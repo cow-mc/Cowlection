@@ -1,0 +1,13 @@
+[{
+  "modid": "cowmoonication",
+  "name": "Cowmoonication",
+  "description": "Adding various things related to communication.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "https://github.com/cow-mc/Cowmoonication",
+  "updateUrl": "",
+  "authorList": ["Cow"],
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}]
