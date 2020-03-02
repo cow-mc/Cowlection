@@ -1,5 +1,6 @@
-package eu.olli.cowmoonication;
+package eu.olli.cowmoonication.util;
 
+import eu.olli.cowmoonication.Cowmoonication;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.IChatComponent;

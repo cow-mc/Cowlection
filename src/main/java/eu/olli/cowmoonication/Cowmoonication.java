@@ -3,6 +3,7 @@ package eu.olli.cowmoonication;
 import eu.olli.cowmoonication.command.MooCommand;
 import eu.olli.cowmoonication.config.MooConfig;
 import eu.olli.cowmoonication.listener.ChatListener;
+import eu.olli.cowmoonication.util.Utils;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;

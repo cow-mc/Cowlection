@@ -13,35 +13,8 @@ public class Friends {
         this.main = main;
     }
 
-    public boolean addBestFriend(String name, boolean save) {
-        if (name.isEmpty()) {
-            return false;
-        }
-        boolean added = bestFriends.add(name);
-        if (added && save) {
-            saveBestFriends();
-        }
-        return added;
-    }
-
-    public boolean addBestFriend(String name) {
-        return addBestFriend(name, false);
-    }
-
-    public boolean removeBestFriend(String name) {
-        boolean removed = bestFriends.remove(name);
-        if (removed) {
-            saveBestFriends();
-        }
-        return removed;
-    }
-
     public boolean isBestFriend(String playerName) {
         return bestFriends.contains(playerName);
-    }
-
-    private void saveBestFriends() {
-
     }
 
     public Set<String> getBestFriends() {

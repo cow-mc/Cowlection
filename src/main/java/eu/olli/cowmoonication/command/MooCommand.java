@@ -2,6 +2,8 @@ package eu.olli.cowmoonication.command;
 
 import eu.olli.cowmoonication.Cowmoonication;
 import eu.olli.cowmoonication.config.MooConfig;
+import eu.olli.cowmoonication.config.MooGuiConfig;
+import eu.olli.cowmoonication.util.TickDelay;
 import net.minecraft.client.Minecraft;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
@@ -27,14 +29,8 @@ public class MooCommand extends CommandBase {
             main.getUtils().sendMessage(new ChatComponentTranslation(getCommandUsage(sender)));
             return;
         }
-        if (args.length == 2 && args[0].equalsIgnoreCase("add")) {
-            main.getUtils().sendMessage(EnumChatFormatting.RED + "Edit the best friends list via ESC > Mod Options > Cowmoonication > Config > bestFriends.");
-            // TODO replace with a proper command
-            // handleBestFriendAdd(args[1]);
-        } else if (args.length == 2 && args[0].equalsIgnoreCase("remove") && main.getUtils().isValidMcName(args[1])) {
-            main.getUtils().sendMessage(EnumChatFormatting.RED + "Edit the best friends list via ESC > Mod Options > Cowmoonication > Config > bestFriends.");
-            // TODO replace with a proper command
-            // handleBestFriendRemove(args[1]);
+        if (args[0].equalsIgnoreCase("friends") || args[0].equalsIgnoreCase("f")) {
+            new TickDelay(() -> Minecraft.getMinecraft().displayGuiScreen(new MooGuiConfig(null)), 1); // delay by 1 tick, because the chat closing would close the new gui instantly as well.
         } else if (args[0].equalsIgnoreCase("list")) {
             handleListBestFriends();
         } else if (args[0].equalsIgnoreCase("toggle")) {
@@ -51,35 +47,6 @@ public class MooCommand extends CommandBase {
             }
         } else {
             main.getUtils().sendMessage(new ChatComponentTranslation(getCommandUsage(sender)));
-        }
-    }
-
-    private void handleBestFriendAdd(String username) {
-        if (!main.getUtils().isValidMcName(username)) {
-            main.getUtils().sendMessage(EnumChatFormatting.DARK_RED + username + EnumChatFormatting.RED + "? This... doesn't look like a valid username.");
-            return;
-        }
-
-        // TODO Add check if 'best friend' is on normal friend list
-        boolean added = main.getFriends().addBestFriend(username, true);
-        if (added) {
-            main.getUtils().sendMessage(EnumChatFormatting.GREEN + "Added " + EnumChatFormatting.DARK_GREEN + username + EnumChatFormatting.GREEN + " as best friend.");
-        } else {
-            main.getUtils().sendMessage(EnumChatFormatting.DARK_RED + username + EnumChatFormatting.RED + " is a best friend already.");
-        }
-    }
-
-    private void handleBestFriendRemove(String username) {
-        if (!main.getUtils().isValidMcName(username)) {
-            main.getUtils().sendMessage(EnumChatFormatting.DARK_RED + username + EnumChatFormatting.RED + "? This... doesn't look like a valid username.");
-            return;
-        }
-
-        boolean removed = main.getFriends().removeBestFriend(username);
-        if (removed) {
-            main.getUtils().sendMessage(EnumChatFormatting.GREEN + "Removed " + EnumChatFormatting.DARK_GREEN + username + EnumChatFormatting.GREEN + " from best friends list.");
-        } else {
-            main.getUtils().sendMessage(EnumChatFormatting.DARK_RED + username + EnumChatFormatting.RED + " isn't a best friend.");
         }
     }
 
@@ -108,7 +75,7 @@ public class MooCommand extends CommandBase {
     @Override
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         if (args.length == 1) {
-            return getListOfStringsMatchingLastWord(args, "add", "remove", "list", "toggle", "guiscale");
+            return getListOfStringsMatchingLastWord(args, "friends", "list", "toggle", "guiscale");
         }
         return null;
     }

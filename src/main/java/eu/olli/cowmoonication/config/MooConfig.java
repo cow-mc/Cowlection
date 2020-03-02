@@ -1,7 +1,7 @@
 package eu.olli.cowmoonication.config;
 
 import eu.olli.cowmoonication.Cowmoonication;
-import eu.olli.cowmoonication.Utils;
+import eu.olli.cowmoonication.util.Utils;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
