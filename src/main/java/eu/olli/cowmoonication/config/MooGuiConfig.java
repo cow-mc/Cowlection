@@ -24,7 +24,6 @@ public class MooGuiConfig extends GuiConfig {
         // optional: add buttons and initialize fields
     }
 
-
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         super.drawScreen(mouseX, mouseY, partialTicks);

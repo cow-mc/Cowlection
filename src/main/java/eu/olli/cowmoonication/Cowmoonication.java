@@ -3,24 +3,32 @@ package eu.olli.cowmoonication;
 import eu.olli.cowmoonication.command.MooCommand;
 import eu.olli.cowmoonication.config.MooConfig;
 import eu.olli.cowmoonication.listener.ChatListener;
+import eu.olli.cowmoonication.listener.PlayerListener;
 import eu.olli.cowmoonication.util.Utils;
+import eu.olli.cowmoonication.util.VersionChecker;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 
-@Mod(modid = Cowmoonication.MODID, version = Cowmoonication.VERSION, clientSideOnly = true, guiFactory = "eu.olli." + Cowmoonication.MODID + ".config.MooGuiFactory")
+@Mod(modid = Cowmoonication.MODID, name = Cowmoonication.MODNAME, version = Cowmoonication.VERSION,
+        clientSideOnly = true,
+        guiFactory = "eu.olli." + Cowmoonication.MODID + ".config.MooGuiFactory",
+        updateJSON = "https://raw.githubusercontent.com/cow-mc/Cowmoonication/master/update.json")
 public class Cowmoonication {
     public static final String MODID = "cowmoonication";
-    public static final String VERSION = "1.0";
+    public static final String VERSION = "1.8.9-0.2.0";
+    public static final String MODNAME = "Cowmoonication";
     private MooConfig config;
     private Friends friends;
+    private VersionChecker versionChecker;
     private Utils utils;
     private Logger logger;
 
@@ -35,14 +43,21 @@ public class Cowmoonication {
 
         friends = new Friends(this);
         config = new MooConfig(new Configuration(new File(modDir, MODID + ".cfg")), this);
+
+        utils = new Utils(this, e.getSourceFile());
     }
 
     @EventHandler
     public void init(FMLInitializationEvent e) {
-        utils = new Utils(this);
 
         MinecraftForge.EVENT_BUS.register(new ChatListener(this));
+        MinecraftForge.EVENT_BUS.register(new PlayerListener(this));
         ClientCommandHandler.instance.registerCommand(new MooCommand(this));
+    }
+
+    @EventHandler
+    public void postInit(FMLPostInitializationEvent e) {
+        versionChecker = new VersionChecker(this);
     }
 
     public MooConfig getConfig() {
@@ -53,6 +68,10 @@ public class Cowmoonication {
         return friends;
     }
 
+    public VersionChecker getVersionChecker() {
+        return versionChecker;
+    }
+
     public Utils getUtils() {
         return utils;
     }
@@ -60,5 +79,4 @@ public class Cowmoonication {
     public Logger getLogger() {
         return logger;
     }
-
 }

@@ -7,6 +7,7 @@ import net.minecraft.util.IChatComponent;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.common.MinecraftForge;
 
+import java.io.File;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -14,11 +15,13 @@ public class Utils {
     public static final Pattern VALID_USERNAME = Pattern.compile("^[\\w]{1,16}$");
     private static final Pattern USELESS_JSON_CONTENT_PATTERN = Pattern.compile("\"[A-Za-z]+\":false,?");
     private final Cowmoonication main;
+    private final File modsDir;
     private String[] aboveChatMessage;
     private long aboveChatMessageExpiration;
 
-    public Utils(Cowmoonication main) {
+    public Utils(Cowmoonication main, File sourceFile) {
         this.main = main;
+        modsDir = sourceFile.getParentFile();
     }
 
     public void sendMessage(String text) {
@@ -54,5 +57,9 @@ public class Utils {
         String component = IChatComponent.Serializer.componentToJson(chatComponent);
         Matcher jsonMatcher = USELESS_JSON_CONTENT_PATTERN.matcher(component);
         return jsonMatcher.replaceAll("");
+    }
+
+    public File getModsFolder() {
+        return modsDir;
     }
 }

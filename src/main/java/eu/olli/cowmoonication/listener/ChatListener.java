@@ -36,8 +36,9 @@ public class ChatListener {
     public void onLogInOutMessage(ClientChatReceivedEvent e) {
         if (e.type != 2 && MooConfig.filterFriendNotifications) { // normal chat or system msg
             String text = e.message.getUnformattedText();
-            if (text.endsWith(" joined.") || text.endsWith(" left.") // Hypixel
-                    || text.endsWith(" joined the game") || text.endsWith(" left the game.")) { // Spigot
+            if (text.length() < 42 && // to prevent the party disbanded message from being filtered: "The party was disbanded because all invites have expired and all members have left."
+                    (text.endsWith(" joined.") || text.endsWith(" left.") // Hypixel
+                            || text.endsWith(" joined the game") || text.endsWith(" left the game."))) { // Spigot
                 // TODO maybe check which server thePlayer is on and check for logout pattern accordingly
                 int nameEnd = text.indexOf(" joined");
                 if (nameEnd == -1) {
@@ -76,7 +77,7 @@ public class ChatListener {
                 if (lastTypedChars.equalsIgnoreCase("/r ")) {
                     // replace /r with /msg <last user>
                     main.getUtils().sendAboveChatMessage("Sending message to " + lastPMSender + "!");
-                    Minecraft.getMinecraft().displayGuiScreen(new GuiChat("/msg " + lastPMSender + " "));
+                    Minecraft.getMinecraft().displayGuiScreen(new GuiChat("/w " + lastPMSender + " "));
                 }
             } else if (Keyboard.getEventKey() == Keyboard.KEY_BACK) { // Backspace
                 lastTypedChars = lastTypedChars.substring(0, Math.max(lastTypedChars.length() - 1, 0));

@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MooConfig {
+    public static boolean doUpdateCheck;
     public static boolean filterFriendNotifications;
     private static String[] bestFriends;
     private static Configuration cfg = null;
@@ -69,6 +70,9 @@ public class MooConfig {
             cfg.load();
         }
 
+        final boolean DO_UPDATE_CHECK = true;
+        Property propDoUpdateCheck = cfg.get(Configuration.CATEGORY_CLIENT, "doUpdateCheck", DO_UPDATE_CHECK, "Check for mod updates?");
+
         final boolean FILTER_FRIEND_NOTIFICATIONS = true;
         Property propFilterFriendNotify = cfg.get(Configuration.CATEGORY_CLIENT, "filterFriendNotifications", FILTER_FRIEND_NOTIFICATIONS, "Set to false to receive all login/logout messages, set to true to only get notifications of 'best friends' joining/leaving");
 
@@ -77,15 +81,18 @@ public class MooConfig {
         propBestFriends.setValidationPattern(Utils.VALID_USERNAME);
 
         List<String> propOrderGeneral = new ArrayList<>();
+        propOrderGeneral.add(propDoUpdateCheck.getName());
         propOrderGeneral.add(propFilterFriendNotify.getName());
         propOrderGeneral.add(propBestFriends.getName());
         cfg.setCategoryPropertyOrder(Configuration.CATEGORY_CLIENT, propOrderGeneral);
 
         if (readFieldsFromConfig) {
+            doUpdateCheck = propDoUpdateCheck.getBoolean(DO_UPDATE_CHECK);
             filterFriendNotifications = propFilterFriendNotify.getBoolean(FILTER_FRIEND_NOTIFICATIONS);
             bestFriends = propBestFriends.getStringList();
         }
 
+        propDoUpdateCheck.set(doUpdateCheck);
         propFilterFriendNotify.set(filterFriendNotifications);
         propBestFriends.set(bestFriends);
 
