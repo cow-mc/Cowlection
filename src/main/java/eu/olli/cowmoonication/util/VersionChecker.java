@@ -120,7 +120,7 @@ public class VersionChecker {
         }
 
         if (statusMsg != null) {
-            main.getUtils().sendMessage(statusMsg);
+            main.getChatHelper().sendMessage(statusMsg);
         }
     }
 

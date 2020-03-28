@@ -44,7 +44,7 @@ public class ChatListener {
                 if (nameEnd == -1) {
                     nameEnd = text.indexOf(" left");
                 }
-                boolean isBestFriend = main.getFriends().isBestFriend(text.substring(0, nameEnd));
+                boolean isBestFriend = main.getFriends().isBestFriend(text.substring(0, nameEnd), false);
                 if (!isBestFriend) {
                     e.setCanceled(true);
                 }
@@ -58,10 +58,10 @@ public class ChatListener {
             if (!Mouse.getEventButtonState() && Mouse.getEventButton() == 1 && Keyboard.isKeyDown(Keyboard.KEY_LMENU)) { // alt key pressed and right mouse button being released
                 IChatComponent chatComponent = Minecraft.getMinecraft().ingameGUI.getChatGUI().getChatComponent(Mouse.getX(), Mouse.getY());
                 if (chatComponent != null) {
-                    String chatData = main.getUtils().cleanChatComponent(chatComponent);
+                    String chatData = main.getChatHelper().cleanChatComponent(chatComponent);
                     Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                     clipboard.setContents(new StringSelection(chatData), null);
-                    main.getUtils().sendAboveChatMessage(EnumChatFormatting.YELLOW + "Copied chat component to clipboard:", "" + EnumChatFormatting.BOLD + EnumChatFormatting.GOLD + "\u276E" + EnumChatFormatting.RESET + chatComponent.getUnformattedText() + EnumChatFormatting.BOLD + EnumChatFormatting.GOLD + "\u276F");
+                    main.getChatHelper().sendAboveChatMessage(EnumChatFormatting.YELLOW + "Copied chat component to clipboard:", "" + EnumChatFormatting.BOLD + EnumChatFormatting.GOLD + "\u276E" + EnumChatFormatting.RESET + chatComponent.getUnformattedText() + EnumChatFormatting.BOLD + EnumChatFormatting.GOLD + "\u276F");
                 }
             }
         }
@@ -76,7 +76,7 @@ public class ChatListener {
                 lastTypedChars += eventCharacter;
                 if (lastTypedChars.equalsIgnoreCase("/r ")) {
                     // replace /r with /msg <last user>
-                    main.getUtils().sendAboveChatMessage("Sending message to " + lastPMSender + "!");
+                    main.getChatHelper().sendAboveChatMessage("Sending message to " + lastPMSender + "!");
                     Minecraft.getMinecraft().displayGuiScreen(new GuiChat("/w " + lastPMSender + " "));
                 }
             } else if (Keyboard.getEventKey() == Keyboard.KEY_BACK) { // Backspace
@@ -106,7 +106,7 @@ public class ChatListener {
     public void onRenderChatGui(RenderGameOverlayEvent.Chat e) {
         if (e.type == RenderGameOverlayEvent.ElementType.CHAT) {
             // render message above chat box
-            String[] aboveChatMessage = main.getUtils().getAboveChatMessage();
+            String[] aboveChatMessage = main.getChatHelper().getAboveChatMessage();
             if (aboveChatMessage != null) {
                 float chatHeightFocused = Minecraft.getMinecraft().gameSettings.chatHeightFocused;
                 float chatScale = Minecraft.getMinecraft().gameSettings.chatScale;

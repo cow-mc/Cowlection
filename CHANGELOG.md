@@ -3,6 +3,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 1.8.9-0.3.0 - unreleased
+### Added
+- `/moo nameChangeCheck`: Force a scan for changed names of best friends
+
+### Changed
+- Moved best friends add/remove functionality from config GUI back to commands (`/moo <add|remove> <name>`)
+- Saving best friends' UUIDs now (instead of just the name), also checking for name changes periodically to keep best friends list up to date
+
+
 ## [1.8.9-0.2.0] - 08.03.2020
 ### Added
 - Mod update notification (opt-out via config)

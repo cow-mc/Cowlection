@@ -1,7 +1,6 @@
 package eu.olli.cowmoonication.config;
 
 import eu.olli.cowmoonication.Cowmoonication;
-import eu.olli.cowmoonication.util.Utils;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
@@ -15,23 +14,19 @@ import java.util.List;
 public class MooConfig {
     public static boolean doUpdateCheck;
     public static boolean filterFriendNotifications;
-    private static String[] bestFriends;
     private static Configuration cfg = null;
-    private final Cowmoonication main;
 
-    public MooConfig(Configuration configuration, Cowmoonication main) {
-        this.main = main;
+    public MooConfig(Configuration configuration) {
         cfg = configuration;
         initConfig();
     }
 
-    public static Configuration getConfig() {
+    static Configuration getConfig() {
         return cfg;
     }
 
     private void initConfig() {
         syncFromFile();
-        main.getFriends().syncFriends(bestFriends);
         MinecraftForge.EVENT_BUS.register(new ConfigEventHandler());
     }
 
@@ -76,31 +71,21 @@ public class MooConfig {
         final boolean FILTER_FRIEND_NOTIFICATIONS = true;
         Property propFilterFriendNotify = cfg.get(Configuration.CATEGORY_CLIENT, "filterFriendNotifications", FILTER_FRIEND_NOTIFICATIONS, "Set to false to receive all login/logout messages, set to true to only get notifications of 'best friends' joining/leaving");
 
-        final String[] BEST_FRIENDS_DEFAULT_VALUE = new String[]{"Cow"};
-        Property propBestFriends = cfg.get(Configuration.CATEGORY_CLIENT, "bestFriends", BEST_FRIENDS_DEFAULT_VALUE, "List of best friends: receive login/logout notifications from them");
-        propBestFriends.setValidationPattern(Utils.VALID_USERNAME);
-
         List<String> propOrderGeneral = new ArrayList<>();
         propOrderGeneral.add(propDoUpdateCheck.getName());
         propOrderGeneral.add(propFilterFriendNotify.getName());
-        propOrderGeneral.add(propBestFriends.getName());
         cfg.setCategoryPropertyOrder(Configuration.CATEGORY_CLIENT, propOrderGeneral);
 
         if (readFieldsFromConfig) {
             doUpdateCheck = propDoUpdateCheck.getBoolean(DO_UPDATE_CHECK);
             filterFriendNotifications = propFilterFriendNotify.getBoolean(FILTER_FRIEND_NOTIFICATIONS);
-            bestFriends = propBestFriends.getStringList();
         }
 
         propDoUpdateCheck.set(doUpdateCheck);
         propFilterFriendNotify.set(filterFriendNotifications);
-        propBestFriends.set(bestFriends);
 
         if (cfg.hasChanged()) {
             cfg.save();
-        }
-        if (propBestFriends.hasChanged()) {
-            main.getFriends().syncFriends(bestFriends);
         }
     }
 

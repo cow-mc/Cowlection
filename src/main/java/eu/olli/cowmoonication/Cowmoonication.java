@@ -2,9 +2,10 @@ package eu.olli.cowmoonication;
 
 import eu.olli.cowmoonication.command.MooCommand;
 import eu.olli.cowmoonication.config.MooConfig;
+import eu.olli.cowmoonication.friends.Friends;
 import eu.olli.cowmoonication.listener.ChatListener;
 import eu.olli.cowmoonication.listener.PlayerListener;
-import eu.olli.cowmoonication.util.Utils;
+import eu.olli.cowmoonication.util.ChatHelper;
 import eu.olli.cowmoonication.util.VersionChecker;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.MinecraftForge;
@@ -26,10 +27,11 @@ public class Cowmoonication {
     public static final String MODID = "cowmoonication";
     public static final String VERSION = "1.8.9-0.2.0";
     public static final String MODNAME = "Cowmoonication";
+    private File modsDir;
     private MooConfig config;
     private Friends friends;
     private VersionChecker versionChecker;
-    private Utils utils;
+    private ChatHelper chatHelper;
     private Logger logger;
 
     @Mod.EventHandler
@@ -41,10 +43,11 @@ public class Cowmoonication {
             modDir.mkdirs();
         }
 
-        friends = new Friends(this);
-        config = new MooConfig(new Configuration(new File(modDir, MODID + ".cfg")), this);
+        friends = new Friends(this, new File(modDir, "friends.json"));
+        config = new MooConfig(new Configuration(new File(modDir, MODID + ".cfg")));
 
-        utils = new Utils(this, e.getSourceFile());
+        chatHelper = new ChatHelper();
+        modsDir = e.getSourceFile().getParentFile();
     }
 
     @EventHandler
@@ -72,8 +75,12 @@ public class Cowmoonication {
         return versionChecker;
     }
 
-    public Utils getUtils() {
-        return utils;
+    public ChatHelper getChatHelper() {
+        return chatHelper;
+    }
+
+    public File getModsFolder() {
+        return modsDir;
     }
 
     public Logger getLogger() {

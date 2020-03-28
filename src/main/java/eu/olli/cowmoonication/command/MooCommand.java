@@ -4,6 +4,7 @@ import eu.olli.cowmoonication.Cowmoonication;
 import eu.olli.cowmoonication.config.MooConfig;
 import eu.olli.cowmoonication.config.MooGuiConfig;
 import eu.olli.cowmoonication.util.TickDelay;
+import eu.olli.cowmoonication.util.Utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
@@ -28,40 +29,52 @@ public class MooCommand extends CommandBase {
     @Override
     public void processCommand(ICommandSender sender, String[] args) throws CommandException {
         if (args.length == 0) {
-            main.getUtils().sendMessage(new ChatComponentTranslation(getCommandUsage(sender)));
+            main.getChatHelper().sendMessage(new ChatComponentTranslation(getCommandUsage(sender)));
             return;
         }
-        if (args[0].equalsIgnoreCase("friends") || args[0].equalsIgnoreCase("config")) {
-            new TickDelay(() -> Minecraft.getMinecraft().displayGuiScreen(new MooGuiConfig(null)), 1); // delay by 1 tick, because the chat closing would close the new gui instantly as well.
+        // sub commands: friends
+        if (args.length == 2 && args[0].equalsIgnoreCase("add")) {
+            handleBestFriendAdd(args[1]);
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("remove")) {
+            handleBestFriendRemove(args[1]);
         } else if (args[0].equalsIgnoreCase("list")) {
             handleListBestFriends();
+        } else if (args[0].equalsIgnoreCase("nameChangeCheck")) {
+            main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, "Looking for best friends that have changed their name... This will take a few seconds...");
+            main.getFriends().updateBestFriends(true);
         } else if (args[0].equalsIgnoreCase("toggle")) {
             main.getConfig().toggleNotifications();
-            main.getUtils().sendMessage(EnumChatFormatting.GREEN + "\u2714 Switched all non-best friend login/logout notifications " + (MooConfig.filterFriendNotifications ? EnumChatFormatting.DARK_GREEN + "off" : EnumChatFormatting.DARK_RED + "on"));
+            main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u2714 Switched all non-best friend login/logout notifications " + (MooConfig.filterFriendNotifications ? EnumChatFormatting.DARK_GREEN + "off" : EnumChatFormatting.DARK_RED + "on"));
+        }
+        // sub-commands: miscellaneous
+        else if (args[0].equalsIgnoreCase("config")) {
+            new TickDelay(() -> Minecraft.getMinecraft().displayGuiScreen(new MooGuiConfig(null)), 1); // delay by 1 tick, because the chat closing would close the new gui instantly as well.
         } else if (args[0].equalsIgnoreCase("guiscale")) {
             int currentGuiScale = (Minecraft.getMinecraft()).gameSettings.guiScale;
             if (args.length == 1) {
-                main.getUtils().sendMessage(EnumChatFormatting.GREEN + "\u279C Current GUI scale: " + EnumChatFormatting.DARK_GREEN + currentGuiScale);
+                main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u279C Current GUI scale: " + EnumChatFormatting.DARK_GREEN + currentGuiScale);
             } else {
                 int scale = Math.min(10, MathHelper.parseIntWithDefault(args[1], 6));
                 Minecraft.getMinecraft().gameSettings.guiScale = scale;
-                main.getUtils().sendMessage(EnumChatFormatting.GREEN + "\u2714 New GUI scale: " + EnumChatFormatting.DARK_GREEN + scale + EnumChatFormatting.GREEN + " (previous: " + EnumChatFormatting.DARK_GREEN + currentGuiScale + EnumChatFormatting.GREEN + ")");
+                main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u2714 New GUI scale: " + EnumChatFormatting.DARK_GREEN + scale + EnumChatFormatting.GREEN + " (previous: " + EnumChatFormatting.DARK_GREEN + currentGuiScale + EnumChatFormatting.GREEN + ")");
             }
-        } else if (args[0].equalsIgnoreCase("update")) {
+        }
+        // sub-commands: update mod
+        else if (args[0].equalsIgnoreCase("update")) {
             boolean updateCheckStarted = main.getVersionChecker().runUpdateCheck(true);
 
             if (updateCheckStarted) {
-                main.getUtils().sendMessage(EnumChatFormatting.GREEN + "\u279C Checking for a newer mod version...");
+                main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u279C Checking for a newer mod version...");
                 // VersionChecker#handleVersionStatus will run with a 5 seconds delay
             } else {
                 long nextUpdate = main.getVersionChecker().getNextCheck();
                 String waitingTime = String.format("%02d:%02d",
                         TimeUnit.MILLISECONDS.toMinutes(nextUpdate),
                         TimeUnit.MILLISECONDS.toSeconds(nextUpdate) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(nextUpdate)));
-                main.getUtils().sendMessage(new ChatComponentText("\u26A0 Update checker is on cooldown. Please wait " + EnumChatFormatting.GOLD + EnumChatFormatting.BOLD + waitingTime + EnumChatFormatting.RESET + EnumChatFormatting.RED + " more minutes before checking again.").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.RED)));
+                main.getChatHelper().sendMessage(EnumChatFormatting.RED, "\u26A0 Update checker is on cooldown. Please wait " + EnumChatFormatting.GOLD + EnumChatFormatting.BOLD + waitingTime + EnumChatFormatting.RESET + EnumChatFormatting.RED + " more minutes before checking again.");
             }
         } else if (args[0].equalsIgnoreCase("updateHelp")) {
-            main.getUtils().sendMessage(new ChatComponentText("\u279C Update instructions:").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(true))
+            main.getChatHelper().sendMessage(new ChatComponentText("\u279C Update instructions:").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(true))
                     .appendSibling(new ChatComponentText("\n\u278A" + EnumChatFormatting.YELLOW + " download latest mod version").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(false)
                             .setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, main.getVersionChecker().getDownloadUrl()))
                             .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.YELLOW + "Download the latest version of Cowmoonication\n\u279C Click to download latest mod file")))))
@@ -76,21 +89,53 @@ public class MooCommand extends CommandBase {
             main.getVersionChecker().handleVersionStatus(true);
         } else if (args[0].equalsIgnoreCase("folder")) {
             try {
-                Desktop.getDesktop().open(main.getUtils().getModsFolder());
+                Desktop.getDesktop().open(main.getModsFolder());
             } catch (IOException e) {
-                main.getUtils().sendMessage(new ChatComponentText("\u2716 An error occurred trying to open the mod's folder. I guess you have to open it manually \u00af\\_(\u30c4)_/\u00af").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.RED)));
+                main.getChatHelper().sendMessage(EnumChatFormatting.RED, "\u2716 An error occurred trying to open the mod's folder. I guess you have to open it manually \u00af\\_(\u30c4)_/\u00af");
                 e.printStackTrace();
             }
+        }
+        // "catch-all" remaining sub-commands
+        else {
+            main.getChatHelper().sendMessage(new ChatComponentTranslation(getCommandUsage(sender)));
+        }
+    }
+
+    private void handleBestFriendAdd(String username) {
+        if (!Utils.isValidMcName(username)) {
+            main.getChatHelper().sendMessage(EnumChatFormatting.RED, EnumChatFormatting.DARK_RED + username + EnumChatFormatting.RED + "? This... doesn't look like a valid username.");
+            return;
+        }
+
+        // TODO Add check if 'best friend' is on normal friend list
+        if (main.getFriends().isBestFriend(username, true)) {
+            main.getChatHelper().sendMessage(EnumChatFormatting.RED, EnumChatFormatting.DARK_RED + username + EnumChatFormatting.RED + " is a best friend already.");
         } else {
-            main.getUtils().sendMessage(new ChatComponentTranslation(getCommandUsage(sender)));
+            main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, "Fetching " + EnumChatFormatting.YELLOW + username + EnumChatFormatting.GOLD + "'s unique user id. This may take a few seconds...");
+            // add friend async
+            main.getFriends().addBestFriend(username);
+        }
+    }
+
+    private void handleBestFriendRemove(String username) {
+        if (!Utils.isValidMcName(username)) {
+            main.getChatHelper().sendMessage(EnumChatFormatting.RED, EnumChatFormatting.DARK_RED + username + EnumChatFormatting.RED + "? This... doesn't look like a valid username.");
+            return;
+        }
+
+        boolean removed = main.getFriends().removeBestFriend(username);
+        if (removed) {
+            main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Removed " + EnumChatFormatting.DARK_GREEN + username + EnumChatFormatting.GREEN + " from best friends list.");
+        } else {
+            main.getChatHelper().sendMessage(EnumChatFormatting.RED, EnumChatFormatting.DARK_RED + username + EnumChatFormatting.RED + " isn't a best friend.");
         }
     }
 
     private void handleListBestFriends() {
         Set<String> bestFriends = main.getFriends().getBestFriends();
 
-        // TODO show fancy gui with list of best friends (maybe just the mod's settings?)
-        main.getUtils().sendMessage(EnumChatFormatting.GREEN + "\u279C Best friends: " + EnumChatFormatting.DARK_GREEN + String.join(EnumChatFormatting.GREEN + ", " + EnumChatFormatting.DARK_GREEN, bestFriends));
+        // TODO show fancy gui with list of best friends; maybe with buttons to delete them
+        main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u279C Best friends: " + EnumChatFormatting.DARK_GREEN + String.join(EnumChatFormatting.GREEN + ", " + EnumChatFormatting.DARK_GREEN, bestFriends));
     }
 
     @Override
@@ -101,12 +146,14 @@ public class MooCommand extends CommandBase {
     @Override
     public String getCommandUsage(ICommandSender sender) {
         IChatComponent usage = new ChatComponentText("\u279C Cowmoonication commands:").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(true))
-                .appendSibling(createCmdHelpSection(1, "Login/Logout Notifications"))
-                .appendSibling(createCmdHelpEntry("friends", "Add/remove best friends"))
+                .appendSibling(createCmdHelpSection(1, "Friends"))
+                .appendSibling(createCmdHelpEntry("add", "Add best friends"))
+                .appendSibling(createCmdHelpEntry("remove", "Remove best friends"))
                 .appendSibling(createCmdHelpEntry("list", "View list of best friends"))
+                .appendSibling(createCmdHelpEntry("nameChangeCheck", "Force a scan for changed names of best friends"))
                 .appendSibling(createCmdHelpEntry("toggle", "Toggle show/hide all join/leave notifications"))
                 .appendSibling(createCmdHelpSection(2, "Miscellaneous"))
-                .appendSibling(createCmdHelpEntry("config", "Open configuration GUI"))
+                .appendSibling(createCmdHelpEntry("config", "Open mod's configuration"))
                 .appendSibling(createCmdHelpEntry("guiScale", "Change GUI scale"))
                 .appendSibling(createCmdHelpSection(3, "Update mod"))
                 .appendSibling(createCmdHelpEntry("update", "Check for new mod updates"))
@@ -139,7 +186,11 @@ public class MooCommand extends CommandBase {
     @Override
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         if (args.length == 1) {
-            return getListOfStringsMatchingLastWord(args, "config", "friends", "list", "toggle", "guiscale", "update", "updateHelp", "version", "folder", "help");
+            return getListOfStringsMatchingLastWord(args,
+                    /* friends */  "add", "remove", "list", "nameChangeCheck", "toggle",
+                    /* miscellaneous */ "guiscale", "config",
+                    /* update mod */ "update", "updateHelp", "version", "folder",
+                    /* help */ "help");
         }
         return null;
     }
