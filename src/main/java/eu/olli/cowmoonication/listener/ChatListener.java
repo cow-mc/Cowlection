@@ -2,6 +2,7 @@ package eu.olli.cowmoonication.listener;
 
 import eu.olli.cowmoonication.Cowmoonication;
 import eu.olli.cowmoonication.config.MooConfig;
+import eu.olli.cowmoonication.util.Utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.GuiNewChat;
@@ -34,9 +35,9 @@ public class ChatListener {
 
     @SubscribeEvent
     public void onLogInOutMessage(ClientChatReceivedEvent e) {
-        if (e.type != 2 && MooConfig.filterFriendNotifications) { // normal chat or system msg
+        if (e.type != 2) { // normal chat or system msg
             String text = e.message.getUnformattedText();
-            if (text.length() < 42 && // to prevent the party disbanded message from being filtered: "The party was disbanded because all invites have expired and all members have left."
+            if (MooConfig.filterFriendNotifications && text.length() < 42 && // to prevent the party disbanded message from being filtered: "The party was disbanded because all invites have expired and all members have left."
                     (text.endsWith(" joined.") || text.endsWith(" left.") // Hypixel
                             || text.endsWith(" joined the game") || text.endsWith(" left the game."))) { // Spigot
                 // TODO maybe check which server thePlayer is on and check for logout pattern accordingly
@@ -47,6 +48,14 @@ public class ChatListener {
                 boolean isBestFriend = main.getFriends().isBestFriend(text.substring(0, nameEnd), false);
                 if (!isBestFriend) {
                     e.setCanceled(true);
+                }
+            } else if (text.length() == 56 && text.startsWith("Your new API key is ")) {
+                // Your new API key is 00000000-0000-0000-0000-000000000000
+                String moo = text.substring(20, 56);
+                if (Utils.isValidUuid(moo)) {
+                    MooConfig.moo = moo;
+                    main.getConfig().syncFromFields();
+                    main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Added updated API key in Cowmoonication config!");
                 }
             }
         }

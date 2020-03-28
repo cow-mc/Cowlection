@@ -1,6 +1,7 @@
 package eu.olli.cowmoonication.config;
 
 import eu.olli.cowmoonication.Cowmoonication;
+import eu.olli.cowmoonication.util.Utils;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
@@ -14,6 +15,7 @@ import java.util.List;
 public class MooConfig {
     public static boolean doUpdateCheck;
     public static boolean filterFriendNotifications;
+    public static String moo;
     private static Configuration cfg = null;
 
     public MooConfig(Configuration configuration) {
@@ -47,7 +49,7 @@ public class MooConfig {
     /**
      * Save the Configuration variables (fields) to disk
      */
-    private void syncFromFields() {
+    public void syncFromFields() {
         syncConfig(false, false);
     }
 
@@ -71,18 +73,25 @@ public class MooConfig {
         final boolean FILTER_FRIEND_NOTIFICATIONS = true;
         Property propFilterFriendNotify = cfg.get(Configuration.CATEGORY_CLIENT, "filterFriendNotifications", FILTER_FRIEND_NOTIFICATIONS, "Set to false to receive all login/logout messages, set to true to only get notifications of 'best friends' joining/leaving");
 
+        final String MOO = "";
+        Property propMoo = cfg.get(Configuration.CATEGORY_CLIENT, "moo", MOO, "The answer to life the universe and everything. Don't edit this entry manually!", Utils.VALID_UUID_PATTERN);
+        propMoo.setShowInGui(false);
+
         List<String> propOrderGeneral = new ArrayList<>();
         propOrderGeneral.add(propDoUpdateCheck.getName());
         propOrderGeneral.add(propFilterFriendNotify.getName());
+        propOrderGeneral.add(propMoo.getName());
         cfg.setCategoryPropertyOrder(Configuration.CATEGORY_CLIENT, propOrderGeneral);
 
         if (readFieldsFromConfig) {
             doUpdateCheck = propDoUpdateCheck.getBoolean(DO_UPDATE_CHECK);
             filterFriendNotifications = propFilterFriendNotify.getBoolean(FILTER_FRIEND_NOTIFICATIONS);
+            moo = propMoo.getString();
         }
 
         propDoUpdateCheck.set(doUpdateCheck);
         propFilterFriendNotify.set(filterFriendNotifications);
+        propMoo.set(moo);
 
         if (cfg.hasChanged()) {
             cfg.save();

@@ -6,6 +6,7 @@ A client-side only Forge mod by [Cow](https://namemc.com/profile/Cow) providing 
 |-------------------------------------------------------------------------|-----------------------------------------|
 | Toggle to hide all join/leave notifications                             | `/moo toggle`                           |
 | 'Best friends' list to limit the amount of join and leave notifications | `/moo add/remove/list`                  |
+| Stalk a player (check online status, current game, ...)                 | `/moo stalk`                            |
 | Change guiScale to any value                                            | `/moo guiscale [newValue]`              |
 | Auto-replace `/r` with `/w <latest username>`                           | `/r `                                   |
 | Copy chat components                                                    | <kbd>ALT</kbd> + <kbd>right click</kbd> |

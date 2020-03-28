@@ -80,6 +80,10 @@ public class Friends {
         return bestFriends.stream().map(Friend::getName).collect(Collectors.toCollection(TreeSet::new));
     }
 
+    public Friend getBestFriend(String name) {
+        return bestFriends.stream().filter(friend -> friend.getName().equalsIgnoreCase(name)).findFirst().orElse(Friend.FRIEND_NOT_FOUND);
+    }
+
     private Friend getBestFriend(UUID uuid) {
         return bestFriends.stream().filter(friend -> friend.getUuid().equals(uuid)).findFirst().orElse(Friend.FRIEND_NOT_FOUND);
     }

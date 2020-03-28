@@ -3,6 +3,9 @@ package eu.olli.cowmoonication.command;
 import eu.olli.cowmoonication.Cowmoonication;
 import eu.olli.cowmoonication.config.MooConfig;
 import eu.olli.cowmoonication.config.MooGuiConfig;
+import eu.olli.cowmoonication.friends.Friend;
+import eu.olli.cowmoonication.util.ApiUtils;
+import eu.olli.cowmoonication.util.HyStalking;
 import eu.olli.cowmoonication.util.TickDelay;
 import eu.olli.cowmoonication.util.Utils;
 import net.minecraft.client.Minecraft;
@@ -33,7 +36,15 @@ public class MooCommand extends CommandBase {
             return;
         }
         // sub commands: friends
-        if (args.length == 2 && args[0].equalsIgnoreCase("add")) {
+        if (args[0].equalsIgnoreCase("stalk")) {
+            if (args.length != 2) {
+                main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Usage: /" + getCommandName() + " stalk <playerName>");
+            } else if (!Utils.isValidMcName(args[1])) {
+                main.getChatHelper().sendMessage(EnumChatFormatting.RED, "\"" + args[1] + "\" is not a valid player name.");
+            } else {
+                handleStalking(args[1]);
+            }
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("add")) {
             handleBestFriendAdd(args[1]);
         } else if (args.length == 2 && args[0].equalsIgnoreCase("remove")) {
             handleBestFriendRemove(args[1]);
@@ -58,6 +69,8 @@ public class MooCommand extends CommandBase {
                 Minecraft.getMinecraft().gameSettings.guiScale = scale;
                 main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u2714 New GUI scale: " + EnumChatFormatting.DARK_GREEN + scale + EnumChatFormatting.GREEN + " (previous: " + EnumChatFormatting.DARK_GREEN + currentGuiScale + EnumChatFormatting.GREEN + ")");
             }
+        } else if (args[0].equalsIgnoreCase("apikey")) {
+            handleApiKey(args);
         }
         // sub-commands: update mod
         else if (args[0].equalsIgnoreCase("update")) {
@@ -99,6 +112,75 @@ public class MooCommand extends CommandBase {
         else {
             main.getChatHelper().sendMessage(new ChatComponentTranslation(getCommandUsage(sender)));
         }
+    }
+
+    private void handleApiKey(String[] args) {
+        if (args.length == 1) {
+            String firstSentence;
+            EnumChatFormatting color;
+            EnumChatFormatting colorSecondary;
+            if (Utils.isValidUuid(MooConfig.moo)) {
+                firstSentence = "You already set your Hypixel API key.";
+                color = EnumChatFormatting.GREEN;
+                colorSecondary = EnumChatFormatting.DARK_GREEN;
+            } else {
+                firstSentence = "You haven't set your Hypixel API key yet.";
+                color = EnumChatFormatting.RED;
+                colorSecondary = EnumChatFormatting.DARK_RED;
+            }
+            main.getChatHelper().sendMessage(color, firstSentence + " Use " + colorSecondary + "/api new" + color + " to request a new API key from Hypixel or use " + colorSecondary + "/" + this.getCommandName() + " apikey <key>" + color + " to manually set your existing API key.");
+        } else {
+            String key = args[1];
+            if (Utils.isValidUuid(key)) {
+                MooConfig.moo = key;
+                main.getConfig().syncFromFields();
+                main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Updated API key!");
+            } else {
+                main.getChatHelper().sendMessage(EnumChatFormatting.RED, "That doesn't look like a valid API key...");
+            }
+        }
+    }
+
+    private void handleStalking(String playerName) {
+        if (!Utils.isValidUuid(MooConfig.moo)) {
+            main.getChatHelper().sendMessage(EnumChatFormatting.RED, "You haven't set your Hypixel API key yet. Use " + EnumChatFormatting.DARK_RED + "/api new" + EnumChatFormatting.RED + " to request a new API key from Hypixel or use " + EnumChatFormatting.DARK_RED + "/" + this.getCommandName() + " apikey <key>" + EnumChatFormatting.RED + " to manually set your existing API key.");
+            return;
+        }
+        main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, "Stalking " + EnumChatFormatting.GOLD + playerName + EnumChatFormatting.YELLOW + ". This may take a few seconds.");
+        boolean isBestFriend = main.getFriends().isBestFriend(playerName, true);
+        if (isBestFriend) {
+            Friend stalkedPlayer = main.getFriends().getBestFriend(playerName);
+            // we have the uuid already, so stalk the player
+            stalkPlayer(stalkedPlayer);
+        } else {
+            // fetch player uuid
+            ApiUtils.fetchFriendData(playerName, stalkedPlayer -> {
+                if (stalkedPlayer == null) {
+                    main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Sorry, could contact Mojang's API and thus couldn't stalk " + EnumChatFormatting.DARK_RED + playerName);
+                } else if (stalkedPlayer.equals(Friend.FRIEND_NOT_FOUND)) {
+                    main.getChatHelper().sendMessage(EnumChatFormatting.RED, "There is no player with the name " + EnumChatFormatting.DARK_RED + playerName + EnumChatFormatting.RED + ".");
+                } else {
+                    // ... then stalk the player
+                    stalkPlayer(stalkedPlayer);
+                }
+            });
+        }
+    }
+
+    private void stalkPlayer(Friend stalkedPlayer) {
+        ApiUtils.fetchPlayerStatus(stalkedPlayer, hyStalking -> {
+            if (hyStalking != null && hyStalking.isSuccess()) {
+                HyStalking.HySession session = hyStalking.getSession();
+                if (session.isOnline()) {
+                    main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, EnumChatFormatting.GOLD + stalkedPlayer.getName() + EnumChatFormatting.YELLOW + " is currently playing " + session.getGameType() + ": " + session.getMode() + (session.getMap() != null ? " (Map: " + session.getMap() + ")" : ""));
+                } else {
+                    main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, EnumChatFormatting.GOLD + stalkedPlayer.getName() + EnumChatFormatting.YELLOW + " is currently " + EnumChatFormatting.RED + "offline" + EnumChatFormatting.YELLOW + " (or deactivated API access).");
+                }
+            } else {
+                String cause = (hyStalking != null) ? hyStalking.getCause() : null;
+                main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Something went wrong contacting the Hypixel API. Couldn't stalk " + EnumChatFormatting.DARK_RED + stalkedPlayer.getName() + EnumChatFormatting.RED + (cause != null ? " (Reason: " + EnumChatFormatting.DARK_RED + cause + EnumChatFormatting.RED + ")" : "") + ".");
+            }
+        });
     }
 
     private void handleBestFriendAdd(String username) {
@@ -147,6 +229,7 @@ public class MooCommand extends CommandBase {
     public String getCommandUsage(ICommandSender sender) {
         IChatComponent usage = new ChatComponentText("\u279C Cowmoonication commands:").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(true))
                 .appendSibling(createCmdHelpSection(1, "Friends"))
+                .appendSibling(createCmdHelpEntry("stalk", "Get info of player's status"))
                 .appendSibling(createCmdHelpEntry("add", "Add best friends"))
                 .appendSibling(createCmdHelpEntry("remove", "Remove best friends"))
                 .appendSibling(createCmdHelpEntry("list", "View list of best friends"))
@@ -187,8 +270,8 @@ public class MooCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args,
-                    /* friends */  "add", "remove", "list", "nameChangeCheck", "toggle",
-                    /* miscellaneous */ "guiscale", "config",
+                    /* friends */  "stalk", "add", "remove", "list", "nameChangeCheck", "toggle",
+                    /* miscellaneous */ "config", "guiscale", "apikey",
                     /* update mod */ "update", "updateHelp", "version", "folder",
                     /* help */ "help");
         }
