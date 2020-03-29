@@ -1,10 +1,10 @@
 {
   "homepage": "https://github.com/cow-mc/Cowmoonication/",
   "1.8.9": {
-    "1.8.9-0.3.0": "https://github.com/cow-mc/Cowmoonication/blob/master/CHANGELOG.md"
+    "1.8.9-0.3.1": "https://github.com/cow-mc/Cowmoonication/blob/master/CHANGELOG.md"
   },
   "promos": {
-    "1.8.9-latest": "1.8.9-0.3.0",
-    "1.8.9-recommended": "1.8.9-0.3.0"
+    "1.8.9-latest": "1.8.9-0.3.1",
+    "1.8.9-recommended": "1.8.9-0.3.1"
   }
 }

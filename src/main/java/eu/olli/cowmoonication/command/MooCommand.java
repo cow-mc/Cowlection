@@ -146,7 +146,7 @@ public class MooCommand extends CommandBase {
             main.getChatHelper().sendMessage(EnumChatFormatting.RED, "You haven't set your Hypixel API key yet. Use " + EnumChatFormatting.DARK_RED + "/api new" + EnumChatFormatting.RED + " to request a new API key from Hypixel or use " + EnumChatFormatting.DARK_RED + "/" + this.getCommandName() + " apikey <key>" + EnumChatFormatting.RED + " to manually set your existing API key.");
             return;
         }
-        main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, "Stalking " + EnumChatFormatting.GOLD + playerName + EnumChatFormatting.YELLOW + ". This may take a few seconds.");
+        main.getChatHelper().sendMessage(EnumChatFormatting.GRAY, "Stalking " + EnumChatFormatting.WHITE + playerName + EnumChatFormatting.GRAY + ". This may take a few seconds.");
         boolean isBestFriend = main.getFriends().isBestFriend(playerName, true);
         if (isBestFriend) {
             Friend stalkedPlayer = main.getFriends().getBestFriend(playerName);
@@ -172,7 +172,9 @@ public class MooCommand extends CommandBase {
             if (hyStalking != null && hyStalking.isSuccess()) {
                 HyStalking.HySession session = hyStalking.getSession();
                 if (session.isOnline()) {
-                    main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, EnumChatFormatting.GOLD + stalkedPlayer.getName() + EnumChatFormatting.YELLOW + " is currently playing " + session.getGameType() + ": " + session.getMode() + (session.getMap() != null ? " (Map: " + session.getMap() + ")" : ""));
+                    main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, EnumChatFormatting.GOLD + stalkedPlayer.getName() + EnumChatFormatting.YELLOW + " is currently playing " + EnumChatFormatting.GOLD + session.getGameType() + EnumChatFormatting.YELLOW
+                            + (session.getMode() != null ? ": " + EnumChatFormatting.GOLD + session.getMode() : "")
+                            + (session.getMap() != null ? EnumChatFormatting.YELLOW + " (Map: " + EnumChatFormatting.GOLD + session.getMap() + EnumChatFormatting.YELLOW + ")" : ""));
                 } else {
                     main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, EnumChatFormatting.GOLD + stalkedPlayer.getName() + EnumChatFormatting.YELLOW + " is currently " + EnumChatFormatting.RED + "offline" + EnumChatFormatting.YELLOW + " (or deactivated API access).");
                 }

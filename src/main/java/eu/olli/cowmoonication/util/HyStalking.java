@@ -1,6 +1,6 @@
 package eu.olli.cowmoonication.util;
 
-import org.apache.commons.lang3.text.WordUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class HyStalking {
     private boolean success;
@@ -41,38 +41,76 @@ public class HyStalking {
                 cleanGameType = GameType.valueOf(gameType).getCleanName();
             } catch (IllegalArgumentException e) {
                 // no matching game type found
-                cleanGameType = WordUtils.capitalizeFully(gameType.replace('_', ' '));
+                cleanGameType = Utils.fancyCase(gameType);
             }
             return cleanGameType;
         }
 
         public String getMode() {
-            // list partially taken from https://api.hypixel.net/gameCounts?key=MOO
-            switch (mode) {
-                // SkyBlock related
-                case "dynamic":
-                    return "Private Island";
-                case "hub":
-                    return "Hub";
-                case "combat_1":
-                    return "Spider's Den";
-                case "combat_2":
-                    return "Blazing Fortress";
-                case "combat_3":
-                    return "The End";
-                case "farming_1":
-                    return "The Barn";
-                case "farming_2":
-                    return "Mushroom Desert";
-                case "foraging_1":
-                    return "The Park";
-                case "mining_1":
-                    return "Gold Mine";
-                case "mining_2":
-                    return "Deep Caverns";
-                default:
-                    return WordUtils.capitalizeFully(mode.replace('_', ' '));
+            // modes partially taken from https://api.hypixel.net/gameCounts?key=MOO
+            if (mode == null) {
+                return null;
             }
+            String gameType = getGameType();
+            if (GameType.BEDWARS.cleanName.equals(gameType)) {
+                // BedWars related
+                String playerMode;
+                String specialMode;
+                int specialModeStart = StringUtils.ordinalIndexOf(mode, "_", 2);
+                if (specialModeStart > -1) {
+                    playerMode = mode.substring(0, specialModeStart);
+                    specialMode = mode.substring(specialModeStart + 1) + " ";
+                } else {
+                    playerMode = mode;
+                    specialMode = "";
+                }
+                String playerModeClean;
+                switch (playerMode) {
+                    case "EIGHT_ONE":
+                        playerModeClean = "Solo";
+                        break;
+                    case "EIGHT_TWO":
+                        playerModeClean = "Doubles";
+                        break;
+                    case "FOUR_THREE":
+                        playerModeClean = "3v3v3v3";
+                        break;
+                    case "FOUR_FOUR":
+                        playerModeClean = "4v4v4v4";
+                        break;
+                    case "TWO_FOUR":
+                        playerModeClean = "4v4";
+                        break;
+                    default:
+                        playerModeClean = playerMode;
+                }
+                return Utils.fancyCase(specialMode + playerModeClean);
+            } else if (GameType.SKYBLOCK.cleanName.equals(gameType)) {
+                // SkyBlock related
+                switch (mode) {
+                    case "dynamic":
+                        return "Private Island";
+                    case "hub":
+                        return "Hub";
+                    case "combat_1":
+                        return "Spider's Den";
+                    case "combat_2":
+                        return "Blazing Fortress";
+                    case "combat_3":
+                        return "The End";
+                    case "farming_1":
+                        return "The Barn";
+                    case "farming_2":
+                        return "Mushroom Desert";
+                    case "foraging_1":
+                        return "The Park";
+                    case "mining_1":
+                        return "Gold Mine";
+                    case "mining_2":
+                        return "Deep Caverns";
+                }
+            }
+            return Utils.fancyCase(mode);
         }
 
         public String getMap() {

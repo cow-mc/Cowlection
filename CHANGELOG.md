@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.8.9-0.3.1] - 29.03.2020
+### Fixed
+- Fixed NullPointer in `/moo stalk` and improved mode output to be more human-readable
+
 ## [1.8.9-0.3.0] - 28.03.2020
 ### Added
 - Added first iteration of Hypixel API integration:
@@ -35,6 +39,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 *Note:* The 'best friends' list is currently available via <kbd>ESC</kbd> > Mod Options > Cowmoonication > Config > bestFriends.
 
+[1.8.9-0.3.1]: https://github.com/cow-mc/Cowmoonication/compare/v1.8.9-0.3.0...v1.8.9-0.3.1
 [1.8.9-0.3.0]: https://github.com/cow-mc/Cowmoonication/compare/v1.8.9-0.2.0...v1.8.9-0.3.0
 [1.8.9-0.2.0]: https://github.com/cow-mc/Cowmoonication/compare/v0.1...v1.8.9-0.2.0
 [0.1]: https://github.com/cow-mc/Cowmoonication/releases/tag/v0.1

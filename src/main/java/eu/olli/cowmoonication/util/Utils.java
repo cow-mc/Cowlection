@@ -1,5 +1,7 @@
 package eu.olli.cowmoonication.util;
 
+import org.apache.commons.lang3.text.WordUtils;
+
 import java.util.regex.Pattern;
 
 public final class Utils {
@@ -15,5 +17,9 @@ public final class Utils {
 
     public static boolean isValidMcName(String username) {
         return VALID_USERNAME.matcher(username).matches();
+    }
+
+    public static String fancyCase(String string) {
+        return WordUtils.capitalizeFully(string.replace('_', ' '));
     }
 }
