@@ -1,6 +1,7 @@
 package eu.olli.cowmoonication;
 
 import eu.olli.cowmoonication.command.MooCommand;
+import eu.olli.cowmoonication.command.ShrugCommand;
 import eu.olli.cowmoonication.config.MooConfig;
 import eu.olli.cowmoonication.friends.Friends;
 import eu.olli.cowmoonication.listener.ChatListener;
@@ -25,7 +26,7 @@ import java.io.File;
         updateJSON = "https://raw.githubusercontent.com/cow-mc/Cowmoonication/master/update.json")
 public class Cowmoonication {
     public static final String MODID = "cowmoonication";
-    public static final String VERSION = "1.8.9-0.3.1";
+    public static final String VERSION = "1.8.9-0.4.0";
     public static final String MODNAME = "Cowmoonication";
     private File modsDir;
     private MooConfig config;
@@ -52,10 +53,10 @@ public class Cowmoonication {
 
     @EventHandler
     public void init(FMLInitializationEvent e) {
-
         MinecraftForge.EVENT_BUS.register(new ChatListener(this));
         MinecraftForge.EVENT_BUS.register(new PlayerListener(this));
         ClientCommandHandler.instance.registerCommand(new MooCommand(this));
+        ClientCommandHandler.instance.registerCommand(new ShrugCommand(this));
     }
 
     @EventHandler

@@ -32,7 +32,7 @@ public class MooCommand extends CommandBase {
     @Override
     public void processCommand(ICommandSender sender, String[] args) throws CommandException {
         if (args.length == 0) {
-            main.getChatHelper().sendMessage(new ChatComponentTranslation(getCommandUsage(sender)));
+            sendCommandUsage(sender);
             return;
         }
         // sub commands: friends
@@ -53,12 +53,9 @@ public class MooCommand extends CommandBase {
         } else if (args[0].equalsIgnoreCase("nameChangeCheck")) {
             main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, "Looking for best friends that have changed their name... This will take a few seconds...");
             main.getFriends().updateBestFriends(true);
-        } else if (args[0].equalsIgnoreCase("toggle")) {
-            main.getConfig().toggleNotifications();
-            main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u2714 Switched all non-best friend login/logout notifications " + (MooConfig.filterFriendNotifications ? EnumChatFormatting.DARK_GREEN + "off" : EnumChatFormatting.DARK_RED + "on"));
         }
         // sub-commands: miscellaneous
-        else if (args[0].equalsIgnoreCase("config")) {
+        else if (args[0].equalsIgnoreCase("config") || args[0].equalsIgnoreCase("toggle")) {
             new TickDelay(() -> Minecraft.getMinecraft().displayGuiScreen(new MooGuiConfig(null)), 1); // delay by 1 tick, because the chat closing would close the new gui instantly as well.
         } else if (args[0].equalsIgnoreCase("guiscale")) {
             int currentGuiScale = (Minecraft.getMinecraft()).gameSettings.guiScale;
@@ -69,6 +66,8 @@ public class MooCommand extends CommandBase {
                 Minecraft.getMinecraft().gameSettings.guiScale = scale;
                 main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u2714 New GUI scale: " + EnumChatFormatting.DARK_GREEN + scale + EnumChatFormatting.GREEN + " (previous: " + EnumChatFormatting.DARK_GREEN + currentGuiScale + EnumChatFormatting.GREEN + ")");
             }
+        } else if (args[0].equalsIgnoreCase("shrug")) {
+            main.getChatHelper().sendShrug(buildString(args, 1));
         } else if (args[0].equalsIgnoreCase("apikey")) {
             handleApiKey(args);
         }
@@ -110,7 +109,7 @@ public class MooCommand extends CommandBase {
         }
         // "catch-all" remaining sub-commands
         else {
-            main.getChatHelper().sendMessage(new ChatComponentTranslation(getCommandUsage(sender)));
+            sendCommandUsage(sender);
         }
     }
 
@@ -229,6 +228,10 @@ public class MooCommand extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
+        return "/moo help";
+    }
+
+    private void sendCommandUsage(ICommandSender sender) {
         IChatComponent usage = new ChatComponentText("\u279C Cowmoonication commands:").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(true))
                 .appendSibling(createCmdHelpSection(1, "Friends"))
                 .appendSibling(createCmdHelpEntry("stalk", "Get info of player's status"))
@@ -236,17 +239,17 @@ public class MooCommand extends CommandBase {
                 .appendSibling(createCmdHelpEntry("remove", "Remove best friends"))
                 .appendSibling(createCmdHelpEntry("list", "View list of best friends"))
                 .appendSibling(createCmdHelpEntry("nameChangeCheck", "Force a scan for changed names of best friends"))
-                .appendSibling(createCmdHelpEntry("toggle", "Toggle show/hide all join/leave notifications"))
+                .appendSibling(createCmdHelpEntry("toggle", "Toggle join/leave notifications"))
                 .appendSibling(createCmdHelpSection(2, "Miscellaneous"))
                 .appendSibling(createCmdHelpEntry("config", "Open mod's configuration"))
                 .appendSibling(createCmdHelpEntry("guiScale", "Change GUI scale"))
+                .appendSibling(createCmdHelpEntry("shrug", "\u00AF\\_(\u30C4)_/\u00AF")) // ¯\_(ツ)_/¯
                 .appendSibling(createCmdHelpSection(3, "Update mod"))
                 .appendSibling(createCmdHelpEntry("update", "Check for new mod updates"))
                 .appendSibling(createCmdHelpEntry("updateHelp", "Show mod update instructions"))
                 .appendSibling(createCmdHelpEntry("version", "View results of last mod update check"))
                 .appendSibling(createCmdHelpEntry("folder", "Open Minecraft's mods folder"));
         sender.addChatMessage(usage);
-        return "";
     }
 
     private IChatComponent createCmdHelpSection(int nr, String title) {
@@ -273,7 +276,7 @@ public class MooCommand extends CommandBase {
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args,
                     /* friends */  "stalk", "add", "remove", "list", "nameChangeCheck", "toggle",
-                    /* miscellaneous */ "config", "guiscale", "apikey",
+                    /* miscellaneous */ "config", "guiscale", "shrug", "apikey",
                     /* update mod */ "update", "updateHelp", "version", "folder",
                     /* help */ "help");
         }

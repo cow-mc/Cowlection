@@ -20,12 +20,13 @@ plugins {
     id "net.minecraftforge.gradle.forge" version "2.0.2"
 }
 */
-version = "1.8.9-0.3.1"
+version = "1.8.9-0.4.0"
 group= "eu.olli.cowmoonication" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "Cowmoonication"
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
+compileJava.options.encoding = 'UTF-8'
 
 minecraft {
     version = "1.8.9-11.15.1.1722"

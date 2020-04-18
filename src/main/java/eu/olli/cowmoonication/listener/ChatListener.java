@@ -5,9 +5,11 @@ import eu.olli.cowmoonication.config.MooConfig;
 import eu.olli.cowmoonication.util.Utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiChat;
+import net.minecraft.client.gui.GuiControls;
 import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
+import net.minecraft.util.StringUtils;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
@@ -17,13 +19,16 @@ import org.apache.commons.lang3.CharUtils;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
-import java.awt.*;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ChatListener {
+    /**
+     * Examples:
+     * - §aFriend > §r§aNAME §r§eleft.§r
+     * - §2Guild > §r§aNAME §r§eleft.§r
+     */
+    private static final Pattern LOGIN_LOGOUT_NOTIFICATION = Pattern.compile("^(?<type>§aFriend|§2Guild) > §r(?<rank>§[0-9a-f])(?<playerName>[\\w]+)(?<joinLeave> §r§e(?:joined|left)\\.)§r$");
     private static final Pattern PRIVATE_MESSAGE_RECEIVED_PATTERN = Pattern.compile("^From (?:\\[.*?] )?(\\w+): ");
     private final Cowmoonication main;
     private String lastTypedChars = "";
@@ -35,18 +40,31 @@ public class ChatListener {
 
     @SubscribeEvent
     public void onLogInOutMessage(ClientChatReceivedEvent e) {
-        if (e.type != 2) { // normal chat or system msg
+        if (e.type != 2) { // normal chat or system msg (not above action bar)
             String text = e.message.getUnformattedText();
-            if (MooConfig.filterFriendNotifications && text.length() < 42 && // to prevent the party disbanded message from being filtered: "The party was disbanded because all invites have expired and all members have left."
-                    (text.endsWith(" joined.") || text.endsWith(" left.") // Hypixel
-                            || text.endsWith(" joined the game") || text.endsWith(" left the game."))) { // Spigot
-                // TODO maybe check which server thePlayer is on and check for logout pattern accordingly
-                int nameEnd = text.indexOf(" joined");
-                if (nameEnd == -1) {
-                    nameEnd = text.indexOf(" left");
+            Matcher notificationMatcher = LOGIN_LOGOUT_NOTIFICATION.matcher(e.message.getFormattedText());
+
+            if (MooConfig.doMonitorNotifications() && text.length() < 42 && notificationMatcher.matches()) {
+                // we got a login or logout notification!
+                main.getLogger().info(text);
+
+                String type = notificationMatcher.group("type");
+                String rank = notificationMatcher.group("rank");
+                String playerName = notificationMatcher.group("playerName");
+                String joinLeave = notificationMatcher.group("joinLeave");
+
+                if (MooConfig.showBestFriendNotifications) {
+                    boolean isBestFriend = main.getFriends().isBestFriend(playerName, false);
+                    if (isBestFriend) {
+                        // replace default (friend/guild) notification with best friend notification
+                        main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, "" + EnumChatFormatting.DARK_GREEN + EnumChatFormatting.BOLD + "Best friend" + EnumChatFormatting.DARK_GREEN + " > " + EnumChatFormatting.RESET + rank + playerName + joinLeave);
+                        e.setCanceled(true);
+                        return;
+                    }
                 }
-                boolean isBestFriend = main.getFriends().isBestFriend(text.substring(0, nameEnd), false);
-                if (!isBestFriend) {
+                if (!MooConfig.showFriendNotifications && "§aFriend".equals(type)) {
+                    e.setCanceled(true);
+                } else if (!MooConfig.showGuildNotifications && "§2Guild".equals(type)) {
                     e.setCanceled(true);
                 }
             } else if (text.length() == 56 && text.startsWith("Your new API key is ")) {
@@ -67,10 +85,15 @@ public class ChatListener {
             if (!Mouse.getEventButtonState() && Mouse.getEventButton() == 1 && Keyboard.isKeyDown(Keyboard.KEY_LMENU)) { // alt key pressed and right mouse button being released
                 IChatComponent chatComponent = Minecraft.getMinecraft().ingameGUI.getChatGUI().getChatComponent(Mouse.getX(), Mouse.getY());
                 if (chatComponent != null) {
-                    String chatData = main.getChatHelper().cleanChatComponent(chatComponent);
-                    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                    clipboard.setContents(new StringSelection(chatData), null);
-                    main.getChatHelper().sendAboveChatMessage(EnumChatFormatting.YELLOW + "Copied chat component to clipboard:", "" + EnumChatFormatting.BOLD + EnumChatFormatting.GOLD + "\u276E" + EnumChatFormatting.RESET + chatComponent.getUnformattedText() + EnumChatFormatting.BOLD + EnumChatFormatting.GOLD + "\u276F");
+                    boolean copyWithFormatting = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT);
+                    String chatData;
+                    if (copyWithFormatting) {
+                        chatData = main.getChatHelper().cleanChatComponent(chatComponent);
+                    } else {
+                        chatData = StringUtils.stripControlCodes(chatComponent.getUnformattedText());
+                    }
+                    GuiControls.setClipboardString(chatData);
+                    main.getChatHelper().sendAboveChatMessage(EnumChatFormatting.YELLOW + "Copied chat component to clipboard:", "" + EnumChatFormatting.BOLD + EnumChatFormatting.GOLD + "\u276E" + EnumChatFormatting.RESET + (copyWithFormatting ? chatComponent.getUnformattedText() : chatData) + EnumChatFormatting.BOLD + EnumChatFormatting.GOLD + "\u276F");
                 }
             }
         }

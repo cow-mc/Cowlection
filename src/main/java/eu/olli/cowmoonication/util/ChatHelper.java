@@ -71,4 +71,12 @@ public class ChatHelper {
         Matcher jsonMatcher = USELESS_JSON_CONTENT_PATTERN.matcher(component);
         return jsonMatcher.replaceAll("");
     }
+
+    public void sendShrug(String... args) {
+        String chatMsg = "\u00AF\\_(\u30C4)_/\u00AF"; // ¯\\_(ツ)_/¯"
+        if (args.length > 0) {
+            chatMsg = String.join(" ", args) + " " + chatMsg;
+        }
+        Minecraft.getMinecraft().thePlayer.sendChatMessage(chatMsg);
+    }
 }
