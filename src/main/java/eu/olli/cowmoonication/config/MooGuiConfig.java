@@ -14,7 +14,7 @@ public class MooGuiConfig extends GuiConfig {
                 Cowmoonication.MODID,
                 false,
                 false,
-                "Configuration for Cowmoonication");
+                "Configuration for " + Cowmoonication.MODNAME);
         titleLine2 = MooConfig.getConfig().getConfigFile().getAbsolutePath();
     }
 

@@ -73,7 +73,7 @@ public class ChatListener {
                 if (Utils.isValidUuid(moo)) {
                     MooConfig.moo = moo;
                     main.getConfig().syncFromFields();
-                    main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Added updated API key in Cowmoonication config!");
+                    main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Added updated API key in " + Cowmoonication.MODNAME + " config!");
                 }
             }
         }

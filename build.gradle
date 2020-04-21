@@ -20,24 +20,27 @@ plugins {
     id "net.minecraftforge.gradle.forge" version "2.0.2"
 }
 */
-version = "1.8.9-0.4.0"
-group= "eu.olli.cowmoonication" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "Cowmoonication"
+version = "${mc_version}-${mod_version}"
+group = project.group_package // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+archivesBaseName = project.mod_name
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 compileJava.options.encoding = 'UTF-8'
 
 minecraft {
-    version = "1.8.9-11.15.1.1722"
+    version = "${mc_version}-${forge_version}"
     runDir = "run"
+
+    replace "@VERSION@": project.version, "@MODNAME@": project.archivesBaseName, "@MODID@": project.archivesBaseName.toLowerCase(), "@PACKAGE@": project.group_package
+    replaceIn "${mod_name}.java"
     
     // the mappings can be changed at any time, and must be in the following format.
     // snapshot_YYYYMMDD   snapshot are built nightly.
     // stable_#            stables are built at the discretion of the MCP team.
-    // Use non-default mappings at your own risk. they may not allways work.
+    // Use non-default mappings at your own risk. they may not always work.
     // simply re-run your setup task after changing the mappings to update your workspace.
-    mappings = "stable_20"
+    mappings = project.mappings_version
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 }
 
@@ -65,22 +68,31 @@ dependencies {
 
 }
 
-processResources
-{
+processResources {
     // this will ensure that this task is redone when the versions change.
     inputs.property "version", project.version
     inputs.property "mcversion", project.minecraft.version
 
-    // replace stuff in mcmod.info, nothing else
+    // replace stuff in mcmod.info, but nothing else
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
                 
-        // replace version and mcversion
-        expand 'version':project.version, 'mcversion':project.minecraft.version
+        // replace version, mcversion, modname and modid
+        expand 'version':project.version, 'mcversion':project.minecraft.version, 'modname':project.archivesBaseName, 'modid':project.archivesBaseName.toLowerCase()
     }
         
-    // copy everything else, thats not the mcmod.info
+    // copy everything else, that's not the mcmod.info
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
     }
+}
+
+import org.apache.tools.ant.filters.FixCrLfFilter
+// update versions in update.json
+copy {
+    from file('update_template.json')
+    into projectDir
+    rename { 'update.json' }
+    expand(mcversion: project.minecraft.version, version: project.version)
+    filter(FixCrLfFilter)
 }

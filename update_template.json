@@ -1,0 +1,10 @@
+{
+  "homepage": "https://github.com/cow-mc/Cowmoonication/",
+  "${mcversion}": {
+    "${version}": "https://github.com/cow-mc/Cowmoonication/blob/master/CHANGELOG.md"
+  },
+  "promos": {
+    "${mcversion}-latest": "${version}",
+    "${mcversion}-recommended": "${version}"
+  }
+}

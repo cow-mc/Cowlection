@@ -228,11 +228,11 @@ public class MooCommand extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/moo help";
+        return "/" + getCommandName() + " help";
     }
 
     private void sendCommandUsage(ICommandSender sender) {
-        IChatComponent usage = new ChatComponentText("\u279C Cowmoonication commands:").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(true))
+        IChatComponent usage = new ChatComponentText("\u279C " + Cowmoonication.MODNAME + " commands:").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(true))
                 .appendSibling(createCmdHelpSection(1, "Friends"))
                 .appendSibling(createCmdHelpEntry("stalk", "Get info of player's status"))
                 .appendSibling(createCmdHelpEntry("add", "Add best friends"))

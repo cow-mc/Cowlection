@@ -22,12 +22,12 @@ import java.io.File;
 
 @Mod(modid = Cowmoonication.MODID, name = Cowmoonication.MODNAME, version = Cowmoonication.VERSION,
         clientSideOnly = true,
-        guiFactory = "eu.olli." + Cowmoonication.MODID + ".config.MooGuiFactory",
+        guiFactory = "@PACKAGE@.config.MooGuiFactory",
         updateJSON = "https://raw.githubusercontent.com/cow-mc/Cowmoonication/master/update.json")
 public class Cowmoonication {
-    public static final String MODID = "cowmoonication";
-    public static final String VERSION = "1.8.9-0.4.0";
-    public static final String MODNAME = "Cowmoonication";
+    public static final String MODID = "@MODID@";
+    public static final String VERSION = "@VERSION@";
+    public static final String MODNAME = "@MODNAME@";
     private File modsDir;
     private MooConfig config;
     private Friends friends;

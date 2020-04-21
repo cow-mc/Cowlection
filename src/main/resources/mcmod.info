@@ -1,6 +1,6 @@
 [{
-  "modid": "cowmoonication",
-  "name": "Cowmoonication",
+  "modid": "${modid}",
+  "name": "${modname}",
   "description": "Adding various things related to communication.",
   "version": "${version}",
   "mcversion": "${mcversion}",
