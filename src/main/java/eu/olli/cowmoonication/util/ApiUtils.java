@@ -24,7 +24,8 @@ public class ApiUtils {
     public static final String UUID_NOT_FOUND = "UUID-NOT-FOUND";
     private static final String NAME_TO_UUID_URL = "https://api.mojang.com/users/profiles/minecraft/";
     private static final String UUID_TO_NAME_URL = "https://api.mojang.com/user/profiles/%s/names";
-    private static final String STALKING_URL = "https://api.hypixel.net/status?key=%s&uuid=%s";
+    private static final String STALKING_URL_OFFICIAL = "https://api.hypixel.net/status?key=%s&uuid=%s";
+    private static final String STALKING_URL_UNOFFICIAL = "https://api.slothpixel.me/api/players/%s";
     private static ExecutorService pool = Executors.newCachedThreadPool();
     private static Gson gson = new GsonBuilder().registerTypeAdapter(UUID.class, new UUIDTypeAdapter()).registerTypeAdapter(Friend.class, new Friend.FriendCreator()).create();
 
@@ -37,12 +38,11 @@ public class ApiUtils {
 
     private static Friend getFriend(String name) {
         try {
-            HttpURLConnection connection = (HttpURLConnection) new URL(NAME_TO_UUID_URL + name).openConnection();
-            connection.setReadTimeout(5000);
-            if (connection.getResponseCode() == 204) {
+            BufferedReader reader = makeApiCall(NAME_TO_UUID_URL + name);
+            if (reader == null) {
                 return Friend.FRIEND_NOT_FOUND;
-            } else if (connection.getResponseCode() == 200) {
-                return gson.fromJson(new BufferedReader(new InputStreamReader(connection.getInputStream())), Friend.class);
+            } else {
+                return gson.fromJson(reader, Friend.class);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -56,12 +56,11 @@ public class ApiUtils {
 
     private static String getCurrentName(Friend friend) {
         try {
-            HttpURLConnection connection = (HttpURLConnection) new URL(String.format(UUID_TO_NAME_URL, UUIDTypeAdapter.fromUUID(friend.getUuid()))).openConnection();
-            connection.setReadTimeout(5000);
-            if (connection.getResponseCode() == 204) {
+            BufferedReader reader = makeApiCall(String.format(UUID_TO_NAME_URL, UUIDTypeAdapter.fromUUID(friend.getUuid())));
+            if (reader == null) {
                 return UUID_NOT_FOUND;
-            } else if (connection.getResponseCode() == 200) {
-                JsonArray nameHistoryData = new JsonParser().parse(new BufferedReader(new InputStreamReader(connection.getInputStream()))).getAsJsonArray();
+            } else {
+                JsonArray nameHistoryData = new JsonParser().parse(reader).getAsJsonArray();
                 if (nameHistoryData.size() > 0) {
                     return nameHistoryData.get(nameHistoryData.size() - 1).getAsJsonObject().get("name").getAsString();
                 }
@@ -78,27 +77,49 @@ public class ApiUtils {
 
     private static HyStalking stalkPlayer(Friend friend) {
         try {
-            HttpURLConnection connection = (HttpURLConnection) new URL(String.format(STALKING_URL, MooConfig.moo, UUIDTypeAdapter.fromUUID(friend.getUuid()))).openConnection();
-            connection.setReadTimeout(5000);
-            connection.addRequestProperty("User-Agent", "Forge Mod " + Cowmoonication.MODNAME + "/" + Cowmoonication.VERSION + " (https://github.com/cow-mc/Cowmoonication/)");
-
-            connection.getResponseCode();
-            if (connection.getResponseCode() == 204) {
-                return null;
-            } else { // various possible http status code: 200, 403, 422
-                BufferedReader reader;
-                InputStream errorStream = connection.getErrorStream();
-                if (errorStream != null) {
-                    reader = new BufferedReader(new InputStreamReader(errorStream));
-                } else {
-                    reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                }
-
+            BufferedReader reader = makeApiCall(String.format(STALKING_URL_OFFICIAL, MooConfig.moo, UUIDTypeAdapter.fromUUID(friend.getUuid())));
+            if (reader != null) {
                 return gson.fromJson(reader, HyStalking.class);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static void fetchPlayerOfflineStatus(Friend stalkedPlayer, Consumer<SlothStalking> action) {
+        pool.execute(() -> action.accept(stalkOfflinePlayer(stalkedPlayer)));
+    }
+
+    private static SlothStalking stalkOfflinePlayer(Friend stalkedPlayer) {
+        try {
+            BufferedReader reader = makeApiCall(String.format(STALKING_URL_UNOFFICIAL, UUIDTypeAdapter.fromUUID(stalkedPlayer.getUuid())));
+            if (reader != null) {
+                return gson.fromJson(reader, SlothStalking.class);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private static BufferedReader makeApiCall(String url) throws IOException {
+        HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+        connection.setReadTimeout(5000);
+        connection.addRequestProperty("User-Agent", "Forge Mod " + Cowmoonication.MODNAME + "/" + Cowmoonication.VERSION + " (https://github.com/cow-mc/Cowmoonication/)");
+
+        connection.getResponseCode();
+        if (connection.getResponseCode() == 204) {
+            return null;
+        } else {
+            BufferedReader reader;
+            InputStream errorStream = connection.getErrorStream();
+            if (errorStream != null) {
+                reader = new BufferedReader(new InputStreamReader(errorStream));
+            } else {
+                reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            }
+            return reader;
+        }
     }
 }

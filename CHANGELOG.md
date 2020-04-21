@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 1.8.9-0.5.0 - unreleased
+### Changed
+- Improved player stalking feature: now includes 'offline since &lt;duration&gt;' 
+
 ## [1.8.9-0.4.0] - 18.04.2020
 ### Added
 - `¯\_(ツ)_/¯`

@@ -15,6 +15,7 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.event.HoverEvent;
 import net.minecraft.util.*;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import java.awt.*;
 import java.io.IOException;
@@ -175,7 +176,17 @@ public class MooCommand extends CommandBase {
                             + (session.getMode() != null ? ": " + EnumChatFormatting.GOLD + session.getMode() : "")
                             + (session.getMap() != null ? EnumChatFormatting.YELLOW + " (Map: " + EnumChatFormatting.GOLD + session.getMap() + EnumChatFormatting.YELLOW + ")" : ""));
                 } else {
-                    main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, EnumChatFormatting.GOLD + stalkedPlayer.getName() + EnumChatFormatting.YELLOW + " is currently " + EnumChatFormatting.RED + "offline" + EnumChatFormatting.YELLOW + " (or deactivated API access).");
+                    ApiUtils.fetchPlayerOfflineStatus(stalkedPlayer, slothStalking -> {
+                        if (slothStalking == null) {
+                            main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Something went wrong contacting the Slothpixel API. Couldn't stalk " + EnumChatFormatting.DARK_RED + stalkedPlayer.getName() + EnumChatFormatting.RED + " but they appear to be offline currently.");
+                        } else if (slothStalking.getLastLogout() < 1) { // last_logout == null in API response
+                            main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, slothStalking.getPlayerNameFormatted() + EnumChatFormatting.YELLOW + " is hiding their online status.");
+                        } else {
+                            String offlineSince = DurationFormatUtils.formatDurationWords(System.currentTimeMillis() - slothStalking.getLastLogout(), true, true);
+
+                            main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, slothStalking.getPlayerNameFormatted() + EnumChatFormatting.YELLOW + " is " + EnumChatFormatting.GOLD + "offline" + EnumChatFormatting.YELLOW + " since " + EnumChatFormatting.GOLD + offlineSince + EnumChatFormatting.YELLOW + (slothStalking.getLastGame() != null ? " (last played gamemode: " + EnumChatFormatting.GOLD + slothStalking.getLastGame() + EnumChatFormatting.YELLOW + ")" : "") + ".");
+                        }
+                    });
                 }
             } else {
                 String cause = (hyStalking != null) ? hyStalking.getCause() : null;
