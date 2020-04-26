@@ -37,8 +37,7 @@ public class ApiUtils {
     }
 
     private static Friend getFriend(String name) {
-        try {
-            BufferedReader reader = makeApiCall(NAME_TO_UUID_URL + name);
+        try (BufferedReader reader = makeApiCall(NAME_TO_UUID_URL + name)) {
             if (reader == null) {
                 return Friend.FRIEND_NOT_FOUND;
             } else {
@@ -55,8 +54,7 @@ public class ApiUtils {
     }
 
     private static String getCurrentName(Friend friend) {
-        try {
-            BufferedReader reader = makeApiCall(String.format(UUID_TO_NAME_URL, UUIDTypeAdapter.fromUUID(friend.getUuid())));
+        try (BufferedReader reader = makeApiCall(String.format(UUID_TO_NAME_URL, UUIDTypeAdapter.fromUUID(friend.getUuid())))) {
             if (reader == null) {
                 return UUID_NOT_FOUND;
             } else {
@@ -76,8 +74,7 @@ public class ApiUtils {
     }
 
     private static HyStalking stalkPlayer(Friend friend) {
-        try {
-            BufferedReader reader = makeApiCall(String.format(STALKING_URL_OFFICIAL, MooConfig.moo, UUIDTypeAdapter.fromUUID(friend.getUuid())));
+        try (BufferedReader reader = makeApiCall(String.format(STALKING_URL_OFFICIAL, MooConfig.moo, UUIDTypeAdapter.fromUUID(friend.getUuid())))) {
             if (reader != null) {
                 return gson.fromJson(reader, HyStalking.class);
             }
@@ -92,8 +89,7 @@ public class ApiUtils {
     }
 
     private static SlothStalking stalkOfflinePlayer(Friend stalkedPlayer) {
-        try {
-            BufferedReader reader = makeApiCall(String.format(STALKING_URL_UNOFFICIAL, UUIDTypeAdapter.fromUUID(stalkedPlayer.getUuid())));
+        try (BufferedReader reader = makeApiCall(String.format(STALKING_URL_UNOFFICIAL, UUIDTypeAdapter.fromUUID(stalkedPlayer.getUuid())))) {
             if (reader != null) {
                 return gson.fromJson(reader, SlothStalking.class);
             }
@@ -105,6 +101,7 @@ public class ApiUtils {
 
     private static BufferedReader makeApiCall(String url) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+        connection.setConnectTimeout(5000);
         connection.setReadTimeout(5000);
         connection.addRequestProperty("User-Agent", "Forge Mod " + Cowmoonication.MODNAME + "/" + Cowmoonication.VERSION + " (https://github.com/cow-mc/Cowmoonication/)");
 

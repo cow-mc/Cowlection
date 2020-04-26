@@ -1,5 +1,6 @@
 package eu.olli.cowmoonication.command;
 
+import com.mojang.realmsclient.util.Pair;
 import eu.olli.cowmoonication.Cowmoonication;
 import eu.olli.cowmoonication.config.MooConfig;
 import eu.olli.cowmoonication.config.MooGuiConfig;
@@ -15,7 +16,6 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.event.HoverEvent;
 import net.minecraft.util.*;
-import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import java.awt.*;
 import java.io.IOException;
@@ -179,12 +179,24 @@ public class MooCommand extends CommandBase {
                     ApiUtils.fetchPlayerOfflineStatus(stalkedPlayer, slothStalking -> {
                         if (slothStalking == null) {
                             main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Something went wrong contacting the Slothpixel API. Couldn't stalk " + EnumChatFormatting.DARK_RED + stalkedPlayer.getName() + EnumChatFormatting.RED + " but they appear to be offline currently.");
-                        } else if (slothStalking.getLastLogout() < 1) { // last_logout == null in API response
+                        } else if (slothStalking.hasNeverJoinedHypixel()) {
+                            main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, stalkedPlayer.getName() + EnumChatFormatting.YELLOW + " has " + EnumChatFormatting.GOLD + "never " + EnumChatFormatting.YELLOW + "been on Hypixel (or might be nicked).");
+                        } else if (slothStalking.isHidingOnlineStatus()) {
                             main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, slothStalking.getPlayerNameFormatted() + EnumChatFormatting.YELLOW + " is hiding their online status.");
-                        } else {
-                            String offlineSince = DurationFormatUtils.formatDurationWords(System.currentTimeMillis() - slothStalking.getLastLogout(), true, true);
+                        } else if (slothStalking.hasNeverLoggedOut()) {
+                            Pair<String, String> lastOnline = Utils.getLastOnlineWords(slothStalking.getLastLogin());
 
-                            main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, slothStalking.getPlayerNameFormatted() + EnumChatFormatting.YELLOW + " is " + EnumChatFormatting.GOLD + "offline" + EnumChatFormatting.YELLOW + " since " + EnumChatFormatting.GOLD + offlineSince + EnumChatFormatting.YELLOW + (slothStalking.getLastGame() != null ? " (last played gamemode: " + EnumChatFormatting.GOLD + slothStalking.getLastGame() + EnumChatFormatting.YELLOW + ")" : "") + ".");
+                            main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, slothStalking.getPlayerNameFormatted() + EnumChatFormatting.YELLOW + " was last online " + EnumChatFormatting.GOLD + lastOnline.first() + EnumChatFormatting.YELLOW + " ago"
+                                    + (lastOnline.second() != null ? " (" + EnumChatFormatting.GOLD + lastOnline.second() + EnumChatFormatting.YELLOW + ")" : "") + ".");
+                        } else {
+                            Pair<String, String> lastOnline = Utils.getLastOnlineWords(slothStalking.getLastLogout());
+
+                            main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, slothStalking.getPlayerNameFormatted() + EnumChatFormatting.YELLOW + " is " + EnumChatFormatting.GOLD + "offline" + EnumChatFormatting.YELLOW + " for " + EnumChatFormatting.GOLD + lastOnline.first() + EnumChatFormatting.YELLOW
+                                    + ((lastOnline.second() != null || slothStalking.getLastGame() != null) ? (" ("
+                                    + (lastOnline.second() != null ? EnumChatFormatting.GOLD + lastOnline.second() + EnumChatFormatting.YELLOW : "") // = last online date
+                                    + (lastOnline.second() != null && slothStalking.getLastGame() != null ? "; " : "") // = delimiter
+                                    + (slothStalking.getLastGame() != null ? "last played gamemode: " + EnumChatFormatting.GOLD + slothStalking.getLastGame() + EnumChatFormatting.YELLOW : "") // = last gamemode
+                                    + ")") : "") + ".");
                         }
                     });
                 }

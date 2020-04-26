@@ -1,0 +1,8 @@
+cowmoonication.config.doUpdateCheck=Check for updates
+cowmoonication.config.doUpdateCheck.tooltip=Check for mod updates?
+cowmoonication.config.showBestFriendNotifications=Show best friend notifications
+cowmoonication.config.showBestFriendNotifications.tooltip=Set to true to receive best friends' login/logout messages, set to false hide them.
+cowmoonication.config.showFriendNotifications=Show friend notifications
+cowmoonication.config.showFriendNotifications.tooltip=Set to true to receive friends' login/logout messages, set to false hide them.
+cowmoonication.config.showGuildNotifications=Show guild notifications
+cowmoonication.config.showGuildNotifications.tooltip=Set to true to receive guild members' login/logout messages, set to false hide them.

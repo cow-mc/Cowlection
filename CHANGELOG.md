@@ -5,7 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## 1.8.9-0.5.0 - unreleased
 ### Changed
-- Improved player stalking feature: now includes 'offline since &lt;duration&gt;' 
+- Improved player stalking feature:
+  - now includes 'offline for &lt;duration&gt;'
+  - better handling of special cases (e.g. nicked players, players who haven't joined in years)
 
 ## [1.8.9-0.4.0] - 18.04.2020
 ### Added

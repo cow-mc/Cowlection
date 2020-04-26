@@ -19,6 +19,7 @@ public class MooConfig {
     public static boolean showGuildNotifications;
     public static String moo;
     private static Configuration cfg = null;
+    private List<String> propOrderGeneral;
 
     public MooConfig(Configuration configuration) {
         cfg = configuration;
@@ -68,36 +69,26 @@ public class MooConfig {
         if (loadConfigFromFile) {
             cfg.load();
         }
+        propOrderGeneral = new ArrayList<>();
 
-        final boolean DO_UPDATE_CHECK = true;
-        Property propDoUpdateCheck = cfg.get(Configuration.CATEGORY_CLIENT, "doUpdateCheck", DO_UPDATE_CHECK, "Check for mod updates?");
+        Property propDoUpdateCheck = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
+                "doUpdateCheck", true, "Check for mod updates?"), true);
+        Property propShowBestFriendNotifications = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
+                "showBestFriendNotifications", true, "Set to true to receive best friends' login/logout messages, set to false hide them."), true);
+        Property propShowFriendNotifications = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
+                "showFriendNotifications", false, "Set to true to receive friends' login/logout messages, set to false hide them."), true);
+        Property propShowGuildNotifications = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
+                "showGuildNotifications", false, "Set to true to receive guild members' login/logout messages, set to false hide them."), true);
+        Property propMoo = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
+                "moo", "", "The answer to life the universe and everything. Don't edit this entry manually!", Utils.VALID_UUID_PATTERN), false);
 
-        final boolean SHOW_BEST_FRIEND_NOTIFICATIONS = true;
-        Property propShowBestFriendNotifications = cfg.get(Configuration.CATEGORY_CLIENT, "showBestFriendNotifications", SHOW_BEST_FRIEND_NOTIFICATIONS, "Set to true to receive best friends' login/logout messages, set to false hide them.");
-
-        final boolean SHOW_FRIEND_NOTIFICATIONS = false;
-        Property propShowFriendNotifications = cfg.get(Configuration.CATEGORY_CLIENT, "showFriendNotifications", SHOW_FRIEND_NOTIFICATIONS, "Set to true to receive friends' login/logout messages, set to false hide them.");
-
-        final boolean SHOW_GUILD_NOTIFICATIONS = false;
-        Property propShowGuildNotifications = cfg.get(Configuration.CATEGORY_CLIENT, "showGuildNotifications", SHOW_GUILD_NOTIFICATIONS, "Set to true to receive guild members' login/logout messages, set to false hide them.");
-
-        final String MOO = "";
-        Property propMoo = cfg.get(Configuration.CATEGORY_CLIENT, "moo", MOO, "The answer to life the universe and everything. Don't edit this entry manually!", Utils.VALID_UUID_PATTERN);
-        propMoo.setShowInGui(false);
-
-        List<String> propOrderGeneral = new ArrayList<>();
-        propOrderGeneral.add(propDoUpdateCheck.getName());
-        propOrderGeneral.add(propShowBestFriendNotifications.getName());
-        propOrderGeneral.add(propShowFriendNotifications.getName());
-        propOrderGeneral.add(propShowGuildNotifications.getName());
-        propOrderGeneral.add(propMoo.getName());
         cfg.setCategoryPropertyOrder(Configuration.CATEGORY_CLIENT, propOrderGeneral);
 
         if (readFieldsFromConfig) {
-            doUpdateCheck = propDoUpdateCheck.getBoolean(DO_UPDATE_CHECK);
-            showBestFriendNotifications = propShowBestFriendNotifications.getBoolean(SHOW_BEST_FRIEND_NOTIFICATIONS);
-            showFriendNotifications = propShowFriendNotifications.getBoolean(SHOW_FRIEND_NOTIFICATIONS);
-            showGuildNotifications = propShowGuildNotifications.getBoolean(SHOW_GUILD_NOTIFICATIONS);
+            doUpdateCheck = propDoUpdateCheck.getBoolean();
+            showBestFriendNotifications = propShowBestFriendNotifications.getBoolean();
+            showFriendNotifications = propShowFriendNotifications.getBoolean();
+            showGuildNotifications = propShowGuildNotifications.getBoolean();
             moo = propMoo.getString();
         }
 
@@ -110,6 +101,16 @@ public class MooConfig {
         if (cfg.hasChanged()) {
             cfg.save();
         }
+    }
+
+    private Property addConfigEntry(Property property, boolean showInGui) {
+        if (showInGui) {
+            property.setLanguageKey(Cowmoonication.MODID + ".config." + property.getName());
+        } else {
+            property.setShowInGui(false);
+        }
+        propOrderGeneral.add(property.getName());
+        return property;
     }
 
     /**
