@@ -2,11 +2,13 @@ package eu.olli.cowmoonication;
 
 import eu.olli.cowmoonication.command.MooCommand;
 import eu.olli.cowmoonication.command.ShrugCommand;
+import eu.olli.cowmoonication.command.TabCompletableCommand;
 import eu.olli.cowmoonication.config.MooConfig;
 import eu.olli.cowmoonication.friends.Friends;
 import eu.olli.cowmoonication.listener.ChatListener;
 import eu.olli.cowmoonication.listener.PlayerListener;
 import eu.olli.cowmoonication.util.ChatHelper;
+import eu.olli.cowmoonication.util.PlayerCache;
 import eu.olli.cowmoonication.util.VersionChecker;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.MinecraftForge;
@@ -33,6 +35,7 @@ public class Cowmoonication {
     private Friends friends;
     private VersionChecker versionChecker;
     private ChatHelper chatHelper;
+    private PlayerCache playerCache;
     private Logger logger;
 
     @Mod.EventHandler
@@ -45,7 +48,7 @@ public class Cowmoonication {
         }
 
         friends = new Friends(this, new File(modDir, "friends.json"));
-        config = new MooConfig(new Configuration(new File(modDir, MODID + ".cfg")));
+        config = new MooConfig(this, new Configuration(new File(modDir, MODID + ".cfg")));
 
         chatHelper = new ChatHelper();
         modsDir = e.getSourceFile().getParentFile();
@@ -57,11 +60,13 @@ public class Cowmoonication {
         MinecraftForge.EVENT_BUS.register(new PlayerListener(this));
         ClientCommandHandler.instance.registerCommand(new MooCommand(this));
         ClientCommandHandler.instance.registerCommand(new ShrugCommand(this));
+        ClientCommandHandler.instance.registerCommand(new TabCompletableCommand(this));
     }
 
     @EventHandler
     public void postInit(FMLPostInitializationEvent e) {
         versionChecker = new VersionChecker(this);
+        playerCache = new PlayerCache(this);
     }
 
     public MooConfig getConfig() {
@@ -78,6 +83,10 @@ public class Cowmoonication {
 
     public ChatHelper getChatHelper() {
         return chatHelper;
+    }
+
+    public PlayerCache getPlayerCache() {
+        return playerCache;
     }
 
     public File getModsFolder() {

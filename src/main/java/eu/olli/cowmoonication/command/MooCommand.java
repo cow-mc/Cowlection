@@ -302,6 +302,10 @@ public class MooCommand extends CommandBase {
                     /* miscellaneous */ "config", "guiscale", "shrug", "apikey",
                     /* update mod */ "update", "updateHelp", "version", "folder",
                     /* help */ "help");
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("remove")) {
+            return getListOfStringsMatchingLastWord(args, main.getFriends().getBestFriends());
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("stalk")) {
+            return getListOfStringsMatchingLastWord(args, main.getPlayerCache().getAllNamesSorted());
         }
         return null;
     }

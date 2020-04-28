@@ -2,6 +2,8 @@ package eu.olli.cowmoonication.config;
 
 import eu.olli.cowmoonication.Cowmoonication;
 import eu.olli.cowmoonication.util.Utils;
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
@@ -10,18 +12,23 @@ import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class MooConfig {
     public static boolean doUpdateCheck;
     public static boolean showBestFriendNotifications;
     public static boolean showFriendNotifications;
     public static boolean showGuildNotifications;
+    public static String[] tabCompletableNamesCommands;
     public static String moo;
     private static Configuration cfg = null;
+    private final Cowmoonication main;
     private List<String> propOrderGeneral;
 
-    public MooConfig(Configuration configuration) {
+    public MooConfig(Cowmoonication main, Configuration configuration) {
+        this.main = main;
         cfg = configuration;
         initConfig();
     }
@@ -79,26 +86,42 @@ public class MooConfig {
                 "showFriendNotifications", false, "Set to true to receive friends' login/logout messages, set to false hide them."), true);
         Property propShowGuildNotifications = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
                 "showGuildNotifications", false, "Set to true to receive guild members' login/logout messages, set to false hide them."), true);
+        Property propTabCompletableNamesCommands = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
+                "tabCompletableNamesCommands", new String[]{"party", "p", "invite", "visit", "ignore", "msg", "tell", "w", "boop", "profile"}, "List of commands with a Tab-completable username argument."), true)
+                .setValidationPattern(Pattern.compile("^[A-Za-z]+$"));
         Property propMoo = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
                 "moo", "", "The answer to life the universe and everything. Don't edit this entry manually!", Utils.VALID_UUID_PATTERN), false);
 
         cfg.setCategoryPropertyOrder(Configuration.CATEGORY_CLIENT, propOrderGeneral);
+
+        // 'manual' replacement for propTabCompletableNamesCommands.hasChanged()
+        boolean modifiedTabCompletableCommandsList = false;
+        String[] tabCompletableCommandsPreChange = tabCompletableNamesCommands != null ? tabCompletableNamesCommands.clone() : null;
 
         if (readFieldsFromConfig) {
             doUpdateCheck = propDoUpdateCheck.getBoolean();
             showBestFriendNotifications = propShowBestFriendNotifications.getBoolean();
             showFriendNotifications = propShowFriendNotifications.getBoolean();
             showGuildNotifications = propShowGuildNotifications.getBoolean();
+            tabCompletableNamesCommands = propTabCompletableNamesCommands.getStringList();
             moo = propMoo.getString();
+
+            if (!Arrays.equals(tabCompletableCommandsPreChange, tabCompletableNamesCommands)) {
+                modifiedTabCompletableCommandsList = true;
+            }
         }
 
         propDoUpdateCheck.set(doUpdateCheck);
         propShowBestFriendNotifications.set(showBestFriendNotifications);
         propShowFriendNotifications.set(showFriendNotifications);
         propShowGuildNotifications.set(showGuildNotifications);
+        propTabCompletableNamesCommands.set(tabCompletableNamesCommands);
         propMoo.set(moo);
 
         if (cfg.hasChanged()) {
+            if (modifiedTabCompletableCommandsList && Minecraft.getMinecraft().thePlayer != null) {
+                main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Added or removed commands with tab-completable usernames take effect after a game restart!");
+            }
             cfg.save();
         }
     }

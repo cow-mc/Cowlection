@@ -1,0 +1,46 @@
+package eu.olli.cowmoonication.util;
+
+import com.google.common.collect.EvictingQueue;
+import eu.olli.cowmoonication.Cowmoonication;
+
+import java.util.Set;
+import java.util.TreeSet;
+
+public class PlayerCache {
+    @SuppressWarnings("UnstableApiUsage")
+    private final EvictingQueue<String> nameCache = EvictingQueue.create(50);
+    @SuppressWarnings("UnstableApiUsage")
+    private final EvictingQueue<String> bestFriendCache = EvictingQueue.create(50);
+    private final Cowmoonication main;
+
+    public PlayerCache(Cowmoonication main) {
+        this.main = main;
+    }
+
+    public void add(String name) {
+        // remove old entry (if exists) to 'push' name to the end of the queue
+        nameCache.remove(name);
+        nameCache.add(name);
+    }
+
+    public void addBestFriend(String name) {
+        // remove old entry (if exists) to 'push' name to the end of the queue
+        bestFriendCache.remove(name);
+        bestFriendCache.add(name);
+    }
+
+    public void removeBestFriend(String name) {
+        bestFriendCache.remove(name);
+    }
+
+    public Set<String> getAllNamesSorted() {
+        Set<String> nameList = new TreeSet<>(bestFriendCache);
+        nameList.addAll(nameCache);
+        return nameList;
+    }
+
+    public void clearAllCaches() {
+        nameCache.clear();
+        bestFriendCache.clear();
+    }
+}

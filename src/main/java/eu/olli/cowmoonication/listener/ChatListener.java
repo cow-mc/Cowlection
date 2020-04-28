@@ -28,7 +28,8 @@ public class ChatListener {
      * - §aFriend > §r§aNAME §r§eleft.§r
      * - §2Guild > §r§aNAME §r§eleft.§r
      */
-    private static final Pattern LOGIN_LOGOUT_NOTIFICATION = Pattern.compile("^(?<type>§aFriend|§2Guild) > §r(?<rank>§[0-9a-f])(?<playerName>[\\w]+)(?<joinLeave> §r§e(?:joined|left)\\.)§r$");
+    private static final Pattern LOGIN_LOGOUT_NOTIFICATION = Pattern.compile("^(?<type>§aFriend|§2Guild) > §r(?<rank>§[0-9a-f])(?<playerName>[\\w]+)(?<joinLeaveSuffix> §r§e(?<joinedLeft>joined|left)\\.)§r$");
+    private static final Pattern CHAT_MESSAGE_RECEIVED_PATTERN = Pattern.compile("^(?:Party|Guild) > (?:\\[.*?] )?(?<playerName>\\w+)(?: \\[.*?])?: ");
     private static final Pattern PRIVATE_MESSAGE_RECEIVED_PATTERN = Pattern.compile("^From (?:\\[.*?] )?(\\w+): ");
     private final Cowmoonication main;
     private String lastTypedChars = "";
@@ -51,13 +52,23 @@ public class ChatListener {
                 String type = notificationMatcher.group("type");
                 String rank = notificationMatcher.group("rank");
                 String playerName = notificationMatcher.group("playerName");
-                String joinLeave = notificationMatcher.group("joinLeave");
+                String joinLeaveSuffix = notificationMatcher.group("joinLeaveSuffix");
+                String joinedLeft = notificationMatcher.group("joinedLeft");
 
-                if (MooConfig.showBestFriendNotifications) {
-                    boolean isBestFriend = main.getFriends().isBestFriend(playerName, false);
-                    if (isBestFriend) {
+
+                boolean isBestFriend = main.getFriends().isBestFriend(playerName, false);
+                if (isBestFriend) {
+                    switch (joinedLeft) {
+                        case "joined":
+                            main.getPlayerCache().addBestFriend(playerName);
+                            break;
+                        case "left":
+                            main.getPlayerCache().removeBestFriend(playerName);
+                            break;
+                    }
+                    if (MooConfig.showBestFriendNotifications) {
                         // replace default (friend/guild) notification with best friend notification
-                        main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, "" + EnumChatFormatting.DARK_GREEN + EnumChatFormatting.BOLD + "Best friend" + EnumChatFormatting.DARK_GREEN + " > " + EnumChatFormatting.RESET + rank + playerName + joinLeave);
+                        main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, "" + EnumChatFormatting.DARK_GREEN + EnumChatFormatting.BOLD + "Best friend" + EnumChatFormatting.DARK_GREEN + " > " + EnumChatFormatting.RESET + rank + playerName + joinLeaveSuffix);
                         e.setCanceled(true);
                         return;
                     }
@@ -125,11 +136,23 @@ public class ChatListener {
     }
 
     @SubscribeEvent
-    public void onPrivateMsgReceive(ClientChatReceivedEvent e) {
+    public void onChatMsgReceive(ClientChatReceivedEvent e) {
         if (e.type != 2) {
-            Matcher matcher = PRIVATE_MESSAGE_RECEIVED_PATTERN.matcher(e.message.getUnformattedText());
-            if (matcher.find()) {
-                this.lastPMSender = matcher.group(1);
+            String messageSender = null;
+
+            String message = EnumChatFormatting.getTextWithoutFormattingCodes(e.message.getUnformattedText());
+
+            Matcher privateMessageMatcher = PRIVATE_MESSAGE_RECEIVED_PATTERN.matcher(message);
+            Matcher chatMessageMatcher = CHAT_MESSAGE_RECEIVED_PATTERN.matcher(message);
+            if (privateMessageMatcher.find()) {
+                messageSender = privateMessageMatcher.group(1);
+                this.lastPMSender = messageSender;
+            } else if (chatMessageMatcher.find()) {
+                messageSender = chatMessageMatcher.group("playerName");
+            }
+
+            if (messageSender != null) {
+                main.getPlayerCache().add(messageSender);
             }
         }
     }

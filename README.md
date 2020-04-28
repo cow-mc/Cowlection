@@ -8,6 +8,7 @@ A client-side only Forge mod by [Cow](https://namemc.com/profile/Cow) providing 
 | Toggle join/leave notifications for friends, guild members or best friends separately | `/moo toggle`             |
 | Stalk a player (check online status, current game, ...)                 | `/moo stalk`                            |
 | Change guiScale to any value                                            | `/moo guiscale [newValue]`              |
+| Tab-completable usernames for several commands (e.g. `/party`, `/invite`, ...) | `/tabcompletablecommand` for full list of commands |
 | Auto-replace `/r` with `/w <latest username>`                           | `/r `                                   |
 | Copy chat component                                                     | <kbd>ALT</kbd> + <kbd>right click</kbd><br>Hold <kbd>shift</kbd> to copy full component |
 | Check for mod updates on server login and via command                   | `/moo update`                           |
