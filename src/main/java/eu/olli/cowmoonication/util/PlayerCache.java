@@ -3,7 +3,7 @@ package eu.olli.cowmoonication.util;
 import com.google.common.collect.EvictingQueue;
 import eu.olli.cowmoonication.Cowmoonication;
 
-import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 public class PlayerCache {
@@ -33,8 +33,9 @@ public class PlayerCache {
         bestFriendCache.remove(name);
     }
 
-    public Set<String> getAllNamesSorted() {
-        Set<String> nameList = new TreeSet<>(bestFriendCache);
+    public SortedSet<String> getAllNamesSorted() {
+        SortedSet<String> nameList = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        nameList.addAll(bestFriendCache);
         nameList.addAll(nameCache);
         return nameList;
     }

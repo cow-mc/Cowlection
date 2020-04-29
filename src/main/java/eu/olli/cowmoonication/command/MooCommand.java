@@ -180,7 +180,7 @@ public class MooCommand extends CommandBase {
                         if (slothStalking == null) {
                             main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Something went wrong contacting the Slothpixel API. Couldn't stalk " + EnumChatFormatting.DARK_RED + stalkedPlayer.getName() + EnumChatFormatting.RED + " but they appear to be offline currently.");
                         } else if (slothStalking.hasNeverJoinedHypixel()) {
-                            main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, stalkedPlayer.getName() + EnumChatFormatting.YELLOW + " has " + EnumChatFormatting.GOLD + "never " + EnumChatFormatting.YELLOW + "been on Hypixel (or might be nicked).");
+                            main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, EnumChatFormatting.GOLD + stalkedPlayer.getName() + EnumChatFormatting.YELLOW + " has " + EnumChatFormatting.GOLD + "never " + EnumChatFormatting.YELLOW + "been on Hypixel (or might be nicked).");
                         } else if (slothStalking.isHidingOnlineStatus()) {
                             main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, slothStalking.getPlayerNameFormatted() + EnumChatFormatting.YELLOW + " is hiding their online status.");
                         } else if (slothStalking.hasNeverLoggedOut()) {

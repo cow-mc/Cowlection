@@ -6,8 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [1.8.9-0.5.0] - unreleased
 ### Added
 - Added Tab-completable usernames for several commands (e.g. party, msg, boop, ...)
-  - use command `/tabcompletablecommand` for a full list of commands that support Tab-completion
-  - the list of supported commands can be modified via `/moo config`
+  - the list of supported commands can be modified via `/moo config` &rarr; `Commands with Tab-completable usernames`
   - Tab-completable usernames consist of: the last 50 players that typed in private/friends, Guild or Party chat; up to 50 best friends that are currently logged in
 
 ### Changed

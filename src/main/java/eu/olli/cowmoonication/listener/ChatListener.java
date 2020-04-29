@@ -92,6 +92,10 @@ public class ChatListener {
 
     @SubscribeEvent
     public void onClickOnChat(GuiScreenEvent.MouseInputEvent.Pre e) {
+        if (Mouse.getEventButton() < 0) {
+            // no button press, just mouse-hover
+            return;
+        }
         if (e.gui instanceof GuiChat) {
             if (!Mouse.getEventButtonState() && Mouse.getEventButton() == 1 && Keyboard.isKeyDown(Keyboard.KEY_LMENU)) { // alt key pressed and right mouse button being released
                 IChatComponent chatComponent = Minecraft.getMinecraft().ingameGUI.getChatGUI().getChatComponent(Mouse.getX(), Mouse.getY());

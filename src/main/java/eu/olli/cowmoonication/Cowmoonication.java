@@ -60,7 +60,9 @@ public class Cowmoonication {
         MinecraftForge.EVENT_BUS.register(new PlayerListener(this));
         ClientCommandHandler.instance.registerCommand(new MooCommand(this));
         ClientCommandHandler.instance.registerCommand(new ShrugCommand(this));
-        ClientCommandHandler.instance.registerCommand(new TabCompletableCommand(this));
+        for (String tabCompletableNamesCommand : MooConfig.tabCompletableNamesCommands) {
+            ClientCommandHandler.instance.registerCommand(new TabCompletableCommand(this, tabCompletableNamesCommand));
+        }
     }
 
     @EventHandler
