@@ -1,30 +1,24 @@
 package eu.olli.cowmoonication.friends;
 
-import com.google.gson.InstanceCreator;
-
-import java.lang.reflect.Type;
 import java.util.Objects;
 import java.util.UUID;
 
 public class Friend {
-    public static final Friend FRIEND_NOT_FOUND = new Friend(null, null, -1);
+    public static final Friend FRIEND_NOT_FOUND = new Friend();
     private UUID id;
     private String name;
     private long lastChecked;
+
+    static {
+        // uuid & name are null
+        FRIEND_NOT_FOUND.setLastChecked(0);
+    }
 
     /**
      * No-args constructor for GSON
      */
     private Friend() {
         this.lastChecked = System.currentTimeMillis();
-    }
-
-    private Friend(UUID uuid, String name, long lastChecked) {
-        this.id = uuid;
-        this.name = name;
-        if (lastChecked > 0) {
-            this.lastChecked = lastChecked;
-        }
     }
 
     public UUID getUuid() {
@@ -67,12 +61,5 @@ public class Friend {
     @Override
     public int hashCode() {
         return Objects.hash(id);
-    }
-
-    public static class FriendCreator implements InstanceCreator {
-        @Override
-        public Friend createInstance(Type type) {
-            return new Friend();
-        }
     }
 }

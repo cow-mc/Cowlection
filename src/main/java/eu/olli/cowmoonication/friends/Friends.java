@@ -1,10 +1,10 @@
 package eu.olli.cowmoonication.friends;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 import eu.olli.cowmoonication.Cowmoonication;
 import eu.olli.cowmoonication.util.ApiUtils;
+import eu.olli.cowmoonication.util.GsonUtils;
 import eu.olli.cowmoonication.util.TickDelay;
 import io.netty.util.internal.ConcurrentSet;
 import net.minecraft.event.ClickEvent;
@@ -136,7 +136,7 @@ public class Friends {
 
     public synchronized void saveBestFriends() {
         try {
-            String bestFriendsJsonZoned = dumpJson(this.bestFriends);
+            String bestFriendsJsonZoned = GsonUtils.toJson(this.bestFriends);
             FileUtils.writeStringToFile(this.bestFriendsFile, bestFriendsJsonZoned, StandardCharsets.UTF_8);
         } catch (IOException e) {
             main.getLogger().error("Couldn't save best friends", e);
@@ -158,11 +158,7 @@ public class Friends {
     private Set<Friend> parseJson(String bestFriendsData) {
         Type collectionType = new TypeToken<Set<Friend>>() {
         }.getType();
-        return new Gson().fromJson(bestFriendsData, collectionType);
-    }
-
-    private String dumpJson(Set<Friend> bestFriends) {
-        return new Gson().toJson(bestFriends);
+        return GsonUtils.fromJson(bestFriendsData, collectionType);
     }
 
     private enum UpdateStatus {

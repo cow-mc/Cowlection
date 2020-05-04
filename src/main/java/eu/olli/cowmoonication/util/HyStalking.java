@@ -7,7 +7,10 @@ public class HyStalking {
     private String cause;
     private HySession session;
 
-    public HyStalking() {
+    /**
+     * No-args constructor for GSON
+     */
+    private HyStalking() {
     }
 
     public boolean isSuccess() {
@@ -28,7 +31,10 @@ public class HyStalking {
         private String mode;
         private String map;
 
-        public HySession() {
+        /**
+         * No-args constructor for GSON
+         */
+        private HySession() {
         }
 
         public boolean isOnline() {

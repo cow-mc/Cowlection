@@ -8,6 +8,7 @@ import com.mojang.util.UUIDTypeAdapter;
 import eu.olli.cowmoonication.Cowmoonication;
 import eu.olli.cowmoonication.config.MooConfig;
 import eu.olli.cowmoonication.friends.Friend;
+import org.apache.http.HttpStatus;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -27,7 +28,6 @@ public class ApiUtils {
     private static final String STALKING_URL_OFFICIAL = "https://api.hypixel.net/status?key=%s&uuid=%s";
     private static final String STALKING_URL_UNOFFICIAL = "https://api.slothpixel.me/api/players/%s";
     private static ExecutorService pool = Executors.newCachedThreadPool();
-    private static Gson gson = new GsonBuilder().registerTypeAdapter(UUID.class, new UUIDTypeAdapter()).registerTypeAdapter(Friend.class, new Friend.FriendCreator()).create();
 
     private ApiUtils() {
     }
@@ -41,7 +41,7 @@ public class ApiUtils {
             if (reader == null) {
                 return Friend.FRIEND_NOT_FOUND;
             } else {
-                return gson.fromJson(reader, Friend.class);
+                return GsonUtils.fromJson(reader, Friend.class);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -76,7 +76,7 @@ public class ApiUtils {
     private static HyStalking stalkPlayer(Friend friend) {
         try (BufferedReader reader = makeApiCall(String.format(STALKING_URL_OFFICIAL, MooConfig.moo, UUIDTypeAdapter.fromUUID(friend.getUuid())))) {
             if (reader != null) {
-                return gson.fromJson(reader, HyStalking.class);
+                return GsonUtils.fromJson(reader, HyStalking.class);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -91,7 +91,7 @@ public class ApiUtils {
     private static SlothStalking stalkOfflinePlayer(Friend stalkedPlayer) {
         try (BufferedReader reader = makeApiCall(String.format(STALKING_URL_UNOFFICIAL, UUIDTypeAdapter.fromUUID(stalkedPlayer.getUuid())))) {
             if (reader != null) {
-                return gson.fromJson(reader, SlothStalking.class);
+                return GsonUtils.fromJson(reader, SlothStalking.class);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -106,7 +106,7 @@ public class ApiUtils {
         connection.addRequestProperty("User-Agent", "Forge Mod " + Cowmoonication.MODNAME + "/" + Cowmoonication.VERSION + " (" + Cowmoonication.GITURL + ")");
 
         connection.getResponseCode();
-        if (connection.getResponseCode() == 204) {
+        if (connection.getResponseCode() == HttpStatus.SC_NO_CONTENT) { // http status 204
             return null;
         } else {
             BufferedReader reader;

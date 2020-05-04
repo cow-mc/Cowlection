@@ -9,6 +9,9 @@ public class SlothStalking {
     private long last_logout;
     private String last_game;
 
+    /**
+     * No-args constructor for GSON
+     */
     public SlothStalking() {
     }
 
