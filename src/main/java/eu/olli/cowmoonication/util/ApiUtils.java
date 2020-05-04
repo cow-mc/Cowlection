@@ -1,13 +1,13 @@
 package eu.olli.cowmoonication.util;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
 import com.mojang.util.UUIDTypeAdapter;
 import eu.olli.cowmoonication.Cowmoonication;
 import eu.olli.cowmoonication.config.MooConfig;
-import eu.olli.cowmoonication.friends.Friend;
+import eu.olli.cowmoonication.data.Friend;
+import eu.olli.cowmoonication.data.HyStalkingData;
+import eu.olli.cowmoonication.data.SlothStalkingData;
 import org.apache.http.HttpStatus;
 
 import java.io.BufferedReader;
@@ -16,7 +16,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -69,14 +68,14 @@ public class ApiUtils {
         return null;
     }
 
-    public static void fetchPlayerStatus(Friend friend, Consumer<HyStalking> action) {
+    public static void fetchPlayerStatus(Friend friend, Consumer<HyStalkingData> action) {
         pool.execute(() -> action.accept(stalkPlayer(friend)));
     }
 
-    private static HyStalking stalkPlayer(Friend friend) {
+    private static HyStalkingData stalkPlayer(Friend friend) {
         try (BufferedReader reader = makeApiCall(String.format(STALKING_URL_OFFICIAL, MooConfig.moo, UUIDTypeAdapter.fromUUID(friend.getUuid())))) {
             if (reader != null) {
-                return GsonUtils.fromJson(reader, HyStalking.class);
+                return GsonUtils.fromJson(reader, HyStalkingData.class);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -84,14 +83,14 @@ public class ApiUtils {
         return null;
     }
 
-    public static void fetchPlayerOfflineStatus(Friend stalkedPlayer, Consumer<SlothStalking> action) {
+    public static void fetchPlayerOfflineStatus(Friend stalkedPlayer, Consumer<SlothStalkingData> action) {
         pool.execute(() -> action.accept(stalkOfflinePlayer(stalkedPlayer)));
     }
 
-    private static SlothStalking stalkOfflinePlayer(Friend stalkedPlayer) {
+    private static SlothStalkingData stalkOfflinePlayer(Friend stalkedPlayer) {
         try (BufferedReader reader = makeApiCall(String.format(STALKING_URL_UNOFFICIAL, UUIDTypeAdapter.fromUUID(stalkedPlayer.getUuid())))) {
             if (reader != null) {
-                return GsonUtils.fromJson(reader, SlothStalking.class);
+                return GsonUtils.fromJson(reader, SlothStalkingData.class);
             }
         } catch (IOException e) {
             e.printStackTrace();

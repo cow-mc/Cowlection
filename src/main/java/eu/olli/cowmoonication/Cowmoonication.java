@@ -4,11 +4,11 @@ import eu.olli.cowmoonication.command.MooCommand;
 import eu.olli.cowmoonication.command.ShrugCommand;
 import eu.olli.cowmoonication.command.TabCompletableCommand;
 import eu.olli.cowmoonication.config.MooConfig;
-import eu.olli.cowmoonication.friends.Friends;
+import eu.olli.cowmoonication.handler.FriendsHandler;
 import eu.olli.cowmoonication.listener.ChatListener;
 import eu.olli.cowmoonication.listener.PlayerListener;
 import eu.olli.cowmoonication.util.ChatHelper;
-import eu.olli.cowmoonication.util.PlayerCache;
+import eu.olli.cowmoonication.handler.PlayerCache;
 import eu.olli.cowmoonication.util.VersionChecker;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.MinecraftForge;
@@ -33,7 +33,7 @@ public class Cowmoonication {
     public static final String GITURL = "@GITURL@";
     private File modsDir;
     private MooConfig config;
-    private Friends friends;
+    private FriendsHandler friendsHandler;
     private VersionChecker versionChecker;
     private ChatHelper chatHelper;
     private PlayerCache playerCache;
@@ -48,7 +48,7 @@ public class Cowmoonication {
             modDir.mkdirs();
         }
 
-        friends = new Friends(this, new File(modDir, "friends.json"));
+        friendsHandler = new FriendsHandler(this, new File(modDir, "friends.json"));
         config = new MooConfig(this, new Configuration(new File(modDir, MODID + ".cfg")));
 
         chatHelper = new ChatHelper();
@@ -76,8 +76,8 @@ public class Cowmoonication {
         return config;
     }
 
-    public Friends getFriends() {
-        return friends;
+    public FriendsHandler getFriendsHandler() {
+        return friendsHandler;
     }
 
     public VersionChecker getVersionChecker() {

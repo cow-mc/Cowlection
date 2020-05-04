@@ -4,9 +4,9 @@ import com.mojang.realmsclient.util.Pair;
 import eu.olli.cowmoonication.Cowmoonication;
 import eu.olli.cowmoonication.config.MooConfig;
 import eu.olli.cowmoonication.config.MooGuiConfig;
-import eu.olli.cowmoonication.friends.Friend;
+import eu.olli.cowmoonication.data.Friend;
 import eu.olli.cowmoonication.util.ApiUtils;
-import eu.olli.cowmoonication.util.HyStalking;
+import eu.olli.cowmoonication.data.HyStalkingData;
 import eu.olli.cowmoonication.util.TickDelay;
 import eu.olli.cowmoonication.util.Utils;
 import net.minecraft.client.Minecraft;
@@ -53,7 +53,7 @@ public class MooCommand extends CommandBase {
             handleListBestFriends();
         } else if (args[0].equalsIgnoreCase("nameChangeCheck")) {
             main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, "Looking for best friends that have changed their name... This will take a few seconds...");
-            main.getFriends().updateBestFriends(true);
+            main.getFriendsHandler().updateBestFriends(true);
         }
         // sub-commands: miscellaneous
         else if (args[0].equalsIgnoreCase("config") || args[0].equalsIgnoreCase("toggle")) {
@@ -147,9 +147,9 @@ public class MooCommand extends CommandBase {
             return;
         }
         main.getChatHelper().sendMessage(EnumChatFormatting.GRAY, "Stalking " + EnumChatFormatting.WHITE + playerName + EnumChatFormatting.GRAY + ". This may take a few seconds.");
-        boolean isBestFriend = main.getFriends().isBestFriend(playerName, true);
+        boolean isBestFriend = main.getFriendsHandler().isBestFriend(playerName, true);
         if (isBestFriend) {
-            Friend stalkedPlayer = main.getFriends().getBestFriend(playerName);
+            Friend stalkedPlayer = main.getFriendsHandler().getBestFriend(playerName);
             // we have the uuid already, so stalk the player
             stalkPlayer(stalkedPlayer);
         } else {
@@ -170,7 +170,7 @@ public class MooCommand extends CommandBase {
     private void stalkPlayer(Friend stalkedPlayer) {
         ApiUtils.fetchPlayerStatus(stalkedPlayer, hyStalking -> {
             if (hyStalking != null && hyStalking.isSuccess()) {
-                HyStalking.HySession session = hyStalking.getSession();
+                HyStalkingData.HySession session = hyStalking.getSession();
                 if (session.isOnline()) {
                     main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, EnumChatFormatting.GOLD + stalkedPlayer.getName() + EnumChatFormatting.YELLOW + " is currently playing " + EnumChatFormatting.GOLD + session.getGameType() + EnumChatFormatting.YELLOW
                             + (session.getMode() != null ? ": " + EnumChatFormatting.GOLD + session.getMode() : "")
@@ -214,12 +214,12 @@ public class MooCommand extends CommandBase {
         }
 
         // TODO Add check if 'best friend' is on normal friend list
-        if (main.getFriends().isBestFriend(username, true)) {
+        if (main.getFriendsHandler().isBestFriend(username, true)) {
             main.getChatHelper().sendMessage(EnumChatFormatting.RED, EnumChatFormatting.DARK_RED + username + EnumChatFormatting.RED + " is a best friend already.");
         } else {
             main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, "Fetching " + EnumChatFormatting.YELLOW + username + EnumChatFormatting.GOLD + "'s unique user id. This may take a few seconds...");
             // add friend async
-            main.getFriends().addBestFriend(username);
+            main.getFriendsHandler().addBestFriend(username);
         }
     }
 
@@ -229,7 +229,7 @@ public class MooCommand extends CommandBase {
             return;
         }
 
-        boolean removed = main.getFriends().removeBestFriend(username);
+        boolean removed = main.getFriendsHandler().removeBestFriend(username);
         if (removed) {
             main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Removed " + EnumChatFormatting.DARK_GREEN + username + EnumChatFormatting.GREEN + " from best friends list.");
         } else {
@@ -238,7 +238,7 @@ public class MooCommand extends CommandBase {
     }
 
     private void handleListBestFriends() {
-        Set<String> bestFriends = main.getFriends().getBestFriends();
+        Set<String> bestFriends = main.getFriendsHandler().getBestFriends();
 
         // TODO show fancy gui with list of best friends; maybe with buttons to delete them
         main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u279C Best friends: " + EnumChatFormatting.DARK_GREEN + String.join(EnumChatFormatting.GREEN + ", " + EnumChatFormatting.DARK_GREEN, bestFriends));
@@ -303,7 +303,7 @@ public class MooCommand extends CommandBase {
                     /* update mod */ "update", "updateHelp", "version", "folder",
                     /* help */ "help");
         } else if (args.length == 2 && args[0].equalsIgnoreCase("remove")) {
-            return getListOfStringsMatchingLastWord(args, main.getFriends().getBestFriends());
+            return getListOfStringsMatchingLastWord(args, main.getFriendsHandler().getBestFriends());
         } else if (args.length == 2 && args[0].equalsIgnoreCase("stalk")) {
             return getListOfStringsMatchingLastWord(args, main.getPlayerCache().getAllNamesSorted());
         }

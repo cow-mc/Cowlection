@@ -1,6 +1,6 @@
-package eu.olli.cowmoonication.util;
+package eu.olli.cowmoonication.data;
 
-public class SlothStalking {
+public class SlothStalkingData {
     private String username;
     private String rank;
     private String rank_formatted;
@@ -12,7 +12,7 @@ public class SlothStalking {
     /**
      * No-args constructor for GSON
      */
-    public SlothStalking() {
+    public SlothStalkingData() {
     }
 
     public String getPlayerNameFormatted() {

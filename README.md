@@ -5,12 +5,12 @@ A client-side only Forge mod by [Cow](https://namemc.com/profile/Cow) providing 
 | Feature                                                                 | Command/Usage                           |
 |-------------------------------------------------------------------------|-----------------------------------------|
 | 'Best friends' list to limit the amount of join and leave notifications (always up-to-date names even after player name changes) | `/moo add/remove/list`                  |
-| Toggle join/leave notifications for friends, guild members or best friends separately | `/moo toggle`             |
 | Stalk a player (check online status, current game, ...)                 | `/moo stalk`                            |
-| Change guiScale to any value                                            | `/moo guiscale [newValue]`              |
+| Toggle join/leave notifications for friends, guild members or best friends separately | `/moo toggle`             |
+| Copy chat component                                                     | <kbd>ALT</kbd> + <kbd>right click</kbd><br>Hold <kbd>shift</kbd> to copy full component |
 | Tab-completable usernames for several commands (e.g. `/party`, `/invite`, ...) | `/moo config` &rarr; `Commands with Tab-completable usernames` for full list of commands |
 | Auto-replace `/r` with `/w <latest username>`                           | `/r `                                   |
-| Copy chat component                                                     | <kbd>ALT</kbd> + <kbd>right click</kbd><br>Hold <kbd>shift</kbd> to copy full component |
+| Change guiScale to any value                                            | `/moo guiscale [newValue]`              |
 | Check for mod updates on server login and via command                   | `/moo update`                           |
 
 ➜ Use `/moo help` to see all available commands.

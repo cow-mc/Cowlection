@@ -1,4 +1,4 @@
-package eu.olli.cowmoonication.friends;
+package eu.olli.cowmoonication.data;
 
 import java.util.Objects;
 import java.util.UUID;

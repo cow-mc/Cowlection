@@ -1,4 +1,4 @@
-package eu.olli.cowmoonication.util;
+package eu.olli.cowmoonication.handler;
 
 import com.google.common.collect.EvictingQueue;
 import eu.olli.cowmoonication.Cowmoonication;

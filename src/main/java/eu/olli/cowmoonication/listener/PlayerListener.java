@@ -20,7 +20,7 @@ public class PlayerListener {
 
     @SubscribeEvent
     public void onServerLeave(FMLNetworkEvent.ClientDisconnectionFromServerEvent e) {
-        main.getFriends().saveBestFriends();
+        main.getFriendsHandler().saveBestFriends();
         main.getPlayerCache().clearAllCaches();
     }
 }

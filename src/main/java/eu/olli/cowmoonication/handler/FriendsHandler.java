@@ -1,8 +1,9 @@
-package eu.olli.cowmoonication.friends;
+package eu.olli.cowmoonication.handler;
 
 import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 import eu.olli.cowmoonication.Cowmoonication;
+import eu.olli.cowmoonication.data.Friend;
 import eu.olli.cowmoonication.util.ApiUtils;
 import eu.olli.cowmoonication.util.GsonUtils;
 import eu.olli.cowmoonication.util.TickDelay;
@@ -24,7 +25,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class Friends {
+public class FriendsHandler {
     private static final long UPDATE_FREQUENCY_DEFAULT = TimeUnit.HOURS.toMillis(15);
     private static final long UPDATE_FREQUENCY_MINIMUM = TimeUnit.MINUTES.toMillis(5);
     private final Cowmoonication main;
@@ -32,7 +33,7 @@ public class Friends {
     private File bestFriendsFile;
     private UpdateStatus updateStatus;
 
-    public Friends(Cowmoonication main, File friendsFile) {
+    public FriendsHandler(Cowmoonication main, File friendsFile) {
         this.main = main;
         this.bestFriendsFile = friendsFile;
         this.updateStatus = UpdateStatus.IDLE;

@@ -56,7 +56,7 @@ public class ChatListener {
                 String joinedLeft = notificationMatcher.group("joinedLeft");
 
 
-                boolean isBestFriend = main.getFriends().isBestFriend(playerName, false);
+                boolean isBestFriend = main.getFriendsHandler().isBestFriend(playerName, false);
                 if (isBestFriend) {
                     switch (joinedLeft) {
                         case "joined":

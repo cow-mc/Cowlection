@@ -1,8 +1,9 @@
-package eu.olli.cowmoonication.util;
+package eu.olli.cowmoonication.data;
 
+import eu.olli.cowmoonication.util.Utils;
 import org.apache.commons.lang3.StringUtils;
 
-public class HyStalking {
+public class HyStalkingData {
     private boolean success;
     private String cause;
     private HySession session;
@@ -10,7 +11,7 @@ public class HyStalking {
     /**
      * No-args constructor for GSON
      */
-    private HyStalking() {
+    private HyStalkingData() {
     }
 
     public boolean isSuccess() {
