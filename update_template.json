@@ -1,7 +1,7 @@
 {
-  "homepage": "https://github.com/cow-mc/Cowmoonication/",
+  "homepage": "${giturl}",
   "${mcversion}": {
-    "${version}": "https://github.com/cow-mc/Cowmoonication/blob/master/CHANGELOG.md"
+    "${version}": "${giturl}blob/master/CHANGELOG.md"
   },
   "promos": {
     "${mcversion}-latest": "${version}",

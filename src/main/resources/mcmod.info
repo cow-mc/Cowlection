@@ -4,7 +4,7 @@
   "description": "Adding various things related to communication.",
   "version": "${version}",
   "mcversion": "${mcversion}",
-  "url": "https://github.com/cow-mc/Cowmoonication/",
+  "url": "${giturl}",
   "updateUrl": "https://raw.githubusercontent.com/cow-mc/Cowmoonication/master/update.json",
   "authorList": ["Cow"],
   "logoFile": "",

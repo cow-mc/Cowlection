@@ -1,4 +1,3 @@
-
 // For those who want the bleeding edge
 buildscript {
     repositories {
@@ -22,7 +21,9 @@ plugins {
 */
 version = "${mc_version}-${mod_version}"
 group = project.group_package // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = project.mod_name
+def mod_name_no_spaces = project.mod_name.replace(" ", "")
+def mod_id = mod_name_no_spaces.toLowerCase()
+archivesBaseName = mod_name_no_spaces
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -32,8 +33,8 @@ minecraft {
     version = "${mc_version}-${forge_version}"
     runDir = "run"
 
-    replace "@VERSION@": project.version, "@MODNAME@": project.archivesBaseName, "@MODID@": project.archivesBaseName.toLowerCase(), "@PACKAGE@": project.group_package
-    replaceIn "${mod_name}.java"
+    replace "@VERSION@": project.version, "@MODNAME@": project.mod_name, "@MODID@": mod_id, "@PACKAGE@": project.group_package, "@GITURL@": project.git_url
+    replaceIn "${mod_name_no_spaces}.java"
     
     // the mappings can be changed at any time, and must be in the following format.
     // snapshot_YYYYMMDD   snapshot are built nightly.
@@ -72,13 +73,16 @@ processResources {
     // this will ensure that this task is redone when the versions change.
     inputs.property "version", project.version
     inputs.property "mcversion", project.minecraft.version
+    inputs.property "modname", project.mod_name
+    inputs.property "modid", mod_id
+    inputs.property "giturl", project.git_url
 
     // replace stuff in mcmod.info, but nothing else
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
-                
-        // replace version, mcversion, modname and modid
-        expand 'version':project.version, 'mcversion':project.minecraft.version, 'modname':project.archivesBaseName, 'modid':project.archivesBaseName.toLowerCase()
+
+        // replace version, mcversion, modname, modid and giturl
+        expand 'version':project.version, 'mcversion':project.minecraft.version, 'modname':project.mod_name, 'modid':mod_id, 'giturl':project.git_url
     }
         
     // copy everything else, that's not the mcmod.info
@@ -93,6 +97,6 @@ copy {
     from file('update_template.json')
     into projectDir
     rename { 'update.json' }
-    expand(mcversion: project.minecraft.version, version: project.version)
+    expand(mcversion: project.minecraft.version, version: project.version, giturl: project.git_url)
     filter(FixCrLfFilter)
 }

@@ -23,7 +23,7 @@ public class VersionChecker {
      * Cooldown between to update checks in minutes
      */
     private static final int CHECK_COOLDOWN = 15;
-    private static final String CHANGELOG_URL = "https://github.com/cow-mc/Cowmoonication/blob/master/CHANGELOG.md";
+    private static final String CHANGELOG_URL = Cowmoonication.GITURL + "blob/master/CHANGELOG.md";
     private final Cowmoonication main;
     private long lastCheck;
     private String newVersion;
@@ -33,7 +33,7 @@ public class VersionChecker {
         this.main = main;
         this.lastCheck = Minecraft.getSystemTime();
         newVersion = "[newVersion]";
-        downloadUrl = "https://github.com/cow-mc/Cowmoonication/releases";
+        downloadUrl = Cowmoonication.GITURL + "releases";
     }
 
     public boolean runUpdateCheck(boolean isCommandTriggered) {
@@ -42,7 +42,7 @@ public class VersionChecker {
 
             long now = Minecraft.getSystemTime();
 
-            // only re-run if last check was >CHECK_COOLDOWN minutes ago#
+            // only re-run if last check was >CHECK_COOLDOWN minutes ago
             if (getNextCheck() < 0) { // next allowed check is "in the past", so we're good to go
                 lastCheck = now;
                 ForgeVersion.startVersionCheck();
@@ -61,7 +61,7 @@ public class VersionChecker {
         ForgeVersion.CheckResult versionResult = ForgeVersion.getResult(Loader.instance().activeModContainer());
         if (versionResult.target != null) {
             newVersion = versionResult.target.toString();
-            downloadUrl = "https://github.com/cow-mc/Cowmoonication/releases/download/v" + newVersion + "/" + Cowmoonication.MODNAME + "-" + newVersion + ".jar";
+            downloadUrl = Cowmoonication.GITURL + "releases/download/v" + newVersion + "/" + Cowmoonication.MODNAME.replace(" ", "") + "-" + newVersion + ".jar";
         }
 
         IChatComponent statusMsg = null;
@@ -94,12 +94,12 @@ public class VersionChecker {
             // outdated
             IChatComponent spacer = new ChatComponentText(" ").setChatStyle(new ChatStyle().setParentStyle(null));
 
-            IChatComponent text = new ChatComponentText("\u279C New version of " + EnumChatFormatting.DARK_GREEN + "Cowmoonication " + EnumChatFormatting.GREEN + "available (" + Cowmoonication.VERSION + " \u27A1 " + newVersion + ")\n").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GREEN));
+            IChatComponent text = new ChatComponentText("\u279C New version of " + EnumChatFormatting.DARK_GREEN + Cowmoonication.MODNAME + " " + EnumChatFormatting.GREEN + "available (" + Cowmoonication.VERSION + " \u27A1 " + newVersion + ")\n").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GREEN));
 
             IChatComponent download = new ChatComponentText("[Download]").setChatStyle(new ChatStyle()
                     .setColor(EnumChatFormatting.DARK_GREEN).setBold(true)
                     .setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, downloadUrl))
-                    .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.YELLOW + "Download the latest version of Cowmoonication"))));
+                    .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.YELLOW + "Download the latest version of " + Cowmoonication.MODNAME))));
 
             IChatComponent changelog = new ChatComponentText("[Changelog]").setChatStyle(new ChatStyle()
                     .setColor(EnumChatFormatting.DARK_AQUA).setBold(true)

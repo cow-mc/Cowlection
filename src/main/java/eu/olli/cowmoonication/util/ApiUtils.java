@@ -103,7 +103,7 @@ public class ApiUtils {
         HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
         connection.setConnectTimeout(5000);
         connection.setReadTimeout(5000);
-        connection.addRequestProperty("User-Agent", "Forge Mod " + Cowmoonication.MODNAME + "/" + Cowmoonication.VERSION + " (https://github.com/cow-mc/Cowmoonication/)");
+        connection.addRequestProperty("User-Agent", "Forge Mod " + Cowmoonication.MODNAME + "/" + Cowmoonication.VERSION + " (" + Cowmoonication.GITURL + ")");
 
         connection.getResponseCode();
         if (connection.getResponseCode() == 204) {

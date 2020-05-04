@@ -30,6 +30,7 @@ public class Cowmoonication {
     public static final String MODID = "@MODID@";
     public static final String VERSION = "@VERSION@";
     public static final String MODNAME = "@MODNAME@";
+    public static final String GITURL = "@GITURL@";
     private File modsDir;
     private MooConfig config;
     private Friends friends;
