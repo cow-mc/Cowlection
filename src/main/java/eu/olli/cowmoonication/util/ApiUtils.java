@@ -4,8 +4,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
 import com.mojang.util.UUIDTypeAdapter;
 import eu.olli.cowmoonication.Cowmoonication;
+import eu.olli.cowmoonication.command.exception.ThrowingConsumer;
 import eu.olli.cowmoonication.config.MooConfig;
 import eu.olli.cowmoonication.data.Friend;
+import eu.olli.cowmoonication.data.HySkyBlockStats;
 import eu.olli.cowmoonication.data.HyStalkingData;
 import eu.olli.cowmoonication.data.SlothStalkingData;
 import org.apache.http.HttpStatus;
@@ -18,20 +20,20 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Consumer;
 
 public class ApiUtils {
     public static final String UUID_NOT_FOUND = "UUID-NOT-FOUND";
     private static final String NAME_TO_UUID_URL = "https://api.mojang.com/users/profiles/minecraft/";
     private static final String UUID_TO_NAME_URL = "https://api.mojang.com/user/profiles/%s/names";
     private static final String STALKING_URL_OFFICIAL = "https://api.hypixel.net/status?key=%s&uuid=%s";
+    private static final String SKYBLOCK_STATS_URL_OFFICIAL = "https://api.hypixel.net/skyblock/profiles?key=%s&uuid=%s";
     private static final String STALKING_URL_UNOFFICIAL = "https://api.slothpixel.me/api/players/%s";
     private static ExecutorService pool = Executors.newCachedThreadPool();
 
     private ApiUtils() {
     }
 
-    public static void fetchFriendData(String name, Consumer<Friend> action) {
+    public static void fetchFriendData(String name, ThrowingConsumer<Friend> action) {
         pool.execute(() -> action.accept(getFriend(name)));
     }
 
@@ -48,7 +50,7 @@ public class ApiUtils {
         return null;
     }
 
-    public static void fetchCurrentName(Friend friend, Consumer<String> action) {
+    public static void fetchCurrentName(Friend friend, ThrowingConsumer<String> action) {
         pool.execute(() -> action.accept(getCurrentName(friend)));
     }
 
@@ -68,7 +70,7 @@ public class ApiUtils {
         return null;
     }
 
-    public static void fetchPlayerStatus(Friend friend, Consumer<HyStalkingData> action) {
+    public static void fetchPlayerStatus(Friend friend, ThrowingConsumer<HyStalkingData> action) {
         pool.execute(() -> action.accept(stalkPlayer(friend)));
     }
 
@@ -83,7 +85,22 @@ public class ApiUtils {
         return null;
     }
 
-    public static void fetchPlayerOfflineStatus(Friend stalkedPlayer, Consumer<SlothStalkingData> action) {
+    public static void fetchSkyBlockStats(Friend friend, ThrowingConsumer<HySkyBlockStats> action) {
+        pool.execute(() -> action.accept(stalkSkyBlockStats(friend)));
+    }
+
+    private static HySkyBlockStats stalkSkyBlockStats(Friend friend) {
+        try (BufferedReader reader = makeApiCall(String.format(SKYBLOCK_STATS_URL_OFFICIAL, MooConfig.moo, UUIDTypeAdapter.fromUUID(friend.getUuid())))) {
+            if (reader != null) {
+                return GsonUtils.fromJson(reader, HySkyBlockStats.class);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static void fetchPlayerOfflineStatus(Friend stalkedPlayer, ThrowingConsumer<SlothStalkingData> action) {
         pool.execute(() -> action.accept(stalkOfflinePlayer(stalkedPlayer)));
     }
 

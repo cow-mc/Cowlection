@@ -15,6 +15,10 @@ public class SlothStalkingData {
     public SlothStalkingData() {
     }
 
+    public String getPlayerName() {
+        return username;
+    }
+
     public String getPlayerNameFormatted() {
         return rank_formatted.replace('&', '§') + " " + username;
     }

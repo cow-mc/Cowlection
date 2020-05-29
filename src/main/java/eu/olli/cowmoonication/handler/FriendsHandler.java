@@ -3,11 +3,13 @@ package eu.olli.cowmoonication.handler;
 import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 import eu.olli.cowmoonication.Cowmoonication;
+import eu.olli.cowmoonication.command.exception.ApiContactException;
 import eu.olli.cowmoonication.data.Friend;
 import eu.olli.cowmoonication.util.ApiUtils;
 import eu.olli.cowmoonication.util.GsonUtils;
 import eu.olli.cowmoonication.util.TickDelay;
 import io.netty.util.internal.ConcurrentSet;
+import net.minecraft.command.PlayerNotFoundException;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.event.HoverEvent;
 import net.minecraft.util.ChatComponentText;
@@ -56,9 +58,9 @@ public class FriendsHandler {
 
         ApiUtils.fetchFriendData(name, friend -> {
             if (friend == null) {
-                main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Sorry, could contact Mojang's API and thus didn't add " + name + " as a best friend.");
+                throw new ApiContactException("Mojang", "didn't add " + name + " as a best friend.");
             } else if (friend.equals(Friend.FRIEND_NOT_FOUND)) {
-                main.getChatHelper().sendMessage(EnumChatFormatting.RED, "There is no player with the name " + EnumChatFormatting.DARK_RED + name + EnumChatFormatting.RED + ".");
+                throw new PlayerNotFoundException("There is no player with the name " + EnumChatFormatting.DARK_RED + name + EnumChatFormatting.RED + ".");
             } else {
                 boolean added = bestFriends.add(friend);
                 if (added) {
@@ -108,7 +110,7 @@ public class FriendsHandler {
             if (newName == null) {
                 // skipping friend, something went wrong with API request
             } else if (newName.equals(ApiUtils.UUID_NOT_FOUND)) {
-                main.getChatHelper().sendMessage(EnumChatFormatting.RED, "How did you manage to get a unique id on your best friends list that has no name attached to it?");
+                throw new PlayerNotFoundException("How did you manage to get a unique id on your best friends list that has no name attached to it?");
             } else if (newName.equals(friend.getName())) {
                 // name hasn't changed, only updating lastChecked timestamp
                 Friend bestFriend = getBestFriend(friend.getUuid());

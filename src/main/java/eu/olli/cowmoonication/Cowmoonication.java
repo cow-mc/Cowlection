@@ -5,10 +5,10 @@ import eu.olli.cowmoonication.command.ShrugCommand;
 import eu.olli.cowmoonication.command.TabCompletableCommand;
 import eu.olli.cowmoonication.config.MooConfig;
 import eu.olli.cowmoonication.handler.FriendsHandler;
+import eu.olli.cowmoonication.handler.PlayerCache;
 import eu.olli.cowmoonication.listener.ChatListener;
 import eu.olli.cowmoonication.listener.PlayerListener;
 import eu.olli.cowmoonication.util.ChatHelper;
-import eu.olli.cowmoonication.handler.PlayerCache;
 import eu.olli.cowmoonication.util.VersionChecker;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.MinecraftForge;
@@ -31,6 +31,7 @@ public class Cowmoonication {
     public static final String VERSION = "@VERSION@";
     public static final String MODNAME = "@MODNAME@";
     public static final String GITURL = "@GITURL@";
+    private static Cowmoonication instance;
     private File modsDir;
     private MooConfig config;
     private FriendsHandler friendsHandler;
@@ -41,6 +42,7 @@ public class Cowmoonication {
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent e) {
+        instance = this;
         logger = e.getModLog();
 
         File modDir = new File(e.getModConfigurationDirectory(), MODID + File.separatorChar);
@@ -98,5 +100,12 @@ public class Cowmoonication {
 
     public Logger getLogger() {
         return logger;
+    }
+
+    /**
+     * Get mod's instance; instead of this method use dependency injection where possible
+     */
+    public static Cowmoonication getInstance() {
+        return instance;
     }
 }

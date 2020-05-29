@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.8.9-0.6.0] - unreleased
+### Added
+- List SkyBlock info of a player `/moo stalkskyblock <playerName>`
+
+### Changed
+- Improved handling of command error messages
+
 ## [1.8.9-0.5.0] - 04.05.2020
 ### Added
 - Added Tab-completable usernames for several commands (e.g. party, msg, boop, ...)
@@ -65,7 +72,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 *Note:* The 'best friends' list is currently available via <kbd>ESC</kbd> > Mod Options > Cowmoonication > Config > bestFriends.
 
-<!-- [1.8.9-0.6.0]: https://github.com/cow-mc/Cowmoonication/compare/v1.8.9-0.5.0...master -->
+[1.8.9-0.6.0]: https://github.com/cow-mc/Cowmoonication/compare/v1.8.9-0.5.0...master
 [1.8.9-0.5.0]: https://github.com/cow-mc/Cowmoonication/compare/v1.8.9-0.4.0...v1.8.9-0.5.0
 [1.8.9-0.4.0]: https://github.com/cow-mc/Cowmoonication/compare/v1.8.9-0.3.1...v1.8.9-0.4.0
 [1.8.9-0.3.1]: https://github.com/cow-mc/Cowmoonication/compare/v1.8.9-0.3.0...v1.8.9-0.3.1
