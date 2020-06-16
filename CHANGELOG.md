@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [1.8.9-0.6.0] - unreleased
 ### Added
+- Minecraft log file search `/moo search`
 - List SkyBlock info of a player `/moo stalkskyblock <playerName>`
 
 ### Changed

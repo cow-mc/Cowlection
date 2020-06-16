@@ -10,6 +10,7 @@ import eu.olli.cowmoonication.config.MooGuiConfig;
 import eu.olli.cowmoonication.data.Friend;
 import eu.olli.cowmoonication.data.HySkyBlockStats;
 import eu.olli.cowmoonication.data.HyStalkingData;
+import eu.olli.cowmoonication.search.GuiSearch;
 import eu.olli.cowmoonication.util.ApiUtils;
 import eu.olli.cowmoonication.util.MooChatComponent;
 import eu.olli.cowmoonication.util.TickDelay;
@@ -70,6 +71,8 @@ public class MooCommand extends CommandBase {
         // sub-commands: miscellaneous
         else if (args[0].equalsIgnoreCase("config") || args[0].equalsIgnoreCase("toggle")) {
             new TickDelay(() -> Minecraft.getMinecraft().displayGuiScreen(new MooGuiConfig(null)), 1); // delay by 1 tick, because the chat closing would close the new gui instantly as well.
+        } else if (args[0].equalsIgnoreCase("search")) {
+            new TickDelay(() -> Minecraft.getMinecraft().displayGuiScreen(new GuiSearch()), 1); // delay by 1 tick, because the chat closing would close the new gui instantly as well.
         } else if (args[0].equalsIgnoreCase("guiscale")) {
             int currentGuiScale = (Minecraft.getMinecraft()).gameSettings.guiScale;
             if (args.length == 1) {
@@ -105,19 +108,19 @@ public class MooCommand extends CommandBase {
                             .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.YELLOW + "Download the latest version of " + Cowmoonication.MODNAME + "\n\u279C Click to download latest mod file")))))
                     .appendSibling(new ChatComponentText("\n\u278B" + EnumChatFormatting.YELLOW + " exit Minecraft").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(false)
                             .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.GOLD + "\u278B" + EnumChatFormatting.YELLOW + " Without closing Minecraft first,\n" + EnumChatFormatting.YELLOW + "you can't delete the old .jar file!")))))
-                    .appendSibling(new ChatComponentText("\n\u278C" + EnumChatFormatting.YELLOW + " copy " + EnumChatFormatting.GOLD + Cowmoonication.MODNAME.replace(" ", "") + "-" + main.getVersionChecker().getNewVersion() + ".jar" + EnumChatFormatting.YELLOW + " into mods folder").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(false)
-                            .setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/moo folder"))
-                            .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.YELLOW + "Open mods folder with command " + EnumChatFormatting.GOLD + "/moo folder\n\u279C Click to open mods folder")))))
+                    .appendSibling(new ChatComponentText("\n\u278C" + EnumChatFormatting.YELLOW + " copy " + EnumChatFormatting.GOLD + Cowmoonication.MODNAME.replace(" ", "") + "-" + main.getVersionChecker().getNewVersion() + ".jar" + EnumChatFormatting.YELLOW + " into mods directory").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(false)
+                            .setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/moo directory"))
+                            .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.YELLOW + "Open mods directory with command " + EnumChatFormatting.GOLD + "/moo directory\n\u279C Click to open mods directory")))))
                     .appendSibling(new ChatComponentText("\n\u278D" + EnumChatFormatting.YELLOW + " delete old mod file " + EnumChatFormatting.GOLD + Cowmoonication.MODNAME.replace(" ", "") + "-" + Cowmoonication.VERSION + ".jar ").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(false)))
                     .appendSibling(new ChatComponentText("\n\u278E" + EnumChatFormatting.YELLOW + " start Minecraft again").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(false))));
         } else if (args[0].equalsIgnoreCase("version")) {
             main.getVersionChecker().handleVersionStatus(true);
-        } else if (args[0].equalsIgnoreCase("folder")) {
+        } else if (args[0].equalsIgnoreCase("directory") || args[0].equalsIgnoreCase("folder")) {
             try {
-                Desktop.getDesktop().open(main.getModsFolder());
+                Desktop.getDesktop().open(main.getModsDirectory());
             } catch (IOException e) {
                 e.printStackTrace();
-                throw new MooCommandException("\u2716 An error occurred trying to open the mod's folder. I guess you have to open it manually \u00af\\_(\u30c4)_/\u00af");
+                throw new MooCommandException("\u2716 An error occurred trying to open the mod's directory. I guess you have to open it manually \u00af\\_(\u30c4)_/\u00af");
             }
         }
         // "catch-all" remaining sub-commands
@@ -379,13 +382,14 @@ public class MooCommand extends CommandBase {
                 .appendSibling(createCmdHelpEntry("toggle", "Toggle join/leave notifications"))
                 .appendSibling(createCmdHelpSection(2, "Miscellaneous"))
                 .appendSibling(createCmdHelpEntry("config", "Open mod's configuration"))
+                .appendSibling(createCmdHelpEntry("search", "Open Minecraft log search"))
                 .appendSibling(createCmdHelpEntry("guiScale", "Change GUI scale"))
                 .appendSibling(createCmdHelpEntry("shrug", "\u00AF\\_(\u30C4)_/\u00AF")) // ¯\_(ツ)_/¯
                 .appendSibling(createCmdHelpSection(3, "Update mod"))
                 .appendSibling(createCmdHelpEntry("update", "Check for new mod updates"))
                 .appendSibling(createCmdHelpEntry("updateHelp", "Show mod update instructions"))
                 .appendSibling(createCmdHelpEntry("version", "View results of last mod update check"))
-                .appendSibling(createCmdHelpEntry("folder", "Open Minecraft's mods folder"));
+                .appendSibling(createCmdHelpEntry("directory", "Open Minecraft's mods directory"));
         sender.addChatMessage(usage);
     }
 
@@ -410,12 +414,12 @@ public class MooCommand extends CommandBase {
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args,
                     /* friends */  "stalk", "stalkskyblock", "skyblockstalk", "add", "remove", "list", "nameChangeCheck", "toggle",
-                    /* miscellaneous */ "config", "guiscale", "shrug", "apikey",
-                    /* update mod */ "update", "updateHelp", "version", "folder",
+                    /* miscellaneous */ "config", "search", "guiscale", "shrug", "apikey",
+                    /* update mod */ "update", "updateHelp", "version", "directory",
                     /* help */ "help");
         } else if (args.length == 2 && args[0].equalsIgnoreCase("remove")) {
             return getListOfStringsMatchingLastWord(args, main.getFriendsHandler().getBestFriends());
-        } else if (args.length == 2 && args[0].equalsIgnoreCase("stalk")) {
+        } else if (args.length == 2 && args[0].toLowerCase().contains("stalk")) { // stalk & stalkskyblock
             return getListOfStringsMatchingLastWord(args, main.getPlayerCache().getAllNamesSorted());
         }
         return null;

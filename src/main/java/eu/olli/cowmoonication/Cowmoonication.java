@@ -44,6 +44,7 @@ public class Cowmoonication {
     public void preInit(FMLPreInitializationEvent e) {
         instance = this;
         logger = e.getModLog();
+        modsDir = e.getSourceFile().getParentFile();
 
         File modDir = new File(e.getModConfigurationDirectory(), MODID + File.separatorChar);
         if (!modDir.exists()) {
@@ -54,7 +55,6 @@ public class Cowmoonication {
         config = new MooConfig(this, new Configuration(new File(modDir, MODID + ".cfg")));
 
         chatHelper = new ChatHelper();
-        modsDir = e.getSourceFile().getParentFile();
     }
 
     @EventHandler
@@ -94,7 +94,7 @@ public class Cowmoonication {
         return playerCache;
     }
 
-    public File getModsFolder() {
+    public File getModsDirectory() {
         return modsDir;
     }
 

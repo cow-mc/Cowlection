@@ -111,12 +111,12 @@ public class VersionChecker {
                     .setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/moo updateHelp"))
                     .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.YELLOW + "Run " + EnumChatFormatting.GOLD + "/moo updateHelp"))));
 
-            IChatComponent openModsFolder = new ChatComponentText("\n[Open Mods folder]").setChatStyle(new ChatStyle()
+            IChatComponent openModsDirectory = new ChatComponentText("\n[Open Mods directory]").setChatStyle(new ChatStyle()
                     .setColor(EnumChatFormatting.GREEN).setBold(true)
-                    .setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/moo folder"))
-                    .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.YELLOW + "Open mods folder with command " + EnumChatFormatting.GOLD + "/moo folder\n\u279C Click to open mods folder"))));
+                    .setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/moo directory"))
+                    .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.YELLOW + "Open mods directory with command " + EnumChatFormatting.GOLD + "/moo directory\n\u279C Click to open mods directory"))));
 
-            statusMsg = text.appendSibling(download).appendSibling(spacer).appendSibling(changelog).appendSibling(spacer).appendSibling(updateInstructions).appendSibling(spacer).appendSibling(openModsFolder);
+            statusMsg = text.appendSibling(download).appendSibling(spacer).appendSibling(changelog).appendSibling(spacer).appendSibling(updateInstructions).appendSibling(spacer).appendSibling(openModsDirectory);
         }
 
         if (statusMsg != null) {

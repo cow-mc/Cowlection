@@ -4,9 +4,10 @@ A client-side only Forge mod by [Cow](https://namemc.com/profile/Cow) providing 
 ## Current features
 | Feature                                                                 | Command/Usage                           |
 |-------------------------------------------------------------------------|-----------------------------------------|
-| 'Best friends' list to limit the amount of join and leave notifications (always up-to-date names even after player name changes) | `/moo add/remove/list`                  |
+| 'Best friends' list to limit the amount of join and leave notifications (always up-to-date names even after player name changes) | `/moo add/remove/list` |
+| Search through your Minecraft log files                                 | `/moo search`                           |
 | Stalk a player (check online status, current game, ...)                 | `/moo stalk`                            |
-| Stalk SkyBlock stats of a player                                        | `/moo stalkskyblock`       |
+| Stalk SkyBlock stats of a player                                        | `/moo stalkskyblock`                    |
 | Toggle join/leave notifications for friends, guild members or best friends separately | `/moo toggle`             |
 | Copy chat component                                                     | <kbd>ALT</kbd> + <kbd>right click</kbd><br>Hold <kbd>shift</kbd> to copy full component |
 | Tab-completable usernames for several commands (e.g. `/party`, `/invite`, ...) | `/moo config` &rarr; `Commands with Tab-completable usernames` for full list of commands |

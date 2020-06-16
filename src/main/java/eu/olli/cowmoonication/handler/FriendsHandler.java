@@ -148,9 +148,13 @@ public class FriendsHandler {
 
     private void loadBestFriends() {
         try {
+            boolean createdNewFile = this.bestFriendsFile.createNewFile();
+
             this.bestFriends.clear();
-            String bestFriendsData = FileUtils.readFileToString(this.bestFriendsFile, StandardCharsets.UTF_8);
-            this.bestFriends.addAll(parseJson(bestFriendsData));
+            if (!createdNewFile) {
+                String bestFriendsData = FileUtils.readFileToString(this.bestFriendsFile, StandardCharsets.UTF_8);
+                this.bestFriends.addAll(parseJson(bestFriendsData));
+            }
         } catch (IOException e) {
             main.getLogger().error("Couldn't read best friends file " + this.bestFriendsFile, e);
         } catch (JsonParseException e) {

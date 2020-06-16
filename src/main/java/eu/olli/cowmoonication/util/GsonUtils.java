@@ -9,7 +9,7 @@ import java.lang.reflect.Type;
 import java.util.UUID;
 
 public final class GsonUtils {
-    private static Gson gson = new GsonBuilder().registerTypeAdapter(UUID.class, new UUIDTypeAdapter()).create();
+    private static final Gson gson = new GsonBuilder().registerTypeAdapter(UUID.class, new UUIDTypeAdapter()).create();
 
     private GsonUtils() {
     }

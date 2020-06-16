@@ -28,7 +28,7 @@ public class ApiUtils {
     private static final String STALKING_URL_OFFICIAL = "https://api.hypixel.net/status?key=%s&uuid=%s";
     private static final String SKYBLOCK_STATS_URL_OFFICIAL = "https://api.hypixel.net/skyblock/profiles?key=%s&uuid=%s";
     private static final String STALKING_URL_UNOFFICIAL = "https://api.slothpixel.me/api/players/%s";
-    private static ExecutorService pool = Executors.newCachedThreadPool();
+    private static final ExecutorService pool = Executors.newCachedThreadPool();
 
     private ApiUtils() {
     }
