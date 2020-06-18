@@ -55,7 +55,6 @@ public class ChatListener {
                 String joinLeaveSuffix = notificationMatcher.group("joinLeaveSuffix");
                 String joinedLeft = notificationMatcher.group("joinedLeft");
 
-
                 boolean isBestFriend = main.getFriendsHandler().isBestFriend(playerName, false);
                 if (isBestFriend) {
                     switch (joinedLeft) {

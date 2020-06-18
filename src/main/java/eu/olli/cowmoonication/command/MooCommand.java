@@ -7,22 +7,29 @@ import eu.olli.cowmoonication.command.exception.InvalidPlayerNameException;
 import eu.olli.cowmoonication.command.exception.MooCommandException;
 import eu.olli.cowmoonication.config.MooConfig;
 import eu.olli.cowmoonication.config.MooGuiConfig;
+import eu.olli.cowmoonication.data.DataHelper;
 import eu.olli.cowmoonication.data.Friend;
 import eu.olli.cowmoonication.data.HySkyBlockStats;
 import eu.olli.cowmoonication.data.HyStalkingData;
 import eu.olli.cowmoonication.search.GuiSearch;
-import eu.olli.cowmoonication.util.ApiUtils;
-import eu.olli.cowmoonication.util.MooChatComponent;
-import eu.olli.cowmoonication.util.TickDelay;
-import eu.olli.cowmoonication.util.Utils;
+import eu.olli.cowmoonication.util.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.command.*;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.item.EntityArmorStand;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.event.HoverEvent;
+import net.minecraft.item.ItemSkull;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.*;
+import net.minecraftforge.common.util.Constants;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.StringUtils;
 
 import java.awt.*;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -58,6 +65,80 @@ public class MooCommand extends CommandBase {
             } else {
                 handleStalkingSkyBlock(args[1]);
             }
+        } else if (args[0].equalsIgnoreCase("analyzeIsland")) {
+            Map<String, String> minions = DataHelper.getMinions();
+
+            Map<String, Integer> detectedMinions = new HashMap<>();
+            Map<Integer, Integer> detectedMinionsWithSkin = new HashMap<>();
+            int detectedMinionCount = 0;
+            int minionsWithSkinCount = 0;
+            entityLoop:
+            for (Entity entity : sender.getEntityWorld().loadedEntityList) {
+                if (entity instanceof EntityArmorStand) {
+                    EntityArmorStand minion = (EntityArmorStand) entity;
+
+                    if (minion.isInvisible() || !minion.isSmall() || minion.getHeldItem() == null) {
+                        // not a minion: invisible, or not small armor stand, or no item in hand (= minion in a minion chair)
+                        continue;
+                    }
+                    for (int slot = 0; slot < 4; slot++) {
+                        if (minion.getCurrentArmor(slot) == null) {
+                            // not a minion: missing equipment
+                            continue entityLoop;
+                        }
+                    }
+                    ItemStack skullItem = minion.getCurrentArmor(3); // head slot
+                    if (skullItem.getItem() instanceof ItemSkull && skullItem.getMetadata() == 3 && skullItem.hasTagCompound()) {
+                        // is a player head!
+                        if (skullItem.getTagCompound().hasKey("SkullOwner", Constants.NBT.TAG_COMPOUND)) {
+                            NBTTagCompound skullOwner = skullItem.getTagCompound().getCompoundTag("SkullOwner");
+                            String skullDataBase64 = skullOwner.getCompoundTag("Properties").getTagList("textures", Constants.NBT.TAG_COMPOUND).getCompoundTagAt(0).getString("Value");
+                            String skullData = new String(Base64.decodeBase64(skullDataBase64));
+                            String minionSkinId = StringUtils.substringBetween(skullData, "http://textures.minecraft.net/texture/", "\"");
+                            String detectedMinion = minions.get(minionSkinId);
+                            if (detectedMinion != null) {
+                                // minion head matches one know minion tier
+                                detectedMinions.put(detectedMinion, detectedMinions.getOrDefault(detectedMinion, 0) + 1);
+                                detectedMinionCount++;
+                            } else {
+                                int minionTier = ImageUtils.getTierFromTexture(minionSkinId);
+                                if (minionTier > 0) {
+                                    detectedMinionsWithSkin.put(minionTier, detectedMinionsWithSkin.getOrDefault(minionTier, 0) + 1);
+                                    minionsWithSkinCount++;
+                                } else {
+                                    // looked like a minion but has no matching tier badge
+                                    main.getLogger().info("[/moo analyzeIsland] Found an armor stand that could be a minion but it is missing a tier badge: " + minionSkinId + "\t\t\t" + minion.serializeNBT());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW,
+                    "Found " + EnumChatFormatting.GOLD + detectedMinionCount + EnumChatFormatting.YELLOW + " minions" +
+                            (minionsWithSkinCount > 0 ? (" + " + EnumChatFormatting.GOLD + minionsWithSkinCount + EnumChatFormatting.YELLOW + " unknown minions with skins") : "") +
+                            " on this island");
+            detectedMinions.entrySet().stream()
+                    .sorted(Map.Entry.comparingByKey()) // sort alphabetically by minion name and tier
+                    .forEach(minion -> {
+                        String minionWithTier = minion.getKey();
+                        int lastSpace = minionWithTier.lastIndexOf(' ');
+
+                        String tierRoman = minionWithTier.substring(lastSpace + 1);
+
+                        int tierArabic = Utils.convertRomanToArabic(tierRoman);
+                        EnumChatFormatting tierColor = Utils.getMinionTierColor(tierArabic);
+
+                        minionWithTier = minionWithTier.substring(0, lastSpace) + " " + tierColor + (MooConfig.useRomanNumerals() ? tierRoman : tierArabic);
+                        main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, "  " + minion.getValue() + (minion.getValue() > 1 ? "✕ " : "⨉ ") + EnumChatFormatting.YELLOW + minionWithTier);
+                    });
+            detectedMinionsWithSkin.entrySet().stream()
+                    .sorted(Map.Entry.comparingByKey()) // sort by tier
+                    .forEach(minionWithSkin -> {
+                        EnumChatFormatting tierColor = Utils.getMinionTierColor(minionWithSkin.getKey());
+                        String minionTier = MooConfig.useRomanNumerals() ? Utils.convertArabicToRoman(minionWithSkin.getKey()) : String.valueOf(minionWithSkin.getKey());
+                        main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, "  " + minionWithSkin.getValue() + (minionWithSkin.getValue() > 1 ? "✕ " : "⨉ ") + EnumChatFormatting.RED + "Unknown minion " + EnumChatFormatting.YELLOW + "(new or with minion skin) " + tierColor + minionTier);
+                    });
         } else if (args.length == 2 && args[0].equalsIgnoreCase("add")) {
             handleBestFriendAdd(args[1]);
         } else if (args.length == 2 && args[0].equalsIgnoreCase("remove")) {
@@ -269,7 +350,8 @@ public class MooCommand extends CommandBase {
                     String skill = Utils.fancyCase(entry.getKey().name());
                     int level = entry.getKey().getLevel(entry.getValue());
                     if (level > 0) {
-                        skillLevels.appendFreshSibling(new MooChatComponent.KeyValueTooltipComponent(skill, String.valueOf(level)));
+                        String skillLevel = MooConfig.useRomanNumerals() ? Utils.convertArabicToRoman(level) : String.valueOf(level);
+                        skillLevels.appendFreshSibling(new MooChatComponent.KeyValueTooltipComponent(skill, skillLevel));
                     }
 
                     if (level > highestLevel) {
@@ -297,7 +379,8 @@ public class MooCommand extends CommandBase {
                     if (highestLevel == 0) {
                         sbStats.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Highest Skill", "All skills level 0"));
                     } else {
-                        sbStats.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Highest Skill", highestSkill + " " + highestLevel).setHover(skillLevels));
+                        String highestSkillLevel = MooConfig.useRomanNumerals() ? Utils.convertArabicToRoman(highestLevel) : String.valueOf(highestLevel);
+                        sbStats.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Highest Skill", highestSkill + " " + highestSkillLevel).setHover(skillLevels));
                     }
                 } else {
                     sbStats.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Highest Skill", "API access disabled"));
@@ -375,6 +458,7 @@ public class MooCommand extends CommandBase {
                 .appendSibling(createCmdHelpSection(1, "Friends"))
                 .appendSibling(createCmdHelpEntry("stalk", "Get info of player's status"))
                 .appendSibling(createCmdHelpEntry("stalkskyblock", "Get info of player's SkyBlock stats"))
+                .appendSibling(createCmdHelpEntry("analyzeIsland", "Analyze a SkyBlock private island"))
                 .appendSibling(createCmdHelpEntry("add", "Add best friends"))
                 .appendSibling(createCmdHelpEntry("remove", "Remove best friends"))
                 .appendSibling(createCmdHelpEntry("list", "View list of best friends"))
@@ -413,7 +497,7 @@ public class MooCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args,
-                    /* friends */  "stalk", "stalkskyblock", "skyblockstalk", "add", "remove", "list", "nameChangeCheck", "toggle",
+                    /* friends */  "stalk", "stalkskyblock", "skyblockstalk", "analyzeIsland", "add", "remove", "list", "nameChangeCheck", "toggle",
                     /* miscellaneous */ "config", "search", "guiscale", "shrug", "apikey",
                     /* update mod */ "update", "updateHelp", "version", "directory",
                     /* help */ "help");

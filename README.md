@@ -8,6 +8,7 @@ A client-side only Forge mod by [Cow](https://namemc.com/profile/Cow) providing 
 | Search through your Minecraft log files                                 | `/moo search`                           |
 | Stalk a player (check online status, current game, ...)                 | `/moo stalk`                            |
 | Stalk SkyBlock stats of a player                                        | `/moo stalkskyblock`                    |
+| Analyze minions on a private island                                     | `/moo analyzeIsland`                    |
 | Toggle join/leave notifications for friends, guild members or best friends separately | `/moo toggle`             |
 | Copy chat component                                                     | <kbd>ALT</kbd> + <kbd>right click</kbd><br>Hold <kbd>shift</kbd> to copy full component |
 | Tab-completable usernames for several commands (e.g. `/party`, `/invite`, ...) | `/moo config` &rarr; `Commands with Tab-completable usernames` for full list of commands |

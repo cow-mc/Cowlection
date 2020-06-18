@@ -32,13 +32,14 @@ import java.util.regex.Pattern;
  * @see FMLConfigGuiFactory
  */
 public class MooConfig {
-    public static final String CATEGORY_LOGS_SEARCH = "logssearch";
+    static final String CATEGORY_LOGS_SEARCH = "logssearch";
     // main config
     public static boolean doUpdateCheck;
     public static boolean showBestFriendNotifications;
     public static boolean showFriendNotifications;
     public static boolean showGuildNotifications;
     public static String[] tabCompletableNamesCommands;
+    private static String numeralSystem;
     // logs search config
     public static String[] logsDirs;
     private static String defaultStartDate;
@@ -126,8 +127,10 @@ public class MooConfig {
                 "showFriendNotifications", false, "Set to true to receive friends' login/logout messages, set to false hide them."), true);
         Property propShowGuildNotifications = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
                 "showGuildNotifications", false, "Set to true to receive guild members' login/logout messages, set to false hide them."), true);
+        Property propNumeralSystem = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
+                "numeralSystem", "Arabic numerals: 1, 4, 10", "Use Roman or Arabic numeral system?", new String[]{"Arabic numerals: 1, 4, 10", "Roman numerals: I, IV, X"}), true);
         Property propTabCompletableNamesCommands = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
-                "tabCompletableNamesCommands", new String[]{"party", "p", "invite", "visit", "ignore", "msg", "tell", "w", "boop", "profile"}, "List of commands with a Tab-completable username argument."), true)
+                "tabCompletableNamesCommands", new String[]{"party", "p", "invite", "visit", "ah", "ignore", "msg", "tell", "w", "boop", "profile"}, "List of commands with a Tab-completable username argument."), true)
                 .setValidationPattern(Pattern.compile("^[A-Za-z]+$"));
         Property propMoo = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
                 "moo", "", "The answer to life the universe and everything. Don't edit this entry manually!", Utils.VALID_UUID_PATTERN), false);
@@ -149,13 +152,13 @@ public class MooConfig {
         // 'manual' replacement for propTabCompletableNamesCommands.hasChanged()
         boolean modifiedTabCompletableCommandsList = false;
         String[] tabCompletableCommandsPreChange = tabCompletableNamesCommands != null ? tabCompletableNamesCommands.clone() : null;
-
         if (readFieldsFromConfig) {
             // main config
             doUpdateCheck = propDoUpdateCheck.getBoolean();
             showBestFriendNotifications = propShowBestFriendNotifications.getBoolean();
             showFriendNotifications = propShowFriendNotifications.getBoolean();
             showGuildNotifications = propShowGuildNotifications.getBoolean();
+            numeralSystem = propNumeralSystem.getString();
             tabCompletableNamesCommands = propTabCompletableNamesCommands.getStringList();
             moo = propMoo.getString();
 
@@ -173,6 +176,7 @@ public class MooConfig {
         propShowBestFriendNotifications.set(showBestFriendNotifications);
         propShowFriendNotifications.set(showFriendNotifications);
         propShowGuildNotifications.set(showGuildNotifications);
+        propNumeralSystem.set(numeralSystem);
         propTabCompletableNamesCommands.set(tabCompletableNamesCommands);
         propMoo.set(moo);
 
@@ -248,6 +252,10 @@ public class MooConfig {
      */
     public static boolean doMonitorNotifications() {
         return showBestFriendNotifications || !showFriendNotifications || !showGuildNotifications;
+    }
+
+    public static boolean useRomanNumerals() {
+        return numeralSystem.startsWith("Roman");
     }
 
     public class ConfigEventHandler {

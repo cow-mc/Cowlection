@@ -1,6 +1,7 @@
 package eu.olli.cowmoonication.util;
 
 import com.mojang.realmsclient.util.Pair;
+import net.minecraft.util.EnumChatFormatting;
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -76,5 +77,131 @@ public final class Utils {
                         (int) d * 10 / 10 : d + "" // (int) d * 10 / 10 drops the decimal
                 ) + "" + LARGE_NUMBERS[iteration]
                 : formatNumberWithAbbreviations(d, iteration + 1);
+    }
+
+    /**
+     * Convert Roman numerals to their corresponding Arabic numeral
+     *
+     * @param roman Roman numeral
+     * @return Arabic numeral
+     * @see <a href="https://www.w3resource.com/javascript-exercises/javascript-math-exercise-22.php">Source</a>
+     */
+    public static int convertRomanToArabic(String roman) {
+        if (roman == null) return -1;
+        int number = romanCharToArabic(roman.charAt(0));
+
+        for (int i = 1; i < roman.length(); i++) {
+            int current = romanCharToArabic(roman.charAt(i));
+            int previous = romanCharToArabic(roman.charAt(i - 1));
+            if (current <= previous) {
+                number += current;
+            } else {
+                number = number - previous * 2 + current;
+            }
+        }
+        return number;
+    }
+
+    private static int romanCharToArabic(char c) {
+        switch (c) {
+            case 'I':
+                return 1;
+            case 'V':
+                return 5;
+            case 'X':
+                return 10;
+            case 'L':
+                return 50;
+            case 'C':
+                return 100;
+            case 'D':
+                return 500;
+            case 'M':
+                return 1000;
+            default:
+                return -1;
+        }
+    }
+
+    /**
+     * Convert Arabic numerals to their corresponding Roman numerals
+     *
+     * @param number Arabic numerals
+     * @return Roman numerals
+     * @see <a href="https://stackoverflow.com/a/48357180">Source</a>
+     */
+    public static String convertArabicToRoman(int number) {
+        String romanOnes = arabicToRomanChars(number % 10, "I", "V", "X");
+        number /= 10;
+
+        String romanTens = arabicToRomanChars(number % 10, "X", "L", "C");
+        number /= 10;
+
+        String romanHundreds = arabicToRomanChars(number % 10, "C", "D", "M");
+        number /= 10;
+
+        String romanThousands = arabicToRomanChars(number % 10, "M", "", "");
+
+        return romanThousands + romanHundreds + romanTens + romanOnes;
+    }
+
+    private static String arabicToRomanChars(int n, String one, String five, String ten) {
+        switch (n) {
+            case 1:
+                return one;
+            case 2:
+                return one + one;
+            case 3:
+                return one + one + one;
+            case 4:
+                return one + five;
+            case 5:
+                return five;
+            case 6:
+                return five + one;
+            case 7:
+                return five + one + one;
+            case 8:
+                return five + one + one + one;
+            case 9:
+                return one + ten;
+        }
+        return "";
+    }
+
+    /**
+     * Get the minion tier's color for chat formatting
+     *
+     * @param tier minion tier
+     * @return color code corresponding to the tier
+     */
+    public static EnumChatFormatting getMinionTierColor(int tier) {
+        EnumChatFormatting tierColor;
+        switch (tier) {
+            case 1:
+                tierColor = EnumChatFormatting.WHITE;
+                break;
+            case 2:
+            case 3:
+            case 4:
+                tierColor = EnumChatFormatting.GREEN;
+                break;
+            case 5:
+            case 6:
+            case 7:
+                tierColor = EnumChatFormatting.DARK_PURPLE;
+                break;
+            case 8:
+            case 9:
+            case 10:
+                tierColor = EnumChatFormatting.RED;
+                break;
+            case 11:
+                tierColor = EnumChatFormatting.AQUA;
+                break;
+            default:
+                tierColor = EnumChatFormatting.OBFUSCATED;
+        }
+        return tierColor;
     }
 }
