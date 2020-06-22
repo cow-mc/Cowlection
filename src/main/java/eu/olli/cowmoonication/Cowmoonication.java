@@ -32,6 +32,7 @@ public class Cowmoonication {
     public static final String MODNAME = "@MODNAME@";
     public static final String GITURL = "@GITURL@";
     private static Cowmoonication instance;
+    private File configDir;
     private File modsDir;
     private MooConfig config;
     private FriendsHandler friendsHandler;
@@ -46,13 +47,13 @@ public class Cowmoonication {
         logger = e.getModLog();
         modsDir = e.getSourceFile().getParentFile();
 
-        File modDir = new File(e.getModConfigurationDirectory(), MODID + File.separatorChar);
-        if (!modDir.exists()) {
-            modDir.mkdirs();
+        this.configDir = new File(e.getModConfigurationDirectory(), MODID + File.separatorChar);
+        if (!configDir.exists()) {
+            configDir.mkdirs();
         }
 
-        friendsHandler = new FriendsHandler(this, new File(modDir, "friends.json"));
-        config = new MooConfig(this, new Configuration(new File(modDir, MODID + ".cfg")));
+        friendsHandler = new FriendsHandler(this, new File(configDir, "friends.json"));
+        config = new MooConfig(this, new Configuration(new File(configDir, MODID + ".cfg")));
 
         chatHelper = new ChatHelper();
     }
@@ -92,6 +93,10 @@ public class Cowmoonication {
 
     public PlayerCache getPlayerCache() {
         return playerCache;
+    }
+
+    public File getConfigDirectory() {
+        return configDir;
     }
 
     public File getModsDirectory() {

@@ -1,81 +1,146 @@
 package eu.olli.cowmoonication.search;
 
 import eu.olli.cowmoonication.config.MooConfig;
+import eu.olli.cowmoonication.data.LogEntry;
 import net.minecraft.util.EnumChatFormatting;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.tuple.ImmutableTriple;
 
 import java.io.*;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 class LogFilesSearcher {
-    private static final Pattern UTF_PARAGRAPH_SYMBOL = Pattern.compile("Â§");
+    /**
+     * Log4j.xml PatternLayout: [%d{HH:mm:ss}] [%t/%level]: %msg%n
+     * Log line: [TIME] [THREAD/LEVEL]: [CHAT] msg
+     * examples:
+     * - [13:33:37] [Client thread/INFO]: [CHAT] Hello World
+     * - [08:15:42] [Client thread/ERROR]: Item entity 9001 has no item?!
+     */
+    private static final Pattern LOG4J_PATTERN = Pattern.compile("^\\[(?<timeHours>[\\d]{2}):(?<timeMinutes>[\\d]{2}):(?<timeSeconds>[\\d]{2})] \\[(?<thread>[^/]+)/(?<logLevel>[A-Z]+)]:(?<isChat> \\[CHAT])? (?<message>.*)$");
+    private int analyzedFilesWithHits = 0;
 
-    List<String> searchFor(String searchQuery, boolean matchCase, boolean removeFormatting, LocalDate dateStart, LocalDate dateEnd) {
-        List<String> files = new ArrayList<>();
+    ImmutableTriple<Integer, Integer, List<LogEntry>> searchFor(String searchQuery, boolean chatOnly, boolean matchCase, boolean removeFormatting, LocalDate dateStart, LocalDate dateEnd) throws IOException {
+        List<Path> files = new ArrayList<>();
         for (String logsDirPath : MooConfig.logsDirs) {
             File logsDir = new File(logsDirPath);
             if (logsDir.exists() && logsDir.isDirectory()) {
                 try {
                     files.addAll(fileList(logsDir, dateStart, dateEnd));
                 } catch (IOException e) {
-                    return printErrors(logsDirPath, e);
+                    throw throwIoException(logsDirPath, e);
                 }
             }
         }
 
         if (files.isEmpty()) {
-            List<String> errors = new ArrayList<>();
-            errors.add(EnumChatFormatting.DARK_RED + "ERROR: Couldn't find any Minecraft log files. Please check if the log file directories are set correctly (/moo config).");
-            return errors;
+            throw new FileNotFoundException(EnumChatFormatting.DARK_RED + "ERROR: Couldn't find any Minecraft log files. Please check if the log file directories are set correctly (/moo config).");
         } else {
-            return analyseFiles(files, searchQuery, matchCase, removeFormatting);
+            List<LogEntry> searchResults = analyzeFiles(files, searchQuery, chatOnly, matchCase, removeFormatting)
+                    .stream().sorted(Comparator.comparing(LogEntry::getTime)).collect(Collectors.toList());
+            return new ImmutableTriple<>(files.size(), analyzedFilesWithHits, searchResults);
         }
     }
 
-    private List<String> analyseFiles(List<String> files, String searchTerm, boolean matchCase, boolean removeFormatting) {
-        List<String> searchResults = new ArrayList<>();
-        for (String file : files) {
-            try (BufferedReader in = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(file))))) {
+    private List<LogEntry> analyzeFiles(List<Path> paths, String searchTerm, boolean chatOnly, boolean matchCase, boolean removeFormatting) throws IOException {
+        List<LogEntry> searchResults = new ArrayList<>();
+        for (Path path : paths) {
+            boolean foundSearchTermInFile = false;
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(path.toFile()))))) {
+                String fileName = path.getFileName().toString(); // 2020-04-20-3.log.gz
+                String date = fileName.substring(0, fileName.lastIndexOf('-'));
                 String content;
+                LogEntry logEntry = null;
                 while ((content = in.readLine()) != null) {
-                    String result = analyseLine(content, searchTerm, matchCase);
-                    if (result != null) {
-                        if (result.contains("Â§")) {
-                            result = UTF_PARAGRAPH_SYMBOL.matcher(result).replaceAll("§");
+                    Matcher logLineMatcher = LOG4J_PATTERN.matcher(content);
+                    if (logLineMatcher.matches()) { // current line is a new log entry
+                        if (logEntry != null) {
+                            // we had a previous log entry; analyze it!
+                            LogEntry result = analyzeLogEntry(logEntry, searchTerm, matchCase, removeFormatting);
+                            if (result != null) {
+                                searchResults.add(result);
+                                foundSearchTermInFile = true;
+                            }
+                            logEntry = null;
                         }
-                        if (removeFormatting) {
-                            result = EnumChatFormatting.getTextWithoutFormattingCodes(result);
+                        // handle first line of new log entry
+                        if (chatOnly && logLineMatcher.group("isChat") == null) {
+                            // not a chat log entry, although we're only searching for chat messages, abort!
+                            continue;
                         }
-                        String date = file.substring(file.lastIndexOf('\\') + 1, file.lastIndexOf('-'));
-                        searchResults.add(EnumChatFormatting.DARK_GRAY + date + " " + EnumChatFormatting.RESET + result);
+                        LocalDateTime dateTime = getDate(date, logLineMatcher);
+                        logEntry = new LogEntry(dateTime, path, logLineMatcher.group("message"));
+                    } else if (logEntry != null) {
+                        // multiline log entry
+                        logEntry.addLogLine(content);
                     }
                 }
+                if (logEntry != null) {
+                    // end of file! analyze last log entry in file
+                    LogEntry result = analyzeLogEntry(logEntry, searchTerm, matchCase, removeFormatting);
+                    if (result != null) {
+                        searchResults.add(result);
+                        foundSearchTermInFile = true;
+                    }
+                }
+                if (foundSearchTermInFile) {
+                    analyzedFilesWithHits++;
+                }
             } catch (IOException e) {
-                return printErrors(file, e);
+                throw throwIoException(path.toString(), e);
             }
         }
         return searchResults;
     }
 
-    private String analyseLine(String logLine, String searchTerms, boolean matchCase) {
-        String result = logLine;
-        if (!matchCase) {
-            logLine = logLine.toLowerCase();
-            searchTerms = searchTerms.toLowerCase();
-        }
-        return logLine.contains(searchTerms) ? (result.contains("[Client thread/INFO]: [CHAT]") ? result.substring(40) : result) : null;
+    private LocalDateTime getDate(String date, Matcher logLineMatcher) {
+        int year = Integer.parseInt(date.substring(0, 4));
+        int month = Integer.parseInt(date.substring(5, 7));
+        int day = Integer.parseInt(date.substring(8, 10));
+        int hour = Integer.parseInt(logLineMatcher.group(1));
+        int minute = Integer.parseInt(logLineMatcher.group(2));
+        int sec = Integer.parseInt(logLineMatcher.group(3));
+
+        return LocalDateTime.of(year, month, day, hour, minute, sec);
     }
 
-    private List<String> fileList(File directory, LocalDate startDate, LocalDate endDate) throws IOException {
-        List<String> fileNames = new ArrayList<>();
+    private LogEntry analyzeLogEntry(LogEntry logEntry, String searchTerms, boolean matchCase, boolean removeFormatting) {
+        if (logEntry.getMessage().length() > 5000) {
+            // avoid ultra long log entries
+            return null;
+        }
+        logEntry.fixWeirdCharacters();
+
+        if (removeFormatting) {
+            logEntry.removeFormatting();
+        }
+        String logMessage = logEntry.getMessage();
+        if (!matchCase) {
+            if (!StringUtils.containsIgnoreCase(logMessage, searchTerms)) {
+                // no result, abort
+                return null;
+            }
+        } else if (!logMessage.contains(searchTerms)) {
+            // no result, abort
+            return null;
+        }
+
+        return logEntry;
+    }
+
+    private List<Path> fileList(File directory, LocalDate startDate, LocalDate endDate) throws IOException {
+        List<Path> fileNames = new ArrayList<>();
         try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(directory.toPath())) {
             for (Path path : directoryStream) {
                 if (path.toString().endsWith(".log.gz")) {
@@ -85,7 +150,7 @@ class LogFilesSearcher {
                                 Integer.parseInt(fileDate[1]), Integer.parseInt(fileDate[2]));
 
                         if (fileLocalDate.compareTo(startDate) >= 0 && fileLocalDate.compareTo(endDate) <= 0) {
-                            fileNames.add(path.toString());
+                            fileNames.add(path);
                         }
                     } else {
                         System.err.println("Error with " + path.toString());
@@ -96,12 +161,9 @@ class LogFilesSearcher {
         return fileNames;
     }
 
-    private List<String> printErrors(String file, IOException e) {
-        System.err.println("Error reading/parsing file: " + file);
-        e.printStackTrace();
-        List<String> errorMessage = new ArrayList<>();
-        errorMessage.add(EnumChatFormatting.DARK_RED + "ERROR: An error occurred trying to read/parse '" + EnumChatFormatting.RED + file + EnumChatFormatting.DARK_RED + "'");
-        errorMessage.add(StringUtils.replaceEach(ExceptionUtils.getStackTrace(e), new String[]{"\t", "\r\n"}, new String[]{"  ", "\n"}));
-        return errorMessage;
+    private IOException throwIoException(String file, IOException e) throws IOException {
+        IOException ioException = new IOException(EnumChatFormatting.DARK_RED + "ERROR: An error occurred trying to read/parse '" + EnumChatFormatting.RED + file + EnumChatFormatting.DARK_RED + "'");
+        ioException.setStackTrace(e.getStackTrace());
+        throw ioException;
     }
 }

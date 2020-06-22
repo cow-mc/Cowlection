@@ -2,6 +2,7 @@ package eu.olli.cowmoonication.config;
 
 import eu.olli.cowmoonication.Cowmoonication;
 import eu.olli.cowmoonication.search.GuiTooltip;
+import eu.olli.cowmoonication.util.Utils;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
@@ -30,7 +31,7 @@ public class MooGuiConfig extends GuiConfig {
                 false,
                 false,
                 EnumChatFormatting.BOLD + "Configuration for " + Cowmoonication.MODNAME);
-        titleLine2 = EnumChatFormatting.GRAY + MooConfig.getConfig().getConfigFile().getAbsolutePath();
+        titleLine2 = EnumChatFormatting.GRAY + Utils.toRealPath(MooConfig.getConfig().getConfigFile());
     }
 
     private static List<IConfigElement> getConfigElements() {

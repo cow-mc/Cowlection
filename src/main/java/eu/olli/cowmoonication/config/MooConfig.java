@@ -221,7 +221,7 @@ public class MooConfig {
         List<String> logsDirs = new ArrayList<>();
         File currentMcLogsDirFile = new File(Minecraft.getMinecraft().mcDataDir, "logs");
         if (currentMcLogsDirFile.exists() && currentMcLogsDirFile.isDirectory()) {
-            String currentMcLogsDir = currentMcLogsDirFile.getAbsolutePath();
+            String currentMcLogsDir = Utils.toRealPath(currentMcLogsDirFile);
             logsDirs.add(currentMcLogsDir);
         }
 
@@ -240,7 +240,7 @@ public class MooConfig {
         }
         File defaultMcLogsDirFile = new File(defaultMcLogsDir);
         if (defaultMcLogsDirFile.exists() && defaultMcLogsDirFile.isDirectory() && !currentMcLogsDirFile.equals(defaultMcLogsDirFile)) {
-            logsDirs.add(defaultMcLogsDirFile.getAbsolutePath());
+            logsDirs.add(Utils.toRealPath(defaultMcLogsDirFile));
         }
         return logsDirs.toArray(new String[]{});
     }

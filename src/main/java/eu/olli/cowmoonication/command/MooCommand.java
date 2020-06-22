@@ -114,10 +114,11 @@ public class MooCommand extends CommandBase {
                     }
                 }
             }
-            main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW,
-                    "Found " + EnumChatFormatting.GOLD + detectedMinionCount + EnumChatFormatting.YELLOW + " minions" +
-                            (minionsWithSkinCount > 0 ? (" + " + EnumChatFormatting.GOLD + minionsWithSkinCount + EnumChatFormatting.YELLOW + " unknown minions with skins") : "") +
-                            " on this island");
+            StringBuilder analysisResults = new StringBuilder("Found ").append(EnumChatFormatting.GOLD).append(detectedMinionCount).append(EnumChatFormatting.YELLOW).append(" minions");
+            if (minionsWithSkinCount > 0) {
+                analysisResults.append(" + ").append(EnumChatFormatting.GOLD).append(minionsWithSkinCount).append(EnumChatFormatting.YELLOW).append(" unknown minions with skins");
+            }
+            analysisResults.append(" on this island");
             detectedMinions.entrySet().stream()
                     .sorted(Map.Entry.comparingByKey()) // sort alphabetically by minion name and tier
                     .forEach(minion -> {
@@ -130,15 +131,18 @@ public class MooCommand extends CommandBase {
                         EnumChatFormatting tierColor = Utils.getMinionTierColor(tierArabic);
 
                         minionWithTier = minionWithTier.substring(0, lastSpace) + " " + tierColor + (MooConfig.useRomanNumerals() ? tierRoman : tierArabic);
-                        main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, "  " + minion.getValue() + (minion.getValue() > 1 ? "✕ " : "⨉ ") + EnumChatFormatting.YELLOW + minionWithTier);
+                        analysisResults.append("\n  ").append(EnumChatFormatting.GOLD).append(minion.getValue()).append(minion.getValue() > 1 ? "✕ " : "⨉ ")
+                                .append(EnumChatFormatting.YELLOW).append(minionWithTier);
                     });
             detectedMinionsWithSkin.entrySet().stream()
                     .sorted(Map.Entry.comparingByKey()) // sort by tier
                     .forEach(minionWithSkin -> {
                         EnumChatFormatting tierColor = Utils.getMinionTierColor(minionWithSkin.getKey());
                         String minionTier = MooConfig.useRomanNumerals() ? Utils.convertArabicToRoman(minionWithSkin.getKey()) : String.valueOf(minionWithSkin.getKey());
-                        main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, "  " + minionWithSkin.getValue() + (minionWithSkin.getValue() > 1 ? "✕ " : "⨉ ") + EnumChatFormatting.RED + "Unknown minion " + EnumChatFormatting.YELLOW + "(new or with minion skin) " + tierColor + minionTier);
+                        analysisResults.append("\n  ").append(EnumChatFormatting.GOLD).append(minionWithSkin.getValue()).append(minionWithSkin.getValue() > 1 ? "✕ " : "⨉ ")
+                                .append(EnumChatFormatting.RED).append("Unknown minion ").append(EnumChatFormatting.YELLOW).append("(new or with minion skin) ").append(tierColor).append(minionTier);
                     });
+            main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, analysisResults.toString());
         } else if (args.length == 2 && args[0].equalsIgnoreCase("add")) {
             handleBestFriendAdd(args[1]);
         } else if (args.length == 2 && args[0].equalsIgnoreCase("remove")) {
@@ -153,7 +157,7 @@ public class MooCommand extends CommandBase {
         else if (args[0].equalsIgnoreCase("config") || args[0].equalsIgnoreCase("toggle")) {
             new TickDelay(() -> Minecraft.getMinecraft().displayGuiScreen(new MooGuiConfig(null)), 1); // delay by 1 tick, because the chat closing would close the new gui instantly as well.
         } else if (args[0].equalsIgnoreCase("search")) {
-            new TickDelay(() -> Minecraft.getMinecraft().displayGuiScreen(new GuiSearch()), 1); // delay by 1 tick, because the chat closing would close the new gui instantly as well.
+            new TickDelay(() -> Minecraft.getMinecraft().displayGuiScreen(new GuiSearch(main.getConfigDirectory())), 1); // delay by 1 tick, because the chat closing would close the new gui instantly as well.
         } else if (args[0].equalsIgnoreCase("guiscale")) {
             int currentGuiScale = (Minecraft.getMinecraft()).gameSettings.guiScale;
             if (args.length == 1) {
@@ -205,8 +209,10 @@ public class MooCommand extends CommandBase {
             }
         }
         // "catch-all" remaining sub-commands
-        else {
+        else if (args[0].equalsIgnoreCase("help")) {
             sendCommandUsage(sender);
+        } else {
+            main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Command " + EnumChatFormatting.DARK_RED + "/" + getCommandName() + " " + args[0] + EnumChatFormatting.RED + " doesn't exist. Use " + EnumChatFormatting.DARK_RED + "/" + getCommandName() + " help " + EnumChatFormatting.RED + "to show command usage.");
         }
     }
 

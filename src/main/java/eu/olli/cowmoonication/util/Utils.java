@@ -6,6 +6,9 @@ import org.apache.commons.lang3.text.WordUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -53,6 +56,19 @@ public final class Utils {
                     DurationFormatUtils.formatDurationWords(duration, true, true),
                     dateFormatted);
         }
+    }
+
+    public static String toRealPath(Path path) {
+        try {
+            return path.toRealPath().toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "file not found";
+        }
+    }
+
+    public static String toRealPath(File path) {
+        return toRealPath(path.toPath());
     }
 
     /**

@@ -1,42 +1,70 @@
 package eu.olli.cowmoonication.search;
 
-import com.google.common.base.Joiner;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.mojang.realmsclient.util.Pair;
+import eu.olli.cowmoonication.Cowmoonication;
 import eu.olli.cowmoonication.config.MooConfig;
+import eu.olli.cowmoonication.data.LogEntry;
+import eu.olli.cowmoonication.util.Utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.*;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
-import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.common.ForgeVersion;
 import net.minecraftforge.fml.client.GuiScrollingList;
 import net.minecraftforge.fml.client.config.GuiButtonExt;
 import net.minecraftforge.fml.client.config.GuiCheckBox;
 import net.minecraftforge.fml.client.config.GuiUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.opengl.GL11;
 
+import java.awt.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.*;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
+import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
 
 public class GuiSearch extends GuiScreen {
     private static final String SEARCH_QUERY_PLACE_HOLDER = "Search for...";
+    private final File mcLogOutputFile;
+    /**
+     * @see Executors#newCachedThreadPool()
+     */
+    private final ExecutorService executorService = new ThreadPoolExecutor(0, 1,
+            60L, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(), new ThreadFactoryBuilder().setNameFormat(Cowmoonication.MODID + "-logfilesearcher-%d").build());
     // data
     private String searchQuery;
+    private boolean chatOnly;
     private boolean matchCase;
     private boolean removeFormatting;
     /**
      * Cached results are required after resizing the client
      */
-    private List<String> searchResults;
+    private List<LogEntry> searchResults;
     private LocalDate dateStart;
     private LocalDate dateEnd;
 
     // gui elements
     private GuiButton buttonSearch;
     private GuiButton buttonClose;
+    private GuiButton buttonHelp;
+    private GuiCheckBox checkboxChatOnly;
     private GuiCheckBox checkboxMatchCase;
     private GuiCheckBox checkboxRemoveFormatting;
     private GuiTextField fieldSearchQuery;
@@ -45,13 +73,22 @@ public class GuiSearch extends GuiScreen {
     private SearchResults guiSearchResults;
     private List<GuiTooltip> guiTooltips;
     private boolean isSearchInProgress;
+    private String analyzedFiles;
+    private String analyzedFilesWithHits;
+    private boolean areEntriesSearchResults;
 
-    public GuiSearch() {
+    public GuiSearch(File configDirectory) {
+        this.mcLogOutputFile = new File(configDirectory, "mc-log.txt");
+        try {
+            mcLogOutputFile.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         this.searchQuery = SEARCH_QUERY_PLACE_HOLDER;
-        this.matchCase = false;
         this.searchResults = new ArrayList<>();
         this.dateStart = MooConfig.calculateStartDate();
         this.dateEnd = LocalDate.now();
+        this.chatOnly = true;
     }
 
     /**
@@ -62,7 +99,7 @@ public class GuiSearch extends GuiScreen {
     public void initGui() {
         this.guiTooltips = new ArrayList<>();
 
-        this.fieldSearchQuery = new GuiTextField(42, this.fontRendererObj, this.width / 2 - 100, 15, 200, 20);
+        this.fieldSearchQuery = new GuiTextField(42, this.fontRendererObj, this.width / 2 - 100, 13, 200, 20);
         this.fieldSearchQuery.setMaxStringLength(255);
         this.fieldSearchQuery.setText(searchQuery);
         if (SEARCH_QUERY_PLACE_HOLDER.equals(searchQuery)) {
@@ -70,23 +107,33 @@ public class GuiSearch extends GuiScreen {
             this.fieldSearchQuery.setSelectionPos(0);
         }
 
-        // date fields
+        // date field: start
         this.fieldDateStart = new GuiDateField(50, this.fontRendererObj, this.width / 2 + 110, 15, 70, 15);
         this.fieldDateStart.setText(dateStart.toString());
         addTooltip(fieldDateStart, Arrays.asList(EnumChatFormatting.YELLOW + "Start date", "" + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + "Format: " + EnumChatFormatting.RESET + "year-month-day"));
-
+        // date field: end
         this.fieldDateEnd = new GuiDateField(51, this.fontRendererObj, this.width / 2 + 110, 35, 70, 15);
         this.fieldDateEnd.setText(dateEnd.toString());
         addTooltip(fieldDateEnd, Arrays.asList(EnumChatFormatting.YELLOW + "End date", "" + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + "Format: " + EnumChatFormatting.RESET + "year-month-day"));
 
-        // buttons
+        // close
         this.buttonList.add(this.buttonClose = new GuiButtonExt(0, this.width - 25, 3, 22, 20, EnumChatFormatting.RED + "X"));
         addTooltip(buttonClose, Arrays.asList(EnumChatFormatting.RED + "Close search interface", "" + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + "Hint:" + EnumChatFormatting.RESET + " alternatively press ESC"));
+        // help
+        this.buttonList.add(this.buttonHelp = new GuiButtonExt(1, this.width - 25 - 25, 3, 22, 20, "?"));
+        addTooltip(buttonHelp, Collections.singletonList(EnumChatFormatting.YELLOW + "Show help"));
 
-        this.buttonList.add(this.checkboxMatchCase = new GuiCheckBox(1, this.width / 2 - 100, 40, " Match case", matchCase));
+        // chatOnly
+        this.buttonList.add(this.checkboxChatOnly = new GuiCheckBox(21, this.width / 2 - 100, 35, " Chatbox only", chatOnly));
+        addTooltip(checkboxChatOnly, Collections.singletonList(EnumChatFormatting.YELLOW + "Should " + EnumChatFormatting.GOLD + "only " + EnumChatFormatting.YELLOW + "results that have " + EnumChatFormatting.GOLD + "appeared in the chat box " + EnumChatFormatting.YELLOW + "be displayed?\n"
+                + EnumChatFormatting.GRAY + "For example, this " + EnumChatFormatting.WHITE + "excludes error messages" + EnumChatFormatting.GRAY + " but still " + EnumChatFormatting.WHITE + "includes messages sent by a server" + EnumChatFormatting.GRAY + "."));
+        // matchCase
+        this.buttonList.add(this.checkboxMatchCase = new GuiCheckBox(20, this.width / 2 - 100, 45, " Match case", matchCase));
         addTooltip(checkboxMatchCase, Collections.singletonList(EnumChatFormatting.YELLOW + "Should the search be " + EnumChatFormatting.GOLD + "case-sensitive" + EnumChatFormatting.YELLOW + "?"));
-        this.buttonList.add(this.checkboxRemoveFormatting = new GuiCheckBox(1, this.width / 2 - 100, 50, " Remove formatting", removeFormatting));
+        // removeFormatting
+        this.buttonList.add(this.checkboxRemoveFormatting = new GuiCheckBox(22, this.width / 2 - 100, 55, " Remove formatting", removeFormatting));
         addTooltip(checkboxRemoveFormatting, Collections.singletonList(EnumChatFormatting.YELLOW + "Should " + EnumChatFormatting.GOLD + "formatting " + EnumChatFormatting.YELLOW + "and " + EnumChatFormatting.GOLD + "color codes " + EnumChatFormatting.YELLOW + "be " + EnumChatFormatting.GOLD + "removed " + EnumChatFormatting.YELLOW + "from the search results?"));
+        // search
         this.buttonList.add(this.buttonSearch = new GuiButtonExt(100, this.width / 2 + 40, 40, 60, 20, "Search"));
 
         this.guiSearchResults = new SearchResults(70);
@@ -156,15 +203,24 @@ public class GuiSearch extends GuiScreen {
             // copy all search results
             String searchResults = guiSearchResults.getAllSearchResults();
             if (!searchResults.isEmpty()) {
-                GuiScreen.setClipboardString(EnumChatFormatting.getTextWithoutFormattingCodes(searchResults));
+                GuiScreen.setClipboardString(searchResults);
             }
         } else if (GuiScreen.isKeyComboCtrlC(keyCode)) {
             // copy current selected entry
-            String selectedSearchResult = guiSearchResults.getSelectedSearchResult();
+            LogEntry selectedSearchResult = guiSearchResults.getSelectedSearchResult();
             if (selectedSearchResult != null) {
-                GuiScreen.setClipboardString(EnumChatFormatting.getTextWithoutFormattingCodes(selectedSearchResult));
+                GuiScreen.setClipboardString(EnumChatFormatting.getTextWithoutFormattingCodes(selectedSearchResult.getMessage()));
+            }
+        } else if (keyCode == Keyboard.KEY_C && isCtrlKeyDown() && isShiftKeyDown() && !isAltKeyDown()) {
+            // copy current selected entry with formatting codes
+            LogEntry selectedSearchResult = guiSearchResults.getSelectedSearchResult();
+            if (selectedSearchResult != null) {
+                GuiScreen.setClipboardString(selectedSearchResult.getMessage());
             }
         } else {
+            if (keyCode == Keyboard.KEY_ESCAPE) {
+                guiSearchResults = null;
+            }
             super.keyTyped(typedChar, keyCode);
         }
 
@@ -181,7 +237,7 @@ public class GuiSearch extends GuiScreen {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         this.drawDefaultBackground();
-        this.drawCenteredString(this.fontRendererObj, EnumChatFormatting.BOLD + "Minecraft Log Search", this.width / 2, 3, 0xFFFFFF);
+        this.drawCenteredString(this.fontRendererObj, EnumChatFormatting.BOLD + "Minecraft Log Search", this.width / 2, 2, 0xFFFFFF);
         this.fieldSearchQuery.drawTextBox();
         this.fieldDateStart.drawTextBox();
         this.fieldDateEnd.drawTextBox();
@@ -201,6 +257,7 @@ public class GuiSearch extends GuiScreen {
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         if (button == this.buttonClose && button.enabled) {
+            guiSearchResults = null;
             this.mc.setIngameFocus();
         }
         if (isSearchInProgress || !button.enabled) {
@@ -209,20 +266,53 @@ public class GuiSearch extends GuiScreen {
         if (button == this.buttonSearch) {
             setIsSearchInProgress(true);
 
-            Executors.newSingleThreadExecutor().execute(() -> {
-                searchResults = new LogFilesSearcher().searchFor(this.fieldSearchQuery.getText(), checkboxMatchCase.isChecked(), checkboxRemoveFormatting.isChecked(), dateStart, dateEnd);
-                if (searchResults.isEmpty()) {
-                    searchResults.add(EnumChatFormatting.ITALIC + "No results");
+            executorService.execute(() -> {
+                try {
+                    ImmutableTriple<Integer, Integer, List<LogEntry>> searchResultsData = new LogFilesSearcher().searchFor(this.fieldSearchQuery.getText(), checkboxChatOnly.isChecked(), checkboxMatchCase.isChecked(), checkboxRemoveFormatting.isChecked(), dateStart, dateEnd);
+                    this.searchResults = searchResultsData.right;
+                    this.analyzedFiles = "Analyzed files: " + EnumChatFormatting.WHITE + searchResultsData.left;
+                    this.analyzedFilesWithHits = "Files with hits: " + EnumChatFormatting.WHITE + searchResultsData.middle;
+                    if (this.searchResults.isEmpty()) {
+                        this.searchResults.add(new LogEntry(EnumChatFormatting.ITALIC + "No results"));
+                        areEntriesSearchResults = false;
+                    } else {
+                        areEntriesSearchResults = true;
+                    }
+                } catch (IOException e) {
+                    System.err.println("Error reading/parsing file log files:");
+                    e.printStackTrace();
+                    if (e.getStackTrace().length > 0) {
+                        searchResults.add(new LogEntry(StringUtils.replaceEach(ExceptionUtils.getStackTrace(e), new String[]{"\t", "\r\n"}, new String[]{"  ", "\n"})));
+                    }
                 }
                 Minecraft.getMinecraft().addScheduledTask(() -> {
-                    this.guiSearchResults.setResults(searchResults);
+                    this.guiSearchResults.setResults(this.searchResults);
                     setIsSearchInProgress(false);
                 });
             });
+        } else if (button == checkboxChatOnly) {
+            chatOnly = checkboxChatOnly.isChecked();
         } else if (button == checkboxMatchCase) {
             matchCase = checkboxMatchCase.isChecked();
         } else if (button == checkboxRemoveFormatting) {
             removeFormatting = checkboxRemoveFormatting.isChecked();
+        } else if (button == buttonHelp) {
+            this.areEntriesSearchResults = false;
+            this.searchResults.clear();
+            this.searchResults.add(new LogEntry("" + EnumChatFormatting.GOLD + EnumChatFormatting.BOLD + "Initial setup/Configuration " + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + "/moo config"));
+            this.searchResults.add(new LogEntry(EnumChatFormatting.GOLD + " 1) " + EnumChatFormatting.RESET + "Configure directories that should be scanned for log files (\"Directories with Minecraft log files\")"));
+            this.searchResults.add(new LogEntry(EnumChatFormatting.GOLD + " 2) " + EnumChatFormatting.RESET + "Set default starting date (\"Start date for log file search\")"));
+            this.searchResults.add(new LogEntry("" + EnumChatFormatting.GOLD + EnumChatFormatting.BOLD + "Performing a search " + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + "/moo search"));
+            this.searchResults.add(new LogEntry(EnumChatFormatting.GOLD + " 1) " + EnumChatFormatting.RESET + "Enter search term"));
+            this.searchResults.add(new LogEntry(EnumChatFormatting.GOLD + " 2) " + EnumChatFormatting.RESET + "Adjust start and end date"));
+            this.searchResults.add(new LogEntry(EnumChatFormatting.GOLD + " 3) " + EnumChatFormatting.RESET + "Select desired options (match case, ...)"));
+            this.searchResults.add(new LogEntry(EnumChatFormatting.GOLD + " 4) " + EnumChatFormatting.RESET + "Click 'Search'"));
+            this.searchResults.add(new LogEntry("" + EnumChatFormatting.GOLD + EnumChatFormatting.BOLD + "Search results"));
+            this.searchResults.add(new LogEntry(EnumChatFormatting.GOLD + " - " + EnumChatFormatting.YELLOW + "CTRL + C " + EnumChatFormatting.RESET + "to copy selected search result"));
+            this.searchResults.add(new LogEntry(EnumChatFormatting.GOLD + " - " + EnumChatFormatting.YELLOW + "CTRL + Shift + C " + EnumChatFormatting.RESET + "to copy selected search result " + EnumChatFormatting.ITALIC + "with" + EnumChatFormatting.RESET + " formatting codes"));
+            this.searchResults.add(new LogEntry(EnumChatFormatting.GOLD + " - " + EnumChatFormatting.YELLOW + "CTRL + A " + EnumChatFormatting.RESET + "to copy all search results"));
+            this.searchResults.add(new LogEntry(EnumChatFormatting.GOLD + " - " + EnumChatFormatting.YELLOW + "Double click search result " + EnumChatFormatting.RESET + "to open corresponding log file in default text editor"));
+            this.guiSearchResults.setResults(searchResults);
         }
     }
 
@@ -232,15 +322,18 @@ public class GuiSearch extends GuiScreen {
         fieldSearchQuery.setEnabled(!isSearchInProgress);
         fieldDateStart.setEnabled(!isSearchInProgress);
         fieldDateEnd.setEnabled(!isSearchInProgress);
-        checkboxRemoveFormatting.enabled = !isSearchInProgress;
+        checkboxChatOnly.enabled = !isSearchInProgress;
         checkboxMatchCase.enabled = !isSearchInProgress;
+        checkboxRemoveFormatting.enabled = !isSearchInProgress;
         if (isSearchInProgress) {
             fieldSearchQuery.setFocused(false);
             fieldDateStart.setFocused(false);
             fieldDateEnd.setFocused(false);
             buttonSearch.displayString = EnumChatFormatting.ITALIC + "Searching";
             searchResults.clear();
-            this.guiSearchResults.clearResults();
+            guiSearchResults.clearResults();
+            analyzedFiles = null;
+            analyzedFilesWithHits = null;
         } else {
             buttonSearch.displayString = "Search";
         }
@@ -262,9 +355,15 @@ public class GuiSearch extends GuiScreen {
      */
     class SearchResults extends GuiScrollingList {
         private final String[] spinner = new String[]{"oooooo", "Oooooo", "oOoooo", "ooOooo", "oooOoo", "ooooOo", "oooooO"};
-        private List<String> rawResults;
+        private final DateTimeFormatter coloredDateFormatter = DateTimeFormatter.ofPattern(EnumChatFormatting.GRAY + "HH" + EnumChatFormatting.DARK_GRAY + ":" + EnumChatFormatting.GRAY + "mm" + EnumChatFormatting.DARK_GRAY + ":" + EnumChatFormatting.GRAY + "ss");
+        private List<LogEntry> rawResults;
         private List<IChatComponent> slotsData;
+        /**
+         * key: slot id of 1st line of a search result (if multi-line-result), value: search result id
+         */
         private NavigableMap<Integer, Integer> searchResultEntries;
+        private Pair<Long, String> errorMessage;
+        private String resultsCount;
 
         SearchResults(int marginTop) {
             super(GuiSearch.this.mc,
@@ -287,6 +386,82 @@ public class GuiSearch extends GuiScreen {
                 GuiSearch.this.drawCenteredString(GuiSearch.this.fontRendererObj, "Searching for '" + GuiSearch.this.searchQuery + "'", GuiSearch.this.width / 2, GuiSearch.this.height / 2, 16777215);
                 GuiSearch.this.drawCenteredString(GuiSearch.this.fontRendererObj, spinner[(int) (Minecraft.getSystemTime() / 150L % (long) spinner.length)], GuiSearch.this.width / 2, GuiSearch.this.height / 2 + GuiSearch.this.fontRendererObj.FONT_HEIGHT * 2, 16777215);
             }
+            int hoveredSlotId = this.func_27256_c(mouseX, mouseY);
+            if (hoveredSlotId >= 0 && mouseY > top && mouseY < bottom) {
+                float scrollDistance = getScrollDistance();
+                if (scrollDistance != Float.MIN_VALUE) {
+                    // draw hovered entry details
+
+                    int hoveredSearchResultId = getSearchResultIdBySlotId(hoveredSlotId);
+                    LogEntry hoveredEntry = getSearchResultByResultId(hoveredSearchResultId);
+                    if (hoveredEntry != null && !hoveredEntry.isError()) {
+                        // draw 'tooltips' in the top left corner
+                        drawString(fontRendererObj, "Log file: ", 2, 2, 0xff888888);
+                        GlStateManager.pushMatrix();
+                        float scaleFactor = 0.75f;
+                        GL11.glScalef(scaleFactor, scaleFactor, scaleFactor);
+                        fontRendererObj.drawSplitString(EnumChatFormatting.GRAY + Utils.toRealPath(hoveredEntry.getFilePath()), 5, (int) ((4 + fontRendererObj.FONT_HEIGHT) * (1 / scaleFactor)), (int) ((GuiSearch.this.fieldSearchQuery.xPosition - 8) * (1 / scaleFactor)), 0xff888888);
+                        GlStateManager.popMatrix();
+                        drawString(fontRendererObj, "Result: " + EnumChatFormatting.WHITE + (hoveredSearchResultId + 1) + EnumChatFormatting.RESET + "/" + EnumChatFormatting.WHITE + this.rawResults.size(), 8, 48, 0xff888888);
+                        drawString(fontRendererObj, "Time: " + hoveredEntry.getTime().format(coloredDateFormatter), 8, 58, 0xff888888);
+                    }
+
+                    // formula from GuiScrollingList#drawScreen slotTop
+                    int baseY = this.top + /* border: */4 - (int) scrollDistance;
+
+                    // highlight multiline search results
+                    Integer resultIndexStart = searchResultEntries.floorKey(hoveredSlotId);
+                    Integer resultIndexEnd = searchResultEntries.higherKey(hoveredSlotId);
+
+                    if (resultIndexStart == null) {
+                        return;
+                    } else if (resultIndexEnd == null) {
+                        // last result entry
+                        resultIndexEnd = getSize();
+                    }
+
+                    int slotTop = baseY + resultIndexStart * this.slotHeight - 2;
+                    int slotBottom = baseY + resultIndexEnd * this.slotHeight - 2;
+                    drawRect(this.left, Math.max(slotTop, top), right - /* scrollBar: */7, Math.min(slotBottom, bottom), 0x22ffffff);
+                }
+            } else if (areEntriesSearchResults) {
+                if (analyzedFiles != null) {
+                    drawString(fontRendererObj, analyzedFiles, 8, 22, 0xff888888);
+                }
+                if (analyzedFilesWithHits != null) {
+                    drawString(fontRendererObj, analyzedFilesWithHits, 8, 32, 0xff888888);
+                }
+                if (resultsCount != null) {
+                    drawString(fontRendererObj, resultsCount, 8, 48, 0xff888888);
+                }
+            }
+            if (errorMessage != null) {
+                if (errorMessage.first().compareTo(System.currentTimeMillis()) > 0) {
+                    String errorText = "Error: " + EnumChatFormatting.RED + errorMessage.second();
+                    int stringWidth = fontRendererObj.getStringWidth(errorText);
+                    int margin = 5;
+                    int left = width / 2 - stringWidth / 2 - margin;
+                    int top = height / 2 - margin;
+                    drawRect(left, top, left + stringWidth + 2 * margin, top + fontRendererObj.FONT_HEIGHT + 2 * margin, 0xff000000);
+                    drawCenteredString(fontRendererObj, errorText,/* 2, 30*/width / 2, height / 2, 0xffDD1111);
+                } else {
+                    errorMessage = null;
+                }
+            }
+        }
+
+        private float getScrollDistance() {
+            Field scrollDistanceField = FieldUtils.getField(GuiScrollingList.class, "scrollDistance", true);
+            if (scrollDistanceField == null) {
+                // scrollDistance field not found in class GuiScrollingList
+                return Float.MIN_VALUE;
+            }
+            try {
+                return (float) scrollDistanceField.get(this);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+                return Float.MIN_VALUE;
+            }
         }
 
         @Override
@@ -296,6 +471,46 @@ public class GuiSearch extends GuiScreen {
 
         @Override
         protected void elementClicked(int index, boolean doubleClick) {
+            if (doubleClick) {
+                int searchResultIdBySlotId = getSearchResultIdBySlotId(index);
+                LogEntry searchResult = rawResults.get(searchResultIdBySlotId);
+                if (searchResult.getFilePath() == null) {
+                    setErrorMessage("This log entry is not from a file");
+                    return;
+                }
+                byte[] buffer = new byte[1024];
+                String logFileName = Utils.toRealPath(searchResult.getFilePath());
+                try (GZIPInputStream logFileGzipped = new GZIPInputStream(new FileInputStream(logFileName));
+                     FileOutputStream logFileUnGzipped = new FileOutputStream(mcLogOutputFile)) {
+                    String newLine = System.getProperty("line.separator");
+                    logFileUnGzipped.write(("# Original filename: " + logFileName + newLine + "# Use CTRL + F to search for specific words" + newLine + newLine).getBytes());
+                    int len;
+                    while ((len = logFileGzipped.read(buffer)) > 0) {
+                        logFileUnGzipped.write(buffer, 0, len);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                try {
+                    Desktop.getDesktop().open(mcLogOutputFile);
+                    System.out.println("Opened " + mcLogOutputFile);
+                } catch (IOException e) {
+                    setErrorMessage("File extension .txt has no associated default editor");
+                    e.printStackTrace();
+                } catch (IllegalArgumentException e) {
+                    setErrorMessage(e.getMessage()); // The file: <path> doesn't exist.
+                    e.printStackTrace();
+                } catch (UnsupportedOperationException e) {
+                    setErrorMessage("Can't open files on this OS");
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        private void setErrorMessage(String errorMessage) {
+            int showDuration = 10000; // ms
+            this.errorMessage = Pair.of(System.currentTimeMillis() + showDuration, errorMessage);
         }
 
         @Override
@@ -305,12 +520,12 @@ public class GuiSearch extends GuiScreen {
 
         @Override
         protected void drawBackground() {
-
         }
 
         @Override
         protected void drawSlot(int slotIdx, int entryRight, int slotTop, int slotBuffer, Tessellator tess) {
-            if (Objects.equals(searchResultEntries.floorKey(selectedIndex), searchResultEntries.floorKey(slotIdx))) {
+            int drawnResultIndex = searchResultEntries.floorKey(slotIdx);
+            if (Objects.equals(searchResultEntries.floorKey(selectedIndex), drawnResultIndex)) {
                 // highlight all lines of selected entry
                 drawRect(this.left, slotTop - 2, entryRight, slotTop + slotHeight - 2, 0x99000000);
             }
@@ -323,37 +538,56 @@ public class GuiSearch extends GuiScreen {
             }
         }
 
-        private void setResults(List<String> searchResult) {
+        private void setResults(List<LogEntry> searchResult) {
             this.rawResults = searchResult;
             this.slotsData = resizeContent(searchResult);
+            if (GuiSearch.this.areEntriesSearchResults) {
+                this.resultsCount = "Results: " + EnumChatFormatting.WHITE + this.rawResults.size();
+            }
         }
 
         private void clearResults() {
             this.rawResults = Collections.emptyList();
+            this.resultsCount = null;
             this.slotsData = resizeContent(Collections.emptyList());
         }
 
-        private List<IChatComponent> resizeContent(List<String> searchResults) {
+        private List<IChatComponent> resizeContent(List<LogEntry> searchResults) {
             this.searchResultEntries = new TreeMap<>();
             List<IChatComponent> slotsData = new ArrayList<>();
             for (int searchResultIndex = 0; searchResultIndex < searchResults.size(); searchResultIndex++) {
-                String searchResult = searchResults.get(searchResultIndex);
+                LogEntry searchResult = searchResults.get(searchResultIndex);
 
+                String searchResultEntry;
+                if (searchResult.isError()) {
+                    searchResultEntry = searchResult.getMessage();
+                } else {
+                    searchResultEntry = EnumChatFormatting.DARK_GRAY + searchResult.getTime().format(DateTimeFormatter.ISO_LOCAL_DATE) + " " + EnumChatFormatting.RESET + searchResult.getMessage();
+                }
                 searchResultEntries.put(slotsData.size(), searchResultIndex);
-                IChatComponent chat = ForgeHooks.newChatWithLinks(searchResult, false);
-                List<IChatComponent> multilineResult = GuiUtilRenderComponents.splitText(chat, this.listWidth - 8, GuiSearch.this.fontRendererObj, false, true);
+                List<IChatComponent> multilineResult = GuiUtilRenderComponents.splitText(new ChatComponentText(searchResultEntry), this.listWidth - 8, GuiSearch.this.fontRendererObj, false, true);
                 slotsData.addAll(multilineResult);
             }
             return slotsData;
         }
 
-        String getSelectedSearchResult() {
-            Map.Entry<Integer, Integer> selectedResultIndex = searchResultEntries.floorEntry(selectedIndex);
-            return (selectedResultIndex != null && selectedResultIndex.getValue() < rawResults.size()) ? rawResults.get(selectedResultIndex.getValue()) : null;
+        LogEntry getSelectedSearchResult() {
+            int searchResultId = getSearchResultIdBySlotId(selectedIndex);
+            return getSearchResultByResultId(searchResultId);
+        }
+
+        private LogEntry getSearchResultByResultId(int searchResultId) {
+            return (searchResultId >= 0 && searchResultId < rawResults.size()) ? rawResults.get(searchResultId) : null;
+        }
+
+        private int getSearchResultIdBySlotId(int slotId) {
+            Map.Entry<Integer, Integer> searchResultIds = searchResultEntries.floorEntry(slotId);
+            return searchResultIds != null ? searchResultIds.getValue() : -1;
         }
 
         String getAllSearchResults() {
-            return Joiner.on('\n').join(rawResults);
+            return rawResults.stream().map(logEntry -> EnumChatFormatting.getTextWithoutFormattingCodes(logEntry.getMessage()))
+                    .collect(Collectors.joining("\n"));
         }
     }
 }
