@@ -10,8 +10,11 @@ import java.io.*;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -57,9 +60,13 @@ class LogFilesSearcher {
         List<LogEntry> searchResults = new ArrayList<>();
         for (Path path : paths) {
             boolean foundSearchTermInFile = false;
-            try (BufferedReader in = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(path.toFile()))))) {
+            try (BufferedReader in = (path.endsWith("latest.log")
+                    ? new BufferedReader(new InputStreamReader(new FileInputStream(path.toFile()))) // latest.log
+                    : new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(path.toFile())))))) { // ....log.gz
                 String fileName = path.getFileName().toString(); // 2020-04-20-3.log.gz
-                String date = fileName.substring(0, fileName.lastIndexOf('-'));
+                String date = fileName.equals("latest.log")
+                        ? LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
+                        : fileName.substring(0, fileName.lastIndexOf('-'));
                 String content;
                 LogEntry logEntry = null;
                 while ((content = in.readLine()) != null) {
@@ -154,6 +161,11 @@ class LogFilesSearcher {
                         }
                     } else {
                         System.err.println("Error with " + path.toString());
+                    }
+                } else if (path.getFileName().toString().equals("latest.log")) {
+                    LocalDate lastModified = Instant.ofEpochMilli(path.toFile().lastModified()).atZone(ZoneId.systemDefault()).toLocalDate();
+                    if (!lastModified.isBefore(startDate) && !lastModified.isAfter(endDate)) {
+                        fileNames.add(path);
                     }
                 }
             }

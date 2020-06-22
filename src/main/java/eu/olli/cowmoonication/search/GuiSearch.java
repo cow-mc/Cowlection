@@ -31,6 +31,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -480,21 +482,29 @@ public class GuiSearch extends GuiScreen {
                 }
                 byte[] buffer = new byte[1024];
                 String logFileName = Utils.toRealPath(searchResult.getFilePath());
-                try (GZIPInputStream logFileGzipped = new GZIPInputStream(new FileInputStream(logFileName));
-                     FileOutputStream logFileUnGzipped = new FileOutputStream(mcLogOutputFile)) {
-                    String newLine = System.getProperty("line.separator");
-                    logFileUnGzipped.write(("# Original filename: " + logFileName + newLine + "# Use CTRL + F to search for specific words" + newLine + newLine).getBytes());
-                    int len;
-                    while ((len = logFileGzipped.read(buffer)) > 0) {
-                        logFileUnGzipped.write(buffer, 0, len);
+                if (logFileName.endsWith("latest.log")) {
+                    try {
+                        Files.copy(searchResult.getFilePath(), mcLogOutputFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
+                } else { // .log.gz
+                    String newLine = System.getProperty("line.separator");
+                    String fileHeader = "# Original filename: " + logFileName + newLine + "# Use CTRL + F to search for specific words" + newLine + newLine;
+                    try (GZIPInputStream logFileGzipped = new GZIPInputStream(new FileInputStream(logFileName));
+                         FileOutputStream logFileUnGzipped = new FileOutputStream(mcLogOutputFile)) {
+                        logFileUnGzipped.write(fileHeader.getBytes());
+                        int len;
+                        while ((len = logFileGzipped.read(buffer)) > 0) {
+                            logFileUnGzipped.write(buffer, 0, len);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
 
                 try {
                     Desktop.getDesktop().open(mcLogOutputFile);
-                    System.out.println("Opened " + mcLogOutputFile);
                 } catch (IOException e) {
                     setErrorMessage("File extension .txt has no associated default editor");
                     e.printStackTrace();
