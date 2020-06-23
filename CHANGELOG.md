@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - List SkyBlock info of a player `/moo stalkskyblock <playerName>`
 - Config option to toggle between Arabic and Roman numerals
   - used for skill levels and minion tiers currently
+- Added info to auctions' tooltips: price per item
 
 ### Changed
 - Improved handling of command error messages
