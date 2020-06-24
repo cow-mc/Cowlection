@@ -35,7 +35,7 @@ public class PlayerListener {
         if (!MooConfig.showAdvancedTooltips) {
             return;
         }
-        if (e.entityPlayer.openContainer instanceof ContainerChest) {
+        if (e.entityPlayer != null && e.entityPlayer.openContainer instanceof ContainerChest) {
             // for auction house: show price for each item if multiple items are sold at once
             int stackSize = e.itemStack.stackSize;
             if ((stackSize == 1 && !isSubmitBidItem(e.itemStack)) || e.toolTip.size() < 4) {
