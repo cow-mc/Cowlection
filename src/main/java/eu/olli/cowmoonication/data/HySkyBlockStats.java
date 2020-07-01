@@ -123,7 +123,7 @@ public class HySkyBlockStats {
             }
 
             public Pair<String, String> getFancyFirstJoined() {
-                return Utils.getLastOnlineWords(first_join);
+                return Utils.getDurationAsWords(first_join);
             }
 
             public double getCoinPurse() {

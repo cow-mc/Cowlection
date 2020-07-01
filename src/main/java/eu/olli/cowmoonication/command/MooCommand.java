@@ -290,12 +290,12 @@ public class MooCommand extends CommandBase {
                                             .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.YELLOW + "Run " + EnumChatFormatting.GOLD + "/profile " + slothStalking.getPlayerName())))))
                                     .appendSibling(new ChatComponentText(" while you're in a lobby (tooltip of the player head on the top left).").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.YELLOW))));
                         } else if (slothStalking.hasNeverLoggedOut()) {
-                            Pair<String, String> lastOnline = Utils.getLastOnlineWords(slothStalking.getLastLogin());
+                            Pair<String, String> lastOnline = Utils.getDurationAsWords(slothStalking.getLastLogin());
 
                             main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, slothStalking.getPlayerNameFormatted() + EnumChatFormatting.YELLOW + " was last online " + EnumChatFormatting.GOLD + lastOnline.first() + EnumChatFormatting.YELLOW + " ago"
                                     + (lastOnline.second() != null ? " (" + EnumChatFormatting.GOLD + lastOnline.second() + EnumChatFormatting.YELLOW + ")" : "") + ".");
                         } else {
-                            Pair<String, String> lastOnline = Utils.getLastOnlineWords(slothStalking.getLastLogout());
+                            Pair<String, String> lastOnline = Utils.getDurationAsWords(slothStalking.getLastLogout());
 
                             main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, slothStalking.getPlayerNameFormatted() + EnumChatFormatting.YELLOW + " is " + EnumChatFormatting.GOLD + "offline" + EnumChatFormatting.YELLOW + " for " + EnumChatFormatting.GOLD + lastOnline.first() + EnumChatFormatting.YELLOW
                                     + ((lastOnline.second() != null || slothStalking.getLastGame() != null) ? (" ("

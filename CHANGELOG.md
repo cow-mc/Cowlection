@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Config option to toggle between Arabic and Roman numerals
   - used for skill levels and minion tiers currently
 - Added info to auctions' tooltips: price per item
+- Added item age tooltips (works for most non-stackable items)
 
 ### Changed
 - Improved handling of command error messages

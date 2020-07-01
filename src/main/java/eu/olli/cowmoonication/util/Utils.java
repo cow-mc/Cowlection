@@ -9,6 +9,7 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.text.DecimalFormat;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -38,7 +39,7 @@ public final class Utils {
      * @param timestamp last login/logout
      * @return 1st: duration between timestamp and now in words; 2nd: formatted date if time differences is >24h, otherwise null
      */
-    public static Pair<String, String> getLastOnlineWords(long timestamp) {
+    public static Pair<String, String> getDurationAsWords(long timestamp) {
         long duration = System.currentTimeMillis() - timestamp;
         long daysPast = TimeUnit.MILLISECONDS.toDays(duration);
 
@@ -56,6 +57,32 @@ public final class Utils {
                     DurationFormatUtils.formatDurationWords(duration, true, true),
                     dateFormatted);
         }
+    }
+
+    public static String getDurationAsWord(long timestamp) {
+        long duration = System.currentTimeMillis() - timestamp;
+        long secondsPast = TimeUnit.MILLISECONDS.toSeconds(duration);
+        if (secondsPast < 60) {
+            return secondsPast + " second" + (secondsPast > 1 ? "s" : "");
+        }
+        long minutesPast = TimeUnit.SECONDS.toMinutes(secondsPast);
+        if (minutesPast < 60) {
+            return minutesPast + " minute" + (minutesPast > 1 ? "s" : "");
+        }
+        long hoursPast = TimeUnit.MINUTES.toHours(minutesPast);
+        if (hoursPast < 24) {
+            return hoursPast + " hour" + (hoursPast > 1 ? "s" : "");
+        }
+        long daysPast = TimeUnit.HOURS.toDays(hoursPast);
+        if (daysPast < 31) {
+            return daysPast + " day" + (daysPast > 1 ? "s" : "");
+        }
+        double monthsPast = daysPast / 30.5d;
+        if (monthsPast < 12) {
+            return new DecimalFormat("0.#").format(monthsPast) + " month" + (monthsPast >= 2 ? "s" : "");
+        }
+        double yearsPast = monthsPast / 12d;
+        return new DecimalFormat("0.#").format(yearsPast) + " year" + (yearsPast >= 2 ? "s" : "");
     }
 
     public static String toRealPath(Path path) {

@@ -9,20 +9,32 @@ import net.minecraft.init.Items;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 import org.apache.commons.lang3.StringUtils;
+import org.lwjgl.input.Keyboard;
 
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class PlayerListener {
     private final Cowmoonication main;
     private final NumberFormat numberFormatter;
+    /**
+     * timestamp example: 4/20/20 4:20 AM
+     */
+    private final Pattern SB_TIMESTAMP_PATTERN = Pattern.compile("^(\\d{1,2})/(\\d{1,2})/(\\d{2}) (\\d{1,2}):(\\d{2}) (AM|PM)$");
 
     public PlayerListener(Cowmoonication main) {
         this.main = main;
@@ -32,11 +44,34 @@ public class PlayerListener {
 
     @SubscribeEvent
     public void onItemTooltip(ItemTooltipEvent e) {
-        if (!MooConfig.showAdvancedTooltips) {
+        if (!MooConfig.showAdvancedTooltips && !Keyboard.isKeyDown(Keyboard.KEY_LMENU)) {
             return;
         }
+        // add item age to tooltip
+        NBTTagCompound extraAttributes = e.itemStack.getSubCompound("ExtraAttributes", false);
+        if (extraAttributes != null && extraAttributes.hasKey("timestamp")) {
+            String rawTimestamp = extraAttributes.getString("timestamp");
+            Matcher sbTimestampMatcher = SB_TIMESTAMP_PATTERN.matcher(rawTimestamp);
+            if (sbTimestampMatcher.matches()) {
+                // Timezone = America/Toronto! headquarter is in Val-des-Monts, Quebec, Canada; timezone can also be confirmed by looking at the timestamps of New Year Cakes
+                ZonedDateTime dateTime = getDateTimeWithZone(sbTimestampMatcher, ZoneId.of("America/Toronto")); // EDT/EST
+                String dateTimeFormatted = dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm zzz"));
+
+                int index = Math.max(0, e.toolTip.size() - (e.showAdvancedItemTooltips ? /* item name & nbt info */ 2 : 0));
+
+                if (Keyboard.isKeyDown(Keyboard.KEY_LMENU)) {
+                    // full tooltip
+                    e.toolTip.add(index, "Timestamp: " + EnumChatFormatting.DARK_GRAY + dateTimeFormatted);
+                    e.toolTip.add(index, "Item age: " + EnumChatFormatting.DARK_GRAY + Utils.getDurationAsWords(dateTime.toEpochSecond() * 1000).first());
+                } else {
+                    // abbreviated tooltip
+                    e.toolTip.add(index, "Item age: " + EnumChatFormatting.DARK_GRAY + Utils.getDurationAsWord(dateTime.toEpochSecond() * 1000));
+                }
+            }
+        }
+
+        // for auction house: show price for each item if multiple items are sold at once
         if (e.entityPlayer != null && e.entityPlayer.openContainer instanceof ContainerChest) {
-            // for auction house: show price for each item if multiple items are sold at once
             int stackSize = e.itemStack.stackSize;
             if ((stackSize == 1 && !isSubmitBidItem(e.itemStack)) || e.toolTip.size() < 4) {
                 // only 1 item or irrelevant tooltip - nothing to do here, abort!
@@ -77,6 +112,18 @@ public class PlayerListener {
                 }
             }
         }
+    }
+
+    private ZonedDateTime getDateTimeWithZone(Matcher sbTimestampMatcher, ZoneId zoneId) {
+        int year = 2000 + Integer.parseInt(sbTimestampMatcher.group(3));
+        int month = Integer.parseInt(sbTimestampMatcher.group(1));
+        int day = Integer.parseInt(sbTimestampMatcher.group(2));
+        int hour = (Integer.parseInt(sbTimestampMatcher.group(4)) + (sbTimestampMatcher.group(6).equals("PM") ? 12 : 0)) % 24;
+        int minute = Integer.parseInt(sbTimestampMatcher.group(5));
+
+        LocalDateTime localDateTime = LocalDateTime.of(year, month, day, hour, minute);
+
+        return ZonedDateTime.of(localDateTime, zoneId);
     }
 
     private boolean isSubmitBidItem(ItemStack itemStack) {
