@@ -48,7 +48,7 @@ public class MooCommand extends CommandBase {
             sendCommandUsage(sender);
             return;
         }
-        // sub commands: friends
+        // sub commands: friends & other players
         if (args[0].equalsIgnoreCase("stalk")) {
             if (args.length != 2) {
                 throw new WrongUsageException("/" + getCommandName() + " stalk <playerName>");
@@ -207,11 +207,11 @@ public class MooCommand extends CommandBase {
                 e.printStackTrace();
                 throw new MooCommandException("\u2716 An error occurred trying to open the mod's directory. I guess you have to open it manually \u00af\\_(\u30c4)_/\u00af");
             }
+        } else if (args[0].equalsIgnoreCase("help")) {
+            sendCommandUsage(sender);
         }
         // "catch-all" remaining sub-commands
-        else if (args[0].equalsIgnoreCase("help")) {
-            sendCommandUsage(sender);
-        } else {
+        else {
             main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Command " + EnumChatFormatting.DARK_RED + "/" + getCommandName() + " " + args[0] + EnumChatFormatting.RED + " doesn't exist. Use " + EnumChatFormatting.DARK_RED + "/" + getCommandName() + " help " + EnumChatFormatting.RED + "to show command usage.");
         }
     }
@@ -461,7 +461,7 @@ public class MooCommand extends CommandBase {
 
     private void sendCommandUsage(ICommandSender sender) {
         IChatComponent usage = new MooChatComponent("\u279C " + Cowmoonication.MODNAME + " commands:").gold().bold()
-                .appendSibling(createCmdHelpSection(1, "Friends"))
+                .appendSibling(createCmdHelpSection(1, "Friends & other players"))
                 .appendSibling(createCmdHelpEntry("stalk", "Get info of player's status"))
                 .appendSibling(createCmdHelpEntry("stalkskyblock", "Get info of player's SkyBlock stats"))
                 .appendSibling(createCmdHelpEntry("analyzeIsland", "Analyze a SkyBlock private island"))
@@ -503,7 +503,7 @@ public class MooCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args,
-                    /* friends */  "stalk", "stalkskyblock", "skyblockstalk", "analyzeIsland", "add", "remove", "list", "nameChangeCheck", "toggle",
+                    /* friends & other players */ "stalk", "stalkskyblock", "skyblockstalk", "analyzeIsland", "add", "remove", "list", "nameChangeCheck", "toggle",
                     /* miscellaneous */ "config", "search", "guiscale", "shrug", "apikey",
                     /* update mod */ "update", "updateHelp", "version", "directory",
                     /* help */ "help");
