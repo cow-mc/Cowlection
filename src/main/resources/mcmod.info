@@ -1,11 +1,11 @@
 [{
   "modid": "${modid}",
   "name": "${modname}",
-  "description": "Adding various things related to communication.",
+  "description": "Adds a collection of various useful things.",
   "version": "${version}",
   "mcversion": "${mcversion}",
   "url": "${giturl}",
-  "updateUrl": "https://raw.githubusercontent.com/cow-mc/Cowmoonication/master/update.json",
+  "updateUrl": "https://raw.githubusercontent.com/cow-mc/Cowlection/master/update.json",
   "authorList": ["Cow"],
   "logoFile": "",
   "screenshots": [],

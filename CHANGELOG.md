@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.8.9-0.7.0] - 05.07.2020
+### Changed
+- Renamed mod from `Cowmoonication` to `Cowlection` 🐮
+  - `Cowmoonication` originally focused on **communication**-related features
+  - `Cowlection` is a **collection** of various features
+
 ## [1.8.9-0.6.0] - 05.07.2020
 ### Added
 - Minecraft log file search `/moo search`
@@ -75,12 +81,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Copy chat components via <kbd>ALT</kbd> + <kbd>right click</kbd>
 - Change guiScale to any value (`/moo guiscale [newValue]`)
 
-*Note:* The 'best friends' list is currently available via <kbd>ESC</kbd> > Mod Options > Cowmoonication > Config > bestFriends.
+*Note:* The 'best friends' list is currently available via <kbd>ESC</kbd> > Mod Options > Cowlection > Config > bestFriends.
 
-[1.8.9-0.6.0]: https://github.com/cow-mc/Cowmoonication/compare/v1.8.9-0.5.0...v1.8.9-0.6.0
-[1.8.9-0.5.0]: https://github.com/cow-mc/Cowmoonication/compare/v1.8.9-0.4.0...v1.8.9-0.5.0
-[1.8.9-0.4.0]: https://github.com/cow-mc/Cowmoonication/compare/v1.8.9-0.3.1...v1.8.9-0.4.0
-[1.8.9-0.3.1]: https://github.com/cow-mc/Cowmoonication/compare/v1.8.9-0.3.0...v1.8.9-0.3.1
-[1.8.9-0.3.0]: https://github.com/cow-mc/Cowmoonication/compare/v1.8.9-0.2.0...v1.8.9-0.3.0
-[1.8.9-0.2.0]: https://github.com/cow-mc/Cowmoonication/compare/v0.1...v1.8.9-0.2.0
-[0.1]: https://github.com/cow-mc/Cowmoonication/releases/tag/v0.1
+[1.8.9-0.7.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.6.0...v1.8.9-0.7.0
+[1.8.9-0.6.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.5.0...v1.8.9-0.6.0
+[1.8.9-0.5.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.4.0...v1.8.9-0.5.0
+[1.8.9-0.4.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.3.1...v1.8.9-0.4.0
+[1.8.9-0.3.1]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.3.0...v1.8.9-0.3.1
+[1.8.9-0.3.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.2.0...v1.8.9-0.3.0
+[1.8.9-0.2.0]: https://github.com/cow-mc/Cowlection/compare/v0.1...v1.8.9-0.2.0
+[0.1]: https://github.com/cow-mc/Cowlection/releases/tag/v0.1
