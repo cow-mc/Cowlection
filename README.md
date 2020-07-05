@@ -1,5 +1,8 @@
 # Cowlection
-A client-side only Forge mod by [Cow](https://namemc.com/profile/Cow) providing various things related to communication. :cow2:
+> Cow's collection ➔ Cowlection
+
+Cowlection is a client-side-only Forge mod by [Cow](https://namemc.com/profile/Cow) for Minecraft version 1.8.9.  
+It is a collection of different features mainly focused on Hypixel SkyBlock. 🐄
 
 ## Current features
 | Feature                                                                 | Command/Usage                           |
@@ -22,3 +25,6 @@ A client-side only Forge mod by [Cow](https://namemc.com/profile/Cow) providing 
 You can download the compiled .jar files from the [release section](https://github.com/cow-mc/Cowlection/releases).
 
 ➜ View [Changelog](CHANGELOG.md)
+
+## Feedback
+If you have any questions, suggestions or other feedback, you can [join the Discord server](https://discord.gg/fU2tFPf).
