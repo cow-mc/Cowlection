@@ -143,15 +143,14 @@ public class MooCommand extends CommandBase {
                                 .append(EnumChatFormatting.RED).append("Unknown minion ").append(EnumChatFormatting.YELLOW).append("(new or with minion skin) ").append(tierColor).append(minionTier);
                     });
             main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, analysisResults.toString());
-        } else if (args.length == 2 && args[0].equalsIgnoreCase("add")) {
-            handleBestFriendAdd(args[1]);
-        } else if (args.length == 2 && args[0].equalsIgnoreCase("remove")) {
-            handleBestFriendRemove(args[1]);
+        } else if (args[0].equalsIgnoreCase("add")) {
+            handleBestFriendAdd(args);
+        } else if (args[0].equalsIgnoreCase("remove")) {
+            handleBestFriendRemove(args);
         } else if (args[0].equalsIgnoreCase("list")) {
             handleListBestFriends();
         } else if (args[0].equalsIgnoreCase("nameChangeCheck")) {
-            main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, "Looking for best friends that have changed their name... This will take a few seconds...");
-            main.getFriendsHandler().updateBestFriends(true);
+            handleNameChangeCheck(args);
         }
         // sub-commands: miscellaneous
         else if (args[0].equalsIgnoreCase("config") || args[0].equalsIgnoreCase("toggle")) {
@@ -163,7 +162,10 @@ public class MooCommand extends CommandBase {
             if (args.length == 1) {
                 main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u279C Current GUI scale: " + EnumChatFormatting.DARK_GREEN + currentGuiScale);
             } else {
-                int scale = Math.min(10, MathHelper.parseIntWithDefault(args[1], 6));
+                int scale = MathHelper.parseIntWithDefault(args[1], -1);
+                if (scale == -1 || scale > 10) {
+                    throw new NumberInvalidException(EnumChatFormatting.DARK_RED + args[1] + EnumChatFormatting.RED + " is an invalid GUI scale value. Valid values are integers below 10");
+                }
                 Minecraft.getMinecraft().gameSettings.guiScale = scale;
                 main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u2714 New GUI scale: " + EnumChatFormatting.DARK_GREEN + scale + EnumChatFormatting.GREEN + " (previous: " + EnumChatFormatting.DARK_GREEN + currentGuiScale + EnumChatFormatting.GREEN + ")");
             }
@@ -414,26 +416,28 @@ public class MooCommand extends CommandBase {
         });
     }
 
-    private void handleBestFriendAdd(String username) throws CommandException {
-        if (!Utils.isValidMcName(username)) {
-            throw new InvalidPlayerNameException(username);
-        }
-
-        // TODO Add check if 'best friend' is on normal friend list
-        if (main.getFriendsHandler().isBestFriend(username, true)) {
-            throw new MooCommandException(EnumChatFormatting.DARK_RED + username + EnumChatFormatting.RED + " is a best friend already.");
+    private void handleBestFriendAdd(String[] args) throws CommandException {
+        if (args.length != 2) {
+            throw new WrongUsageException("/" + getCommandName() + " add <playerName>");
+        } else if (!Utils.isValidMcName(args[1])) {
+            throw new InvalidPlayerNameException(args[1]);
+        } else if (main.getFriendsHandler().isBestFriend(args[1], true)) {
+            throw new MooCommandException(EnumChatFormatting.DARK_RED + args[1] + EnumChatFormatting.RED + " is a best friend already.");
         } else {
-            main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, "Fetching " + EnumChatFormatting.YELLOW + username + EnumChatFormatting.GOLD + "'s unique user id. This may take a few seconds...");
+            // TODO Add check if 'best friend' is on normal friend list
+            main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, "Fetching " + EnumChatFormatting.YELLOW + args[1] + EnumChatFormatting.GOLD + "'s unique user id. This may take a few seconds...");
             // add friend async
-            main.getFriendsHandler().addBestFriend(username);
+            main.getFriendsHandler().addBestFriend(args[1]);
         }
     }
 
-    private void handleBestFriendRemove(String username) throws CommandException {
-        if (!Utils.isValidMcName(username)) {
-            throw new InvalidPlayerNameException(username);
+    private void handleBestFriendRemove(String[] args) throws CommandException {
+        if (args.length != 2) {
+            throw new WrongUsageException("/" + getCommandName() + " remove <playerName>");
+        } else if (!Utils.isValidMcName(args[1])) {
+            throw new InvalidPlayerNameException(args[1]);
         }
-
+        String username = args[1];
         boolean removed = main.getFriendsHandler().removeBestFriend(username);
         if (removed) {
             main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Removed " + EnumChatFormatting.DARK_GREEN + username + EnumChatFormatting.GREEN + " from best friends list.");
@@ -446,7 +450,25 @@ public class MooCommand extends CommandBase {
         Set<String> bestFriends = main.getFriendsHandler().getBestFriends();
 
         // TODO show fancy gui with list of best friends; maybe with buttons to delete them
-        main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u279C Best friends: " + EnumChatFormatting.DARK_GREEN + String.join(EnumChatFormatting.GREEN + ", " + EnumChatFormatting.DARK_GREEN, bestFriends));
+        main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u279C Best friends: " + ((bestFriends.isEmpty())
+                ? EnumChatFormatting.ITALIC + "none :c"
+                : EnumChatFormatting.DARK_GREEN + String.join(EnumChatFormatting.GREEN + ", " + EnumChatFormatting.DARK_GREEN, bestFriends)));
+    }
+
+    private void handleNameChangeCheck(String[] args) throws CommandException {
+        if (args.length != 2) {
+            throw new WrongUsageException("/" + getCommandName() + " nameChangeCheck <playerName>");
+        } else if (!Utils.isValidMcName(args[1])) {
+            throw new InvalidPlayerNameException(args[1]);
+        }
+        Friend bestFriend = main.getFriendsHandler().getBestFriend(args[1]);
+        if (bestFriend.equals(Friend.FRIEND_NOT_FOUND)) {
+            throw new MooCommandException(EnumChatFormatting.DARK_RED + args[1] + EnumChatFormatting.RED + " isn't a best friend.");
+        } else {
+            main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, "Checking if " + bestFriend.getName() + " changed their name... This will take a few seconds...");
+            // check for name change async
+            main.getFriendsHandler().updateBestFriend(bestFriend, true);
+        }
     }
 
     @Override
@@ -468,7 +490,7 @@ public class MooCommand extends CommandBase {
                 .appendSibling(createCmdHelpEntry("add", "Add best friends"))
                 .appendSibling(createCmdHelpEntry("remove", "Remove best friends"))
                 .appendSibling(createCmdHelpEntry("list", "View list of best friends"))
-                .appendSibling(createCmdHelpEntry("nameChangeCheck", "Force a scan for changed names of best friends"))
+                .appendSibling(createCmdHelpEntry("nameChangeCheck", "Force a scan for a changed name of a best friend"))
                 .appendSibling(createCmdHelpEntry("toggle", "Toggle join/leave notifications"))
                 .appendSibling(createCmdHelpSection(2, "Miscellaneous"))
                 .appendSibling(createCmdHelpEntry("config", "Open mod's configuration"))

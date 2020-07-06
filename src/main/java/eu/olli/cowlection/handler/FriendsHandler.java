@@ -4,10 +4,10 @@ import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 import eu.olli.cowlection.Cowlection;
 import eu.olli.cowlection.command.exception.ApiContactException;
+import eu.olli.cowlection.command.exception.MooCommandException;
 import eu.olli.cowlection.data.Friend;
 import eu.olli.cowlection.util.ApiUtils;
 import eu.olli.cowlection.util.GsonUtils;
-import eu.olli.cowlection.util.TickDelay;
 import io.netty.util.internal.ConcurrentSet;
 import net.minecraft.command.PlayerNotFoundException;
 import net.minecraft.event.ClickEvent;
@@ -25,22 +25,21 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class FriendsHandler {
-    private static final long UPDATE_FREQUENCY_DEFAULT = TimeUnit.HOURS.toMillis(15);
-    private static final long UPDATE_FREQUENCY_MINIMUM = TimeUnit.MINUTES.toMillis(5);
+    private static final long UPDATE_FREQUENCY_DEFAULT = TimeUnit.HOURS.toMillis(10);
     private final Cowlection main;
-    private Set<Friend> bestFriends = new ConcurrentSet<>();
-    private File bestFriendsFile;
-    private UpdateStatus updateStatus;
+    private final Set<Friend> bestFriends = new ConcurrentSet<>();
+    private final File bestFriendsFile;
+    private final AtomicInteger bestFriendQueue = new AtomicInteger();
 
     public FriendsHandler(Cowlection main, File friendsFile) {
         this.main = main;
         this.bestFriendsFile = friendsFile;
-        this.updateStatus = UpdateStatus.IDLE;
         loadBestFriends();
-        updateBestFriends(false);
+        updateBestFriends();
     }
 
     public boolean isBestFriend(String playerName, boolean ignoreCase) {
@@ -91,24 +90,21 @@ public class FriendsHandler {
         return bestFriends.stream().filter(friend -> friend.getUuid().equals(uuid)).findFirst().orElse(Friend.FRIEND_NOT_FOUND);
     }
 
-    public void updateBestFriends(boolean isCommandTriggered) {
-        bestFriends.stream().filter(friend -> System.currentTimeMillis() - friend.getLastChecked() > (isCommandTriggered ? UPDATE_FREQUENCY_MINIMUM : UPDATE_FREQUENCY_DEFAULT)).forEach(this::updateBestFriend);
-
-        new TickDelay(() -> {
-            if (this.updateStatus != UpdateStatus.IDLE) {
-                if (isCommandTriggered && updateStatus == UpdateStatus.NO_NAME_CHANGES) {
-                    main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, "No name changes detected.");
-                }
-                saveBestFriends();
-                this.updateStatus = UpdateStatus.IDLE;
-            }
-        }, 10 * 20);
+    public void updateBestFriends() {
+        bestFriends.stream().filter(friend -> System.currentTimeMillis() - friend.getLastChecked() > UPDATE_FREQUENCY_DEFAULT)
+                .forEach(friend1 -> {
+                    bestFriendQueue.incrementAndGet();
+                    updateBestFriend(friend1, false);
+                });
     }
 
-    private void updateBestFriend(Friend friend) {
+    public void updateBestFriend(Friend friend, boolean isCommandTriggered) {
         ApiUtils.fetchCurrentName(friend, newName -> {
             if (newName == null) {
                 // skipping friend, something went wrong with API request
+                if (isCommandTriggered) {
+                    throw new ApiContactException("Mojang", "couldn't check " + EnumChatFormatting.DARK_RED + friend.getName() + EnumChatFormatting.RED + " (possible) new player name");
+                }
             } else if (newName.equals(ApiUtils.UUID_NOT_FOUND)) {
                 throw new PlayerNotFoundException("How did you manage to get a unique id on your best friends list that has no name attached to it?");
             } else if (newName.equals(friend.getName())) {
@@ -116,8 +112,8 @@ public class FriendsHandler {
                 Friend bestFriend = getBestFriend(friend.getUuid());
                 if (!bestFriend.equals(Friend.FRIEND_NOT_FOUND)) {
                     bestFriend.setLastChecked(System.currentTimeMillis());
-                    if (this.updateStatus == UpdateStatus.IDLE) {
-                        this.updateStatus = UpdateStatus.NO_NAME_CHANGES;
+                    if (isCommandTriggered) {
+                        throw new MooCommandException(friend.getName() + " hasn't changed his name");
                     }
                 }
             } else {
@@ -131,7 +127,15 @@ public class FriendsHandler {
                 if (!bestFriend.equals(Friend.FRIEND_NOT_FOUND)) {
                     bestFriend.setName(newName);
                     bestFriend.setLastChecked(System.currentTimeMillis());
-                    this.updateStatus = UpdateStatus.NAME_CHANGED;
+                }
+            }
+            if (isCommandTriggered) {
+                saveBestFriends();
+            } else {
+                int remainingFriendsToCheck = bestFriendQueue.decrementAndGet();
+                if (remainingFriendsToCheck == 0) {
+                    // we're done with checking for name changes, save updates to file!
+                    saveBestFriends();
                 }
             }
         });
@@ -168,9 +172,5 @@ public class FriendsHandler {
         Type collectionType = new TypeToken<Set<Friend>>() {
         }.getType();
         return GsonUtils.fromJson(bestFriendsData, collectionType);
-    }
-
-    private enum UpdateStatus {
-        IDLE, NAME_CHANGED, NO_NAME_CHANGES
     }
 }
