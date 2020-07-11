@@ -1,16 +1,12 @@
 package eu.olli.cowlection.util;
 
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
-import eu.olli.cowlection.Cowlection;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ThreadDownloadImageData;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.InputStream;
 
 public class ImageUtils {
     public static int getTierFromTexture(String minionSkinId) {
@@ -22,55 +18,47 @@ public class ImageUtils {
         ThreadDownloadImageData minionSkinTexture = (ThreadDownloadImageData) Minecraft.getMinecraft().getTextureManager().getTexture(minionSkinLocation);
         BufferedImage minionSkinImage = ReflectionHelper.getPrivateValue(ThreadDownloadImageData.class, minionSkinTexture, "bufferedImage", "field_110560_d");
 
-        // extract part of the minion tier badge (center 2x2 pixel)
-        BufferedImage minionSkinTierBadge = minionSkinImage.getSubimage(43, 3, 2, 2);
+        // extract relevant part of the minion tier badge (center 2x1 pixel)
+        BufferedImage minionSkinTierBadge = minionSkinImage.getSubimage(43, 3, 2, 1);
 
-        // reference image for tier badges: each tier is 2x2 pixel
-        ResourceLocation tierBadgesLocation = new ResourceLocation(Cowlection.MODID, "minion-tier-badges.png");
-
-        try (InputStream tierBadgesStream = Minecraft.getMinecraft().getResourceManager().getResource(tierBadgesLocation).getInputStream()) {
-            BufferedImage tierBadges = ImageIO.read(tierBadgesStream);
-
-            final int maxTier = 11;
-            for (int tier = 0; tier < maxTier; tier++) {
-                BufferedImage tierBadgeRaw = tierBadges.getSubimage(tier * 2, 0, 2, 2);
-                if (ImageUtils.areEquals(minionSkinTierBadge, tierBadgeRaw)) {
-                    return tier + 1;
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            return -1;
-        }
-        return -5;
+        return MinionTier.getByColors(minionSkinTierBadge.getRGB(0, 0), minionSkinTierBadge.getRGB(1, 0)).getTier();
     }
 
-    /**
-     * Compares two images pixel by pixel
-     *
-     * @param imageA the first image
-     * @param imageB the second image
-     * @return whether the images are both the same or not
-     * @see <a href="https://stackoverflow.com/a/29886786">Source</a>
-     */
-    private static boolean areEquals(BufferedImage imageA, BufferedImage imageB) {
-        // images must be the same size
-        if (imageA.getWidth() != imageB.getWidth() || imageA.getHeight() != imageB.getHeight()) {
-            return false;
+    private enum MinionTier {
+        UNKNOWN(-1, -1),
+        I(0, 0),
+        II(-2949295, -10566655),
+        III(-1245259, -10566655),
+        IV(-8922850, -983608),
+        V(-8110849, -11790679),
+        VI(-4681729, -11790679),
+        VII(-9486653, -3033345),
+        VIII(-907953, -7208930),
+        IX(-31330, -7208930),
+        X(-5046235, -20031),
+        XI(-15426142, -1769477);
+
+        private final int color1;
+        private final int color2;
+
+        MinionTier(int color1, int color2) {
+            this.color1 = color1;
+            this.color2 = color2;
         }
 
-        int width = imageA.getWidth();
-        int height = imageB.getHeight();
-
-        // loop over every pixel
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                // compare the pixels for equality
-                if (imageA.getRGB(x, y) != imageB.getRGB(x, y)) {
-                    return false;
+        private static MinionTier getByColors(int color1, int color2) {
+            MinionTier[] tiers = values();
+            for (int i = 1; i < tiers.length; i++) {
+                MinionTier minionTier = tiers[i];
+                if (minionTier.color1 == color1 && minionTier.color2 == color2) {
+                    return minionTier;
                 }
             }
+            return UNKNOWN;
         }
-        return true;
+
+        private int getTier() {
+            return ordinal();
+        }
     }
 }
