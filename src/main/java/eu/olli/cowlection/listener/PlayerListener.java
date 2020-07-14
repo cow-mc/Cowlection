@@ -44,6 +44,9 @@ public class PlayerListener {
 
     @SubscribeEvent
     public void onItemTooltip(ItemTooltipEvent e) {
+        if (e.itemStack == null || e.toolTip == null) {
+            return;
+        }
         if (!MooConfig.showAdvancedTooltips && !Keyboard.isKeyDown(Keyboard.KEY_LMENU)) {
             return;
         }

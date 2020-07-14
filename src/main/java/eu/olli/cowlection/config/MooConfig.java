@@ -41,6 +41,9 @@ public class MooConfig {
     public static boolean showAdvancedTooltips;
     public static String[] tabCompletableNamesCommands;
     private static String numeralSystem;
+    // SkyBlock dungeon
+    public static int[] dungClassRange;
+    public static boolean dungFilterPartiesWithDupes;
     // logs search config
     public static String[] logsDirs;
     private static String defaultStartDate;
@@ -138,6 +141,13 @@ public class MooConfig {
         Property propMoo = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
                 "moo", "", "The answer to life the universe and everything. Don't edit this entry manually!", Utils.VALID_UUID_PATTERN), false);
 
+        // SkyBlock dungeon
+        Property propDungClassRange = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
+                "dungClassRange", new int[]{-1, -1}, "Accepted level range for the dungeon party finder. Set to -1 to disable"), true)
+                .setMinValue(-1).setIsListLengthFixed(true);
+        Property propDungFilterPartiesWithDupes = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
+                "dungFilterPartiesWithDupes", false, "Mark parties with duplicated classes?"), true);
+
         cfg.setCategoryPropertyOrder(Configuration.CATEGORY_CLIENT, propOrderGeneral);
 
         // config section: log files search
@@ -166,6 +176,10 @@ public class MooConfig {
             tabCompletableNamesCommands = propTabCompletableNamesCommands.getStringList();
             moo = propMoo.getString();
 
+            // SkyBlock dungeon
+            dungClassRange = propDungClassRange.getIntList();
+            dungFilterPartiesWithDupes = propDungFilterPartiesWithDupes.getBoolean();
+
             // logs search config
             logsDirs = propLogsDirs.getStringList();
             defaultStartDate = propDefaultStartDate.getString().trim();
@@ -185,13 +199,22 @@ public class MooConfig {
         propTabCompletableNamesCommands.set(tabCompletableNamesCommands);
         propMoo.set(moo);
 
+        // SkyBlock dungeon
+        propDungClassRange.set(dungClassRange);
+        propDungFilterPartiesWithDupes.set(dungFilterPartiesWithDupes);
+
         // logs search config
         propLogsDirs.set(logsDirs);
         propDefaultStartDate.set(defaultStartDate);
 
         if (cfg.hasChanged()) {
-            if (modifiedTabCompletableCommandsList && Minecraft.getMinecraft().thePlayer != null) {
-                main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Added or removed commands with tab-completable usernames take effect after a game restart!");
+            if (Minecraft.getMinecraft().thePlayer != null) {
+                if (modifiedTabCompletableCommandsList) {
+                    main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Added or removed commands with tab-completable usernames take effect after a game restart!");
+                }
+                if (dungClassRange[0] > -1 && dungClassRange[1] > -1 && dungClassRange[0] > dungClassRange[1]) {
+                    main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Dungeon class range minimum value cannot be higher than the maximum value.");
+                }
             }
             cfg.save();
         }
