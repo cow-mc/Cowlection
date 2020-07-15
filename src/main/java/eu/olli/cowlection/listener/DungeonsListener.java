@@ -54,7 +54,7 @@ public class DungeonsListener {
      * | Group `colorDungeon`       | §8                |
      * </pre>
      */
-    private final Pattern TOOLTIP_LINE_PATTERN = Pattern.compile("^(?<prefix>(?:" + FORMATTING_CODE + ")+[A-Za-z ]+: " + FORMATTING_CODE + ")(?<statNonDungeon>[+-][0-9]+)(?<statNonDungeonUnit>%| HP|)(?: (?<colorReforge>" + FORMATTING_CODE + ")\\((?<reforge>[A-Za-z]+) (?<statReforge>[+-][0-9]+)(?<statReforgeUnit>%| HP|)\\))?(?: (?<colorDungeon>" + FORMATTING_CODE + ")\\((?<statDungeon>[+-][.0-9]+)(?<statDungeonUnit>%| HP|)\\))?$");
+    private final Pattern TOOLTIP_LINE_PATTERN = Pattern.compile("^(?<prefix>(?:" + FORMATTING_CODE + ")+[A-Za-z ]+: " + FORMATTING_CODE + ")(?<statNonDungeon>[+-]?[0-9]+)(?<statNonDungeonUnit>%| HP|)(?: (?<colorReforge>" + FORMATTING_CODE + ")\\((?<reforge>[A-Za-z]+) (?<statReforge>[+-]?[0-9]+)(?<statReforgeUnit>%| HP|)\\))?(?: (?<colorDungeon>" + FORMATTING_CODE + ")\\((?<statDungeon>[+-]?[.0-9]+)(?<statDungeonUnit>%| HP|)\\))?$");
 
     private String activeDungeonClass;
 
@@ -81,14 +81,15 @@ public class DungeonsListener {
                 int reforgeInItemName = originalItemName.indexOf(reforge);
                 if (reforgeInItemName > 0 && !originalItemName.contains(EnumChatFormatting.STRIKETHROUGH.toString())) {
                     // we have a reforged item! strike through reforge in item name and remove any essence upgrades (✪)
+                    String grayedOutFormatting = "" + EnumChatFormatting.GRAY + EnumChatFormatting.STRIKETHROUGH;
                     StringBuffer modifiedItemName = new StringBuffer(originalItemName)
-                            .insert(reforgeInItemName, "" + EnumChatFormatting.GRAY + EnumChatFormatting.STRIKETHROUGH)
-                            .insert(reforgeInItemName + reforge.length() + /*formatting codes for gray + strikethrough:*/4, originalItemName.substring(0, reforgeInItemName));
+                            .insert(reforgeInItemName, grayedOutFormatting)
+                            .insert(reforgeInItemName + reforge.length() + grayedOutFormatting.length(), originalItemName.substring(0, reforgeInItemName));
                     // remove essence upgrade indicators (✪)
                     String essenceUpgradeIndicator = EnumChatFormatting.GOLD + "✪";
                     int essenceModifier = modifiedItemName.indexOf(essenceUpgradeIndicator);
                     while (essenceModifier > 0) {
-                        modifiedItemName.replace(essenceModifier, essenceModifier + essenceUpgradeIndicator.length(), "" + EnumChatFormatting.GRAY + EnumChatFormatting.STRIKETHROUGH + "✪");
+                        modifiedItemName.replace(essenceModifier, essenceModifier + essenceUpgradeIndicator.length(), grayedOutFormatting + "✪");
                         essenceModifier = modifiedItemName.indexOf(essenceUpgradeIndicator);
                     }
                     e.toolTip.set(0, modifiedItemName.toString()); // replace item name
@@ -99,6 +100,13 @@ public class DungeonsListener {
                         String line = tooltipIterator.next();
                         Matcher lineMatcher = TOOLTIP_LINE_PATTERN.matcher(line);
                         if (lineMatcher.matches()) {
+                            if (EnumChatFormatting.getTextWithoutFormattingCodes(lineMatcher.group("prefix")).equals("Gear Score: ")) {
+                                // gear score: gray + strike through because gear score doesn't really mean anything
+                                String newToolTipLine = String.format("%s%s%s%s %s(%s%s%s)", lineMatcher.group("prefix"), grayedOutFormatting, lineMatcher.group("statNonDungeon"), EnumChatFormatting.RESET, // space
+                                        EnumChatFormatting.GRAY, grayedOutFormatting, lineMatcher.group("statDungeon"), EnumChatFormatting.GRAY);
+                                tooltipIterator.set(newToolTipLine);
+                                continue;
+                            }
                             try {
                                 int statNonDungeon = Integer.parseInt(lineMatcher.group("statNonDungeon"));
 
@@ -120,7 +128,7 @@ public class DungeonsListener {
 
                                     double dungeonStatModifier = statDungeon / statNonDungeon; // modified through skill level or gear essence upgrades
                                     if (extraAttributes.hasKey("dungeon_item_level")) {
-                                        // with essences upgraded item => calculate base (level based) dungeon modfier
+                                        // with essences upgraded item => calculate base (level based) dungeon modifier
                                         dungeonStatModifier -= extraAttributes.getInteger("dungeon_item_level") / 10d;
                                     }
 
