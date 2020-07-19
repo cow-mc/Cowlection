@@ -2,15 +2,23 @@ package eu.olli.cowlection.listener;
 
 import eu.olli.cowlection.Cowlection;
 import eu.olli.cowlection.config.MooConfig;
+import eu.olli.cowlection.util.GsonUtils;
 import eu.olli.cowlection.util.TickDelay;
 import eu.olli.cowlection.util.Utils;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.inventory.GuiChest;
+import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.ContainerChest;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent;
@@ -132,6 +140,41 @@ public class PlayerListener {
     private boolean isSubmitBidItem(ItemStack itemStack) {
         return (itemStack.getItem().equals(Items.gold_nugget) || itemStack.getItem().equals(Item.getItemFromBlock(Blocks.gold_block)))
                 && (itemStack.hasDisplayName() && (itemStack.getDisplayName().endsWith("Submit Bid") || itemStack.getDisplayName().endsWith("Collect Auction")));
+    }
+
+    @SubscribeEvent
+    public void onKeyboardInput(GuiScreenEvent.KeyboardInputEvent.Pre e) {
+        if (Keyboard.getEventKeyState() && Keyboard.getEventKey() == Keyboard.KEY_C && GuiScreen.isCtrlKeyDown()) {
+            // ctrl + C
+            IInventory inventory;
+            String inventoryName;
+            if (e.gui instanceof GuiChest) {
+                // some kind of chest
+                ContainerChest chestContainer = (ContainerChest) ((GuiChest) e.gui).inventorySlots;
+                inventory = chestContainer.getLowerChestInventory();
+                inventoryName = (inventory.hasCustomName() ? EnumChatFormatting.getTextWithoutFormattingCodes(inventory.getDisplayName().getUnformattedTextForChat()) : inventory.getName());
+            } else if (e.gui instanceof GuiInventory) {
+                // player inventory
+                inventory = Minecraft.getMinecraft().thePlayer.inventory;
+                inventoryName = "Player inventory";
+            } else {
+                // another gui, abort!
+                return;
+            }
+            NBTTagList items = new NBTTagList();
+            for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
+                ItemStack item = inventory.getStackInSlot(slot);
+                if (item != null) {
+                    // slot + item
+                    NBTTagCompound tag = new NBTTagCompound();
+                    tag.setByte("Slot", (byte) slot);
+                    item.writeToNBT(tag);
+                    items.appendTag(tag);
+                }
+            }
+            GuiScreen.setClipboardString(GsonUtils.toJson(items));
+            main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Copied " + items.tagCount() + " items from '" + inventoryName + "' to clipboard!");
+        }
     }
 
     @SubscribeEvent

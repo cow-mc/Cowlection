@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [1.8.9-0.8.0] - unreleased
 ### Added
+- Copy inventories to clipboard as JSON with <kbd>CTRL</kbd> + <kbd>C</kbd>
 - Dungeon update (part 1)
   - Added Dungeon item stats tooltip cleaner
     - goal: normalize stats to make comparing dungeon items much easier
