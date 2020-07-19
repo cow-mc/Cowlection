@@ -5,13 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [1.8.9-0.8.0] - unreleased
 ### Added
-- Dungeon update!
+- Dungeon update (part 1)
   - Added Dungeon item stats tooltip cleaner
     - goal: normalize stats to make comparing dungeon items much easier
     - hold <kbd>shift</kbd> while viewing the tooltip of a dungeon item: this will normalize stats (remove stats from reforging and essences ✪), recalculate the item stats inside dungeons, and display the item stats inside dungeons if it had been enhanced 5x with essences (✪)
   - Added Dungeon Party Finder improvements
     - indicate parties that (don't) meet certain criteria: "no duped roles", "class levels have to be lvl >X"
-    - adjustable via `/moo config` 
+    - adjustable via `/moo config`
 
 ### Changed
 - Replaced `/moo nameChangeCheck` with `/moo nameChangeCheck <playerName>`

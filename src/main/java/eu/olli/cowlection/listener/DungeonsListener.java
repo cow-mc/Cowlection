@@ -13,6 +13,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.MathHelper;
 import net.minecraftforge.client.event.GuiScreenEvent;
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.apache.commons.lang3.StringUtils;
@@ -101,10 +102,23 @@ public class DungeonsListener {
                         Matcher lineMatcher = TOOLTIP_LINE_PATTERN.matcher(line);
                         if (lineMatcher.matches()) {
                             if (EnumChatFormatting.getTextWithoutFormattingCodes(lineMatcher.group("prefix")).equals("Gear Score: ")) {
-                                // gear score: gray + strike through because gear score doesn't really mean anything
-                                String newToolTipLine = String.format("%s%s%s%s %s(%s%s%s)", lineMatcher.group("prefix"), grayedOutFormatting, lineMatcher.group("statNonDungeon"), EnumChatFormatting.RESET, // space
-                                        EnumChatFormatting.GRAY, grayedOutFormatting, lineMatcher.group("statDungeon"), EnumChatFormatting.GRAY);
-                                tooltipIterator.set(newToolTipLine);
+                                // replace meaningless gear score with item quality (gear score includes reforges etc)
+                                StringBuilder customGearScore = new StringBuilder(EnumChatFormatting.GRAY.toString()).append("Item Quality: ");
+                                boolean hasCustomGearScore = false;
+                                if (extraAttributes.hasKey("baseStatBoostPercentage")) {
+                                    int itemQuality = extraAttributes.getInteger("baseStatBoostPercentage") * 2; // value between 0 and 50 => *2 == in %
+                                    customGearScore.append(EnumChatFormatting.LIGHT_PURPLE).append(itemQuality).append("%");
+                                    hasCustomGearScore = true;
+                                }
+                                if (extraAttributes.hasKey("item_tier", Constants.NBT.TAG_INT)) {
+                                    int obtainedFromFloor = extraAttributes.getInteger("item_tier");
+                                    customGearScore.append(EnumChatFormatting.GRAY).append(" (Floor ").append(EnumChatFormatting.LIGHT_PURPLE).append(obtainedFromFloor).append(EnumChatFormatting.GRAY).append(")");
+                                    hasCustomGearScore = true;
+                                }
+                                if (!hasCustomGearScore) {
+                                    customGearScore.append(EnumChatFormatting.ITALIC).append("unknown");
+                                }
+                                tooltipIterator.set(customGearScore.toString());
                                 continue;
                             }
                             try {
