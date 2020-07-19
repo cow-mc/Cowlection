@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [1.8.9-0.8.0] - unreleased
+## [1.8.9-0.8.0] - 20.07.2020
 ### Added
 - Copy inventories to clipboard as JSON with <kbd>CTRL</kbd> + <kbd>C</kbd>
 - Dungeon update (part 1)
@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Replaced `/moo nameChangeCheck` with `/moo nameChangeCheck <playerName>`
-  - Instead of triggering a manual check for name changes of *all* best friends, you can now only trigger a manualy check for a single name
+  - Instead of triggering a manual check for name changes of *all* best friends, you can now only trigger a manual check for a single name
 
 ### Fixed
 - Various smaller command fixed (including error messages, handling of invalid arguments, ...)
@@ -105,7 +105,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 *Note:* The 'best friends' list is currently available via <kbd>ESC</kbd> > Mod Options > Cowlection > Config > bestFriends.
 
-[1.8.9-0.8.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.7.1...master
+[1.8.9-0.8.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.7.1...v1.8.9-0.8.0
 [1.8.9-0.7.1]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.7.0...v1.8.9-0.7.1
 [1.8.9-0.7.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.6.0...v1.8.9-0.7.0
 [1.8.9-0.6.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.5.0...v1.8.9-0.6.0
