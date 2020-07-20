@@ -80,12 +80,31 @@ public class DungeonsListener {
                     reforge = reforge.substring(0, modifierSuffix);
                 }
                 int reforgeInItemName = originalItemName.indexOf(reforge);
+                if (reforgeInItemName == -1 && reforge.equals("Light") && extraAttributes.getString("id").startsWith("HEAVY_")) {
+                    // special case: heavy armor with light reforge
+                    reforgeInItemName = originalItemName.indexOf("Heavy");
+                }
                 if (reforgeInItemName > 0 && !originalItemName.contains(EnumChatFormatting.STRIKETHROUGH.toString())) {
                     // we have a reforged item! strike through reforge in item name and remove any essence upgrades (✪)
                     String grayedOutFormatting = "" + EnumChatFormatting.GRAY + EnumChatFormatting.STRIKETHROUGH;
+
+                    int reforgeLength = reforge.length();
+                    String reforgePrefix = null;
+                    // special cases for reforge + item name
+                    if (reforge.equals("Heavy") && extraAttributes.getString("id").startsWith("HEAVY_")) {
+                        reforgePrefix = "Extremely ";
+                    } else if (reforge.equals("Light") && extraAttributes.getString("id").startsWith("HEAVY_")) {
+                        reforgePrefix = "Not So ";
+                    } else if (reforge.equals("Wise") && extraAttributes.getString("id").startsWith("WISE_")) {
+                        reforgePrefix = "Very ";
+                    }
+                    if (reforgePrefix != null) {
+                        reforgeInItemName -= reforgePrefix.length();
+                        reforgeLength = reforgePrefix.length() - 1;
+                    }
                     StringBuffer modifiedItemName = new StringBuffer(originalItemName)
                             .insert(reforgeInItemName, grayedOutFormatting)
-                            .insert(reforgeInItemName + reforge.length() + grayedOutFormatting.length(), originalItemName.substring(0, reforgeInItemName));
+                            .insert(reforgeInItemName + reforgeLength + grayedOutFormatting.length(), originalItemName.substring(0, reforgeInItemName));
                     // remove essence upgrade indicators (✪)
                     String essenceUpgradeIndicator = EnumChatFormatting.GOLD + "✪";
                     int essenceModifier = modifiedItemName.indexOf(essenceUpgradeIndicator);

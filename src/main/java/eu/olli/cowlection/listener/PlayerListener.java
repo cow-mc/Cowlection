@@ -9,6 +9,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.gui.inventory.GuiInventory;
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.ContainerChest;
@@ -18,7 +19,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.StatCollector;
 import net.minecraftforge.client.event.GuiScreenEvent;
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent;
@@ -55,6 +58,29 @@ public class PlayerListener {
         if (e.itemStack == null || e.toolTip == null) {
             return;
         }
+        // remove unnecessary tooltip entries: dyed leather armor
+        NBTTagCompound nbtDisplay = e.itemStack.getSubCompound("display", false);
+        if (nbtDisplay != null && nbtDisplay.hasKey("color", Constants.NBT.TAG_INT)) {
+            if (Minecraft.getMinecraft().gameSettings.advancedItemTooltips) {
+                e.toolTip.removeIf(line -> line.startsWith("Color: #"));
+            } else {
+                e.toolTip.removeIf(line -> line.equals(EnumChatFormatting.ITALIC + StatCollector.translateToLocal("item.dyed")));
+            }
+        }
+
+        // remove unnecessary tooltip entries: enchantments (already added via lore)
+        NBTTagList enchantments = e.itemStack.getEnchantmentTagList();
+        if (enchantments != null) {
+            for (int enchantmentNr = 0; enchantmentNr < enchantments.tagCount(); ++enchantmentNr) {
+                int enchantmentId = enchantments.getCompoundTagAt(enchantmentNr).getShort("id");
+                int enchantmentLevel = enchantments.getCompoundTagAt(enchantmentNr).getShort("lvl");
+
+                if (Enchantment.getEnchantmentById(enchantmentId) != null) {
+                    e.toolTip.remove(Enchantment.getEnchantmentById(enchantmentId).getTranslatedName(enchantmentLevel));
+                }
+            }
+        }
+
         if (!MooConfig.showAdvancedTooltips && !Keyboard.isKeyDown(Keyboard.KEY_LMENU)) {
             return;
         }
