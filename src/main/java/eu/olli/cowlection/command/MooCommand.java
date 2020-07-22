@@ -29,10 +29,8 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.awt.*;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class MooCommand extends CommandBase {
@@ -45,11 +43,16 @@ public class MooCommand extends CommandBase {
     @Override
     public void processCommand(ICommandSender sender, String[] args) throws CommandException {
         if (args.length == 0) {
-            sendCommandUsage(sender);
+            main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, "Tried to say " + EnumChatFormatting.YELLOW + getCommandName() + EnumChatFormatting.GOLD + "? Use " + EnumChatFormatting.YELLOW + getCommandName() + " say [optional text]" + EnumChatFormatting.GOLD + " instead.\n"
+                    + "Tried to use the command " + EnumChatFormatting.YELLOW + "/" + getCommandName() + EnumChatFormatting.GOLD + "? Use " + EnumChatFormatting.YELLOW + "/" + getCommandName() + " help" + EnumChatFormatting.GOLD + " for a list of available commands");
             return;
         }
         // sub commands: friends & other players
-        if (args[0].equalsIgnoreCase("stalk")) {
+        if (args[0].equalsIgnoreCase("say")) {
+            // work-around so you can still say 'moo' in chat without triggering the client-side command
+            String msg = CommandBase.buildString(args, 1);
+            Minecraft.getMinecraft().thePlayer.sendChatMessage(getCommandName() + (!msg.isEmpty() ? " " + msg : ""));
+        } else if (args[0].equalsIgnoreCase("stalk")) {
             if (args.length != 2) {
                 throw new WrongUsageException("/" + getCommandName() + " stalk <playerName>");
             } else if (!Utils.isValidMcName(args[1])) {
@@ -296,6 +299,9 @@ public class MooCommand extends CommandBase {
 
                             main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, slothStalking.getPlayerNameFormatted() + EnumChatFormatting.YELLOW + " was last online " + EnumChatFormatting.GOLD + lastOnline.first() + EnumChatFormatting.YELLOW + " ago"
                                     + (lastOnline.second() != null ? " (" + EnumChatFormatting.GOLD + lastOnline.second() + EnumChatFormatting.YELLOW + ")" : "") + ".");
+                        } else if (slothStalking.getLastLogin() > slothStalking.getLastLogout()) {
+                            // player is logged in but is hiding their session details from API (My Profile > API settings > Online Status)
+                            main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, EnumChatFormatting.GOLD + slothStalking.getPlayerNameFormatted() + EnumChatFormatting.YELLOW + " is currently playing " + EnumChatFormatting.GOLD + slothStalking.getLastGame() + "\n" + EnumChatFormatting.DARK_GRAY + "(" + slothStalking.getPlayerName() + " hides their session details from the API so that only their current game mode is visible)");
                         } else {
                             Pair<String, String> lastOnline = Utils.getDurationAsWords(slothStalking.getLastLogout());
 
@@ -474,6 +480,11 @@ public class MooCommand extends CommandBase {
     @Override
     public String getCommandName() {
         return "moo";
+    }
+
+    @Override
+    public List<String> getCommandAliases() {
+        return Collections.singletonList("m");
     }
 
     @Override

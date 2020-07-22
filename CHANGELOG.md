@@ -3,6 +3,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.8.9-0.9.0] - unreleased
+### Added
+- New alias for `/moo` command: `/m`
+- Config option: Change position of item quality in tooltip of dungeon items
+- Added `/moo say [optional text]`: You can say `moo` again without triggering the command `/moo` 🎉 
+
+### Changed
+- Tab-completable player names now include names from:
+  - party or game (duels) invites
+  - Dungeon party finder: player joins group
+- Some smaller improvements to Dungeon party finder (highlighting)
+
+### Fixed
+- Fixed more special case dungeon item tooltips
+  - more special reforge names for specific armor items
+  - now includes dungeon items without reforges
+- `/moo stalk`: Fix players appearing offline when apiSession is set to `false`
+
 ## [1.8.9-0.8.1] - 20.07.2020
 ### Added
 - Added (default) tooltip cleanup
@@ -114,6 +132,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 *Note:* The 'best friends' list is currently available via <kbd>ESC</kbd> > Mod Options > Cowlection > Config > bestFriends.
 
+[1.8.9-0.9.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.8.1...master
 [1.8.9-0.8.1]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.8.0...v1.8.9-0.8.1
 [1.8.9-0.8.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.7.1...v1.8.9-0.8.0
 [1.8.9-0.7.1]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.7.0...v1.8.9-0.7.1

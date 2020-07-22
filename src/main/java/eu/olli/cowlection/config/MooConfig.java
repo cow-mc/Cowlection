@@ -44,6 +44,7 @@ public class MooConfig {
     // SkyBlock dungeon
     public static int[] dungClassRange;
     public static boolean dungFilterPartiesWithDupes;
+    public static String dungItemQualityPos;
     // logs search config
     public static String[] logsDirs;
     private static String defaultStartDate;
@@ -136,7 +137,7 @@ public class MooConfig {
         Property propNumeralSystem = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
                 "numeralSystem", "Arabic numerals: 1, 4, 10", "Use Roman or Arabic numeral system?", new String[]{"Arabic numerals: 1, 4, 10", "Roman numerals: I, IV, X"}), true);
         Property propTabCompletableNamesCommands = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
-                "tabCompletableNamesCommands", new String[]{"party", "p", "invite", "visit", "ah", "ignore", "msg", "tell", "w", "boop", "profile"}, "List of commands with a Tab-completable username argument."), true)
+                "tabCompletableNamesCommands", new String[]{"party", "p", "invite", "visit", "ah", "ignore", "msg", "tell", "w", "boop", "profile", "friend", "friends", "f"}, "List of commands with a Tab-completable username argument."), true)
                 .setValidationPattern(Pattern.compile("^[A-Za-z]+$"));
         Property propMoo = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
                 "moo", "", "The answer to life the universe and everything. Don't edit this entry manually!", Utils.VALID_UUID_PATTERN), false);
@@ -147,6 +148,8 @@ public class MooConfig {
                 .setMinValue(-1).setIsListLengthFixed(true);
         Property propDungFilterPartiesWithDupes = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
                 "dungFilterPartiesWithDupes", false, "Mark parties with duplicated classes?"), true);
+        Property propDungItemQualityPos = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
+                "dungItemQualityPos", "top", "Position of item quality in tooltip", new String[]{"top", "bottom"}), true);
 
         cfg.setCategoryPropertyOrder(Configuration.CATEGORY_CLIENT, propOrderGeneral);
 
@@ -179,6 +182,7 @@ public class MooConfig {
             // SkyBlock dungeon
             dungClassRange = propDungClassRange.getIntList();
             dungFilterPartiesWithDupes = propDungFilterPartiesWithDupes.getBoolean();
+            dungItemQualityPos = propDungItemQualityPos.getString();
 
             // logs search config
             logsDirs = propLogsDirs.getStringList();
@@ -202,6 +206,7 @@ public class MooConfig {
         // SkyBlock dungeon
         propDungClassRange.set(dungClassRange);
         propDungFilterPartiesWithDupes.set(dungFilterPartiesWithDupes);
+        propDungItemQualityPos.set(dungItemQualityPos);
 
         // logs search config
         propLogsDirs.set(logsDirs);
@@ -284,6 +289,10 @@ public class MooConfig {
 
     public static boolean useRomanNumerals() {
         return numeralSystem.startsWith("Roman");
+    }
+
+    public static boolean isDungItemQualityAtTop() {
+        return dungItemQualityPos.equals("top");
     }
 
     public class ConfigEventHandler {

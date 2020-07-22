@@ -8,6 +8,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
+import net.minecraft.item.ItemSkull;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumChatFormatting;
@@ -15,6 +16,7 @@ import net.minecraft.util.MathHelper;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.input.Keyboard;
@@ -64,7 +66,7 @@ public class DungeonsListener {
         activeDungeonClass = "unknown";
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.HIGH)
     public void onItemTooltip(ItemTooltipEvent e) {
         if (e.itemStack == null || e.toolTip == null) {
             return;
@@ -73,109 +75,134 @@ public class DungeonsListener {
             // simplify dungeon armor stats
             String originalItemName = e.itemStack.getDisplayName();
             NBTTagCompound extraAttributes = e.itemStack.getSubCompound("ExtraAttributes", false);
-            if (extraAttributes != null && extraAttributes.hasKey("modifier")) {
-                String reforge = StringUtils.capitalize(extraAttributes.getString("modifier"));
-                int modifierSuffix = Math.max(reforge.indexOf("_sword"), reforge.indexOf("_bow"));
-                if (modifierSuffix != -1) {
-                    reforge = reforge.substring(0, modifierSuffix);
-                }
-                int reforgeInItemName = originalItemName.indexOf(reforge);
-                if (reforgeInItemName == -1 && reforge.equals("Light") && extraAttributes.getString("id").startsWith("HEAVY_")) {
-                    // special case: heavy armor with light reforge
-                    reforgeInItemName = originalItemName.indexOf("Heavy");
-                }
-                if (reforgeInItemName > 0 && !originalItemName.contains(EnumChatFormatting.STRIKETHROUGH.toString())) {
-                    // we have a reforged item! strike through reforge in item name and remove any essence upgrades (✪)
-                    String grayedOutFormatting = "" + EnumChatFormatting.GRAY + EnumChatFormatting.STRIKETHROUGH;
+            if (extraAttributes != null) {
+                StringBuilder modifiedItemName = new StringBuilder(originalItemName);
+                String reforge = "";
+                String grayedOutFormatting = "" + EnumChatFormatting.GRAY + EnumChatFormatting.STRIKETHROUGH;
 
-                    int reforgeLength = reforge.length();
-                    String reforgePrefix = null;
-                    // special cases for reforge + item name
-                    if (reforge.equals("Heavy") && extraAttributes.getString("id").startsWith("HEAVY_")) {
-                        reforgePrefix = "Extremely ";
-                    } else if (reforge.equals("Light") && extraAttributes.getString("id").startsWith("HEAVY_")) {
-                        reforgePrefix = "Not So ";
-                    } else if (reforge.equals("Wise") && extraAttributes.getString("id").startsWith("WISE_")) {
-                        reforgePrefix = "Very ";
+                if (extraAttributes.hasKey("modifier")) {
+                    // item has been reforged; re-format item name to exclude reforges
+                    reforge = StringUtils.capitalize(extraAttributes.getString("modifier"));
+                    int modifierSuffix = Math.max(reforge.indexOf("_sword"), reforge.indexOf("_bow"));
+                    if (modifierSuffix != -1) {
+                        reforge = reforge.substring(0, modifierSuffix);
                     }
-                    if (reforgePrefix != null) {
-                        reforgeInItemName -= reforgePrefix.length();
-                        reforgeLength = reforgePrefix.length() - 1;
+                    int reforgeInItemName = originalItemName.indexOf(reforge);
+                    if (reforgeInItemName == -1 && reforge.equals("Light") && extraAttributes.getString("id").startsWith("HEAVY_")) {
+                        // special case: heavy armor with light reforge
+                        reforgeInItemName = originalItemName.indexOf("Heavy");
                     }
-                    StringBuffer modifiedItemName = new StringBuffer(originalItemName)
-                            .insert(reforgeInItemName, grayedOutFormatting)
-                            .insert(reforgeInItemName + reforgeLength + grayedOutFormatting.length(), originalItemName.substring(0, reforgeInItemName));
-                    // remove essence upgrade indicators (✪)
-                    String essenceUpgradeIndicator = EnumChatFormatting.GOLD + "✪";
-                    int essenceModifier = modifiedItemName.indexOf(essenceUpgradeIndicator);
-                    while (essenceModifier > 0) {
-                        modifiedItemName.replace(essenceModifier, essenceModifier + essenceUpgradeIndicator.length(), grayedOutFormatting + "✪");
-                        essenceModifier = modifiedItemName.indexOf(essenceUpgradeIndicator);
-                    }
-                    e.toolTip.set(0, modifiedItemName.toString()); // replace item name
 
-                    // subtract stat boosts from reforge and update stats for dungeons
-                    ListIterator<String> tooltipIterator = e.toolTip.listIterator();
-                    while (tooltipIterator.hasNext()) {
-                        String line = tooltipIterator.next();
-                        Matcher lineMatcher = TOOLTIP_LINE_PATTERN.matcher(line);
-                        if (lineMatcher.matches()) {
-                            if (EnumChatFormatting.getTextWithoutFormattingCodes(lineMatcher.group("prefix")).equals("Gear Score: ")) {
-                                // replace meaningless gear score with item quality (gear score includes reforges etc)
-                                StringBuilder customGearScore = new StringBuilder(EnumChatFormatting.GRAY.toString()).append("Item Quality: ");
-                                boolean hasCustomGearScore = false;
-                                if (extraAttributes.hasKey("baseStatBoostPercentage")) {
-                                    int itemQuality = extraAttributes.getInteger("baseStatBoostPercentage") * 2; // value between 0 and 50 => *2 == in %
-                                    customGearScore.append(EnumChatFormatting.LIGHT_PURPLE).append(itemQuality).append("%");
-                                    hasCustomGearScore = true;
-                                }
-                                if (extraAttributes.hasKey("item_tier", Constants.NBT.TAG_INT)) {
-                                    int obtainedFromFloor = extraAttributes.getInteger("item_tier");
-                                    customGearScore.append(EnumChatFormatting.GRAY).append(" (Floor ").append(EnumChatFormatting.LIGHT_PURPLE).append(obtainedFromFloor).append(EnumChatFormatting.GRAY).append(")");
-                                    hasCustomGearScore = true;
-                                }
-                                if (!hasCustomGearScore) {
-                                    customGearScore.append(EnumChatFormatting.ITALIC).append("unknown");
-                                }
+                    if (reforgeInItemName > 0 && !originalItemName.contains(EnumChatFormatting.STRIKETHROUGH.toString())) {
+                        // we have a reforged item! strike through reforge in item name and remove any essence upgrades (✪)
+
+                        int reforgeLength = reforge.length();
+                        String reforgePrefix = null;
+                        // special cases for reforge + item name
+                        if (reforge.equals("Heavy") && extraAttributes.getString("id").startsWith("HEAVY_")) {
+                            reforgePrefix = "Extremely ";
+                        } else if (reforge.equals("Light") && extraAttributes.getString("id").startsWith("HEAVY_")) {
+                            reforgePrefix = "Not So ";
+                        } else if ((reforge.equals("Wise") && extraAttributes.getString("id").startsWith("WISE_DRAGON_"))
+                                || (reforge.equals("Strong") && extraAttributes.getString("id").startsWith("STRONG_DRAGON_"))) {
+                            reforgePrefix = "Very ";
+                        } else if (reforge.equals("Superior") && extraAttributes.getString("id").startsWith("SUPERIOR_DRAGON_")) {
+                            reforgePrefix = "Highly ";
+                        } else if (reforge.equals("Perfect") && extraAttributes.getString("id").startsWith("PERFECT_")) {
+                            reforgePrefix = "Absolutely ";
+                        }
+                        if (reforgePrefix != null) {
+                            reforgeInItemName -= reforgePrefix.length();
+                            reforgeLength = reforgePrefix.length() - 1;
+                        }
+
+                        modifiedItemName.insert(reforgeInItemName, grayedOutFormatting)
+                                .insert(reforgeInItemName + reforgeLength + grayedOutFormatting.length(), originalItemName.substring(0, reforgeInItemName));
+                    }
+                }
+                // remove essence upgrade indicators (✪)
+                String essenceUpgradeIndicator = EnumChatFormatting.GOLD + "✪";
+                int essenceModifier = modifiedItemName.indexOf(essenceUpgradeIndicator);
+                while (essenceModifier > 0) {
+                    modifiedItemName.replace(essenceModifier, essenceModifier + essenceUpgradeIndicator.length(), grayedOutFormatting + "✪");
+                    essenceModifier = modifiedItemName.indexOf(essenceUpgradeIndicator);
+                }
+                e.toolTip.set(0, modifiedItemName.toString()); // replace item name
+
+                // subtract stat boosts from reforge and update stats for dungeons
+                ListIterator<String> tooltipIterator = e.toolTip.listIterator();
+
+                String itemQualityBottom = null;
+                while (tooltipIterator.hasNext()) {
+                    String line = tooltipIterator.next();
+                    Matcher lineMatcher = TOOLTIP_LINE_PATTERN.matcher(line);
+                    if (lineMatcher.matches()) {
+                        if (EnumChatFormatting.getTextWithoutFormattingCodes(lineMatcher.group("prefix")).equals("Gear Score: ")) {
+                            // replace meaningless gear score with item quality (gear score includes reforges etc)
+                            StringBuilder customGearScore = new StringBuilder(EnumChatFormatting.GRAY.toString()).append("Item Quality: ");
+                            boolean hasCustomGearScore = false;
+                            if (extraAttributes.hasKey("baseStatBoostPercentage")) {
+                                int itemQuality = extraAttributes.getInteger("baseStatBoostPercentage") * 2; // value between 0 and 50 => *2 == in %
+                                customGearScore.append(EnumChatFormatting.LIGHT_PURPLE).append(itemQuality).append("%");
+                                hasCustomGearScore = true;
+                            }
+                            if (extraAttributes.hasKey("item_tier", Constants.NBT.TAG_INT)) {
+                                int obtainedFromFloor = extraAttributes.getInteger("item_tier");
+                                customGearScore.append(EnumChatFormatting.GRAY).append(" (Floor ").append(EnumChatFormatting.LIGHT_PURPLE).append(obtainedFromFloor).append(EnumChatFormatting.GRAY).append(")");
+                                hasCustomGearScore = true;
+                            }
+                            if (!hasCustomGearScore) {
+                                customGearScore.append("―");
+                            }
+                            if (MooConfig.isDungItemQualityAtTop()) {
+                                // replace 'Gear Score' line
                                 tooltipIterator.set(customGearScore.toString());
+                            } else {
+                                // delete 'Gear Score' line and add item quality to bottom
+                                tooltipIterator.remove();
+                                itemQualityBottom = customGearScore.toString();
+                            }
+                            continue;
+                        }
+                        try {
+                            int statNonDungeon = Integer.parseInt(lineMatcher.group("statNonDungeon"));
+
+                            int statBase = statNonDungeon;
+                            if (reforge.equalsIgnoreCase(lineMatcher.group("reforge"))) {
+                                // tooltip line has reforge stats; subtract them from base stats
+                                statBase -= Integer.parseInt(lineMatcher.group("statReforge"));
+                            }
+
+                            if (statBase == 0) {
+                                // don't redraw 0 stats
+                                tooltipIterator.remove();
                                 continue;
                             }
-                            try {
-                                int statNonDungeon = Integer.parseInt(lineMatcher.group("statNonDungeon"));
+                            String newToolTipLine = String.format("%s%+d%s", lineMatcher.group("prefix"), statBase, lineMatcher.group("statNonDungeonUnit"));
+                            if (lineMatcher.group("statDungeon") != null) {
+                                // tooltip line has dungeon stats; update them!
+                                double statDungeon = Double.parseDouble(lineMatcher.group("statDungeon"));
 
-                                int statBase = statNonDungeon;
-                                if (reforge.equalsIgnoreCase(lineMatcher.group("reforge"))) {
-                                    // tooltip line has reforge stats; subtract them from base stats
-                                    statBase -= Integer.parseInt(lineMatcher.group("statReforge"));
+                                double dungeonStatModifier = statDungeon / statNonDungeon; // modified through skill level or gear essence upgrades
+                                if (extraAttributes.hasKey("dungeon_item_level")) {
+                                    // with essences upgraded item => calculate base (level based) dungeon modifier
+                                    dungeonStatModifier -= extraAttributes.getInteger("dungeon_item_level") / 10d;
                                 }
 
-                                if (statBase == 0) {
-                                    // don't redraw 0 stats
-                                    tooltipIterator.remove();
-                                    continue;
-                                }
-                                String newToolTipLine = String.format("%s%+d%s", lineMatcher.group("prefix"), statBase, lineMatcher.group("statNonDungeonUnit"));
-                                if (lineMatcher.group("statDungeon") != null) {
-                                    // tooltip line has dungeon stats; update them!
-                                    double statDungeon = Double.parseDouble(lineMatcher.group("statDungeon"));
-
-                                    double dungeonStatModifier = statDungeon / statNonDungeon; // modified through skill level or gear essence upgrades
-                                    if (extraAttributes.hasKey("dungeon_item_level")) {
-                                        // with essences upgraded item => calculate base (level based) dungeon modifier
-                                        dungeonStatModifier -= extraAttributes.getInteger("dungeon_item_level") / 10d;
-                                    }
-
-                                    double statBaseDungeon = statBase * dungeonStatModifier;
-                                    double statDungeonWithMaxEssenceUpgrades = statBase * (dungeonStatModifier + /*5x essence à +10% each => +50% stats */0.5d);
-                                    newToolTipLine += String.format(" %s(₀ₓ✪ %+.1f%s) %s(₅ₓ✪ %+.1f%s)", lineMatcher.group("colorDungeon"), statBaseDungeon, lineMatcher.group("statDungeonUnit"),
-                                            lineMatcher.group("colorDungeon"), statDungeonWithMaxEssenceUpgrades, lineMatcher.group("statDungeonUnit"));
-                                }
-
-                                tooltipIterator.set(newToolTipLine);
-                            } catch (NumberFormatException ignored) {
+                                double statBaseDungeon = statBase * dungeonStatModifier;
+                                double statDungeonWithMaxEssenceUpgrades = statBase * (dungeonStatModifier + /*5x essence à +10% each => +50% stats */0.5d);
+                                newToolTipLine += String.format(" %s(₀ₓ✪ %+.1f%s) %s(₅ₓ✪ %+.1f%s)", lineMatcher.group("colorDungeon"), statBaseDungeon, lineMatcher.group("statDungeonUnit"),
+                                        lineMatcher.group("colorDungeon"), statDungeonWithMaxEssenceUpgrades, lineMatcher.group("statDungeonUnit"));
                             }
+
+                            tooltipIterator.set(newToolTipLine);
+                        } catch (NumberFormatException ignored) {
                         }
                     }
+                }
+                if (itemQualityBottom != null) {
+                    int index = Math.max(0, e.toolTip.size() - (e.showAdvancedItemTooltips ? /* item name & nbt info */ 2 : 0));
+                    e.toolTip.add(index, itemQualityBottom);
                 }
             }
         }
@@ -246,14 +273,24 @@ public class DungeonsListener {
     }
 
     private void renderPartyStatus(ItemStack item, int x, int y) {
+        if (!(item.getItem() instanceof ItemSkull && item.getMetadata() == 3 && item.hasTagCompound())) {
+            // not a player skull, don't draw party status indicator
+            return;
+        }
         String status = "⬛"; // ok
         Color color = new Color(20, 200, 20, 255);
 
         List<String> itemTooltip = item.getTooltip(Minecraft.getMinecraft().thePlayer, false);
+        if (itemTooltip.size() < 5) {
+            // not a valid dungeon party tooltip
+            return;
+        }
         if (itemTooltip.get(itemTooltip.size() - 1).endsWith("Complete previous floor first!")) {
             // cannot enter dungeon
             status = "✗";
             color = new Color(220, 20, 20, 255);
+        } else if (itemTooltip.get(itemTooltip.size() - 1).endsWith("You are in this party!")) {
+            status = EnumChatFormatting.OBFUSCATED + "#";
         } else {
             int dungClassMin = MooConfig.dungClassRange[0];
             int dungClassMax = MooConfig.dungClassRange[1];
