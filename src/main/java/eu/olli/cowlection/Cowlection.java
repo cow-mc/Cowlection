@@ -7,7 +7,6 @@ import eu.olli.cowlection.config.MooConfig;
 import eu.olli.cowlection.handler.FriendsHandler;
 import eu.olli.cowlection.handler.PlayerCache;
 import eu.olli.cowlection.listener.ChatListener;
-import eu.olli.cowlection.listener.DungeonsListener;
 import eu.olli.cowlection.listener.PlayerListener;
 import eu.olli.cowlection.util.ChatHelper;
 import eu.olli.cowlection.util.VersionChecker;
@@ -40,6 +39,7 @@ public class Cowlection {
     private VersionChecker versionChecker;
     private ChatHelper chatHelper;
     private PlayerCache playerCache;
+    private boolean isOnSkyBlock;
     private Logger logger;
 
     @Mod.EventHandler
@@ -62,7 +62,6 @@ public class Cowlection {
     @EventHandler
     public void init(FMLInitializationEvent e) {
         MinecraftForge.EVENT_BUS.register(new ChatListener(this));
-        MinecraftForge.EVENT_BUS.register(new DungeonsListener(this));
         MinecraftForge.EVENT_BUS.register(new PlayerListener(this));
         ClientCommandHandler.instance.registerCommand(new MooCommand(this));
         ClientCommandHandler.instance.registerCommand(new ShrugCommand(this));
@@ -107,6 +106,14 @@ public class Cowlection {
 
     public Logger getLogger() {
         return logger;
+    }
+
+    public boolean isOnSkyBlock() {
+        return isOnSkyBlock;
+    }
+
+    public void setIsOnSkyBlock(boolean isOnSkyBlock) {
+        this.isOnSkyBlock = isOnSkyBlock;
     }
 
     /**

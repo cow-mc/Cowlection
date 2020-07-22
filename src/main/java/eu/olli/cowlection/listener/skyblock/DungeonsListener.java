@@ -1,4 +1,4 @@
-package eu.olli.cowlection.listener;
+package eu.olli.cowlection.listener.skyblock;
 
 import eu.olli.cowlection.Cowlection;
 import eu.olli.cowlection.config.MooConfig;

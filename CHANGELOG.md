@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Added `/moo say [optional text]`: You can say `moo` again without triggering the command `/moo` 🎉 
 
 ### Changed
+- SkyBlock related event listeners now only run while on SkyBlock, otherwise they are disabled
+  - Fixes e.g. removal of enchantments in non-SkyBlock gamemodes
 - Tab-completable player names now include names from:
   - party or game (duels) invites
   - Dungeon party finder: player joins group
