@@ -4,6 +4,7 @@ import eu.olli.cowlection.command.MooCommand;
 import eu.olli.cowlection.command.ShrugCommand;
 import eu.olli.cowlection.command.TabCompletableCommand;
 import eu.olli.cowlection.config.MooConfig;
+import eu.olli.cowlection.handler.DungeonCache;
 import eu.olli.cowlection.handler.FriendsHandler;
 import eu.olli.cowlection.handler.PlayerCache;
 import eu.olli.cowlection.listener.ChatListener;
@@ -39,7 +40,7 @@ public class Cowlection {
     private VersionChecker versionChecker;
     private ChatHelper chatHelper;
     private PlayerCache playerCache;
-    private boolean isOnSkyBlock;
+    private DungeonCache dungeonCache;
     private Logger logger;
 
     @Mod.EventHandler
@@ -96,6 +97,13 @@ public class Cowlection {
         return playerCache;
     }
 
+    public DungeonCache getDungeonCache() {
+        if (dungeonCache == null) {
+            dungeonCache = new DungeonCache(this);
+        }
+        return dungeonCache;
+    }
+
     public File getConfigDirectory() {
         return configDir;
     }
@@ -106,14 +114,6 @@ public class Cowlection {
 
     public Logger getLogger() {
         return logger;
-    }
-
-    public boolean isOnSkyBlock() {
-        return isOnSkyBlock;
-    }
-
-    public void setIsOnSkyBlock(boolean isOnSkyBlock) {
-        this.isOnSkyBlock = isOnSkyBlock;
     }
 
     /**

@@ -2,6 +2,7 @@ package eu.olli.cowlection.listener.skyblock;
 
 import eu.olli.cowlection.Cowlection;
 import eu.olli.cowlection.config.MooConfig;
+import eu.olli.cowlection.util.TickDelay;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.renderer.GlStateManager;
@@ -11,21 +12,25 @@ import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemSkull;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.scoreboard.Score;
+import net.minecraft.scoreboard.ScoreObjective;
+import net.minecraft.scoreboard.ScorePlayerTeam;
+import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.MathHelper;
+import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
+import net.minecraftforge.event.entity.player.PlayerSetSpawnEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.input.Keyboard;
 
 import java.awt.*;
-import java.util.HashSet;
 import java.util.List;
-import java.util.ListIterator;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -58,6 +63,17 @@ public class DungeonsListener {
      * </pre>
      */
     private final Pattern TOOLTIP_LINE_PATTERN = Pattern.compile("^(?<prefix>(?:" + FORMATTING_CODE + ")+[A-Za-z ]+: " + FORMATTING_CODE + ")(?<statNonDungeon>[+-]?[0-9]+)(?<statNonDungeonUnit>%| HP|)(?: (?<colorReforge>" + FORMATTING_CODE + ")\\((?<reforge>[A-Za-z]+) (?<statReforge>[+-]?[0-9]+)(?<statReforgeUnit>%| HP|)\\))?(?: (?<colorDungeon>" + FORMATTING_CODE + ")\\((?<statDungeon>[+-]?[.0-9]+)(?<statDungeonUnit>%| HP|)\\))?$");
+    /**
+     * Player deaths in dungeon:
+     * <ul>
+     * <li> ☠ [player] disconnected from the Dungeon and became a ghost.</li>
+     * <li> ☠ [player/You] died and became a ghost.</li>
+     * <li> ☠ [player] fell to their death with help from [mob] and became a ghost.</li>
+     * <li> ☠ [player] was killed by [mob] and became a ghost.</li>
+     * <li> ☠ You were killed by [mob] and became a ghost.</li>
+     * </ul>
+     */
+    private final Pattern DUNGEON_DEATH_PATTERN = Pattern.compile("^ ☠ (\\w+) (?:.*?) and became a ghost\\.$");
 
     private String activeDungeonClass;
 
@@ -322,5 +338,58 @@ public class DungeonsListener {
             }
         }
         Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(status, x, y, color.getRGB());
+    }
+
+    // Events inside dungeons
+    @SubscribeEvent
+    public void onDungeonsEnterOrLeave(PlayerSetSpawnEvent e) {
+        // check if player has entered or left a SkyBlock dungeon
+        new TickDelay(() -> {
+            Scoreboard scoreboard = e.entityPlayer.worldObj.getScoreboard();
+            ScoreObjective scoreboardSidebar = scoreboard.getObjectiveInDisplaySlot(1);
+            if (scoreboardSidebar == null) {
+                return;
+            }
+            boolean wasInDungeon = main.getDungeonCache().isInDungeon();
+
+            Collection<Score> scoreboardLines = scoreboard.getSortedScores(scoreboardSidebar);
+            for (Score line : scoreboardLines) {
+                ScorePlayerTeam scorePlayerTeam = scoreboard.getPlayersTeam(line.getPlayerName());
+                if (scorePlayerTeam != null) {
+                    String lineWithoutFormatting = EnumChatFormatting.getTextWithoutFormattingCodes(scorePlayerTeam.getColorPrefix() + scorePlayerTeam.getColorSuffix());
+
+                    if (lineWithoutFormatting.startsWith(" ⏣")) {
+                        boolean isInDungeonNow = lineWithoutFormatting.startsWith(" ⏣ The Catacombs");
+
+                        if (!wasInDungeon && isInDungeonNow) {
+                            main.getLogger().info("Entered SkyBlock Dungeon!");
+                            main.getDungeonCache().onDungeonEntered();
+                        } else if (wasInDungeon && !isInDungeonNow) {
+                            main.getLogger().info("Leaving SkyBlock Dungeon!");
+                            main.getDungeonCache().onDungeonLeft();
+                        }
+                        return;
+                    }
+                }
+            }
+        }, 20); // 1 second delay, making sure scoreboard got sent
+    }
+
+    @SubscribeEvent
+    public void onMessageReceived(ClientChatReceivedEvent e) {
+        if (main.getDungeonCache().isInDungeon() && e.type != 2) { // normal chat or system msg (not above action bar)
+            String text = EnumChatFormatting.getTextWithoutFormattingCodes(e.message.getUnformattedText());
+            Matcher dungeonDeathMatcher = DUNGEON_DEATH_PATTERN.matcher(text);
+            if (dungeonDeathMatcher.matches()) {
+                String playerName = dungeonDeathMatcher.group(1);
+                if (playerName.equals("You")) {
+                    playerName = Minecraft.getMinecraft().thePlayer.getName();
+                }
+                main.getDungeonCache().addDeath(playerName);
+            } else if (text.trim().equals("> EXTRA STATS <")) {
+                // dungeon "end screen"
+                new TickDelay(() -> main.getDungeonCache().sendDeathCounts(), 5);
+            }
+        }
     }
 }

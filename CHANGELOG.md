@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [1.8.9-0.9.0] - unreleased
 ### Added
+- Added SkyBlock Dungeon deaths counter
+  - sends current deaths automatically; or manually with `/moo deaths`
 - New alias for `/moo` command: `/m`
 - Config option: Change position of item quality in tooltip of dungeon items
 - Added `/moo say [optional text]`: You can say `moo` again without triggering the command `/moo` 🎉 

@@ -11,6 +11,7 @@ import eu.olli.cowlection.data.DataHelper;
 import eu.olli.cowlection.data.Friend;
 import eu.olli.cowlection.data.HySkyBlockStats;
 import eu.olli.cowlection.data.HyStalkingData;
+import eu.olli.cowlection.handler.DungeonCache;
 import eu.olli.cowlection.search.GuiSearch;
 import eu.olli.cowlection.util.*;
 import net.minecraft.client.Minecraft;
@@ -146,6 +147,13 @@ public class MooCommand extends CommandBase {
                                 .append(EnumChatFormatting.RED).append("Unknown minion ").append(EnumChatFormatting.YELLOW).append("(new or with minion skin) ").append(tierColor).append(minionTier);
                     });
             main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, analysisResults.toString());
+        } else if (args[0].equalsIgnoreCase("deaths")) {
+            DungeonCache dungeonCache = main.getDungeonCache();
+            if (dungeonCache.isInDungeon()) {
+                dungeonCache.sendDeathCounts();
+            } else {
+                throw new MooCommandException(EnumChatFormatting.DARK_RED + "Looks like you're not in a dungeon...");
+            }
         } else if (args[0].equalsIgnoreCase("add")) {
             handleBestFriendAdd(args);
         } else if (args[0].equalsIgnoreCase("remove")) {
@@ -498,6 +506,7 @@ public class MooCommand extends CommandBase {
                 .appendSibling(createCmdHelpEntry("stalk", "Get info of player's status"))
                 .appendSibling(createCmdHelpEntry("stalkskyblock", "Get info of player's SkyBlock stats"))
                 .appendSibling(createCmdHelpEntry("analyzeIsland", "Analyze a SkyBlock private island"))
+                .appendSibling(createCmdHelpEntry("deaths", "SkyBlock Dungeons: death counts"))
                 .appendSibling(createCmdHelpEntry("add", "Add best friends"))
                 .appendSibling(createCmdHelpEntry("remove", "Remove best friends"))
                 .appendSibling(createCmdHelpEntry("list", "View list of best friends"))
@@ -536,7 +545,7 @@ public class MooCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args,
-                    /* friends & other players */ "stalk", "stalkskyblock", "skyblockstalk", "analyzeIsland", "add", "remove", "list", "nameChangeCheck", "toggle",
+                    /* friends & other players */ "stalk", "stalkskyblock", "skyblockstalk", "analyzeIsland", "deaths", "add", "remove", "list", "nameChangeCheck", "toggle",
                     /* miscellaneous */ "config", "search", "guiscale", "shrug", "apikey",
                     /* update mod */ "update", "updateHelp", "version", "directory",
                     /* help */ "help");

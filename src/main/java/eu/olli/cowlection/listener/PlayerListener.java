@@ -27,6 +27,7 @@ public class PlayerListener {
     private final Cowlection main;
     private DungeonsListener dungeonsListener;
     private SkyBlockListener skyBlockListener;
+    private boolean isOnSkyBlock;
 
     public PlayerListener(Cowlection main) {
         this.main = main;
@@ -71,7 +72,7 @@ public class PlayerListener {
     public void onServerJoin(FMLNetworkEvent.ClientConnectedToServerEvent e) {
         main.getVersionChecker().runUpdateCheck(false);
         new TickDelay(() -> main.getChatHelper().sendOfflineMessages(), 6 * 20);
-        main.setIsOnSkyBlock(false);
+        isOnSkyBlock = false;
     }
 
     @SubscribeEvent
@@ -79,14 +80,14 @@ public class PlayerListener {
         // check if player is on SkyBlock or on another gamemode
         new TickDelay(() -> {
             ScoreObjective scoreboardSidebar = e.entityPlayer.worldObj.getScoreboard().getObjectiveInDisplaySlot(1);
-            boolean wasOnSkyBlock = main.isOnSkyBlock();
-            main.setIsOnSkyBlock(scoreboardSidebar != null && EnumChatFormatting.getTextWithoutFormattingCodes(scoreboardSidebar.getDisplayName()).startsWith("SKYBLOCK"));
+            boolean wasOnSkyBlock = isOnSkyBlock;
+            isOnSkyBlock = (scoreboardSidebar != null && EnumChatFormatting.getTextWithoutFormattingCodes(scoreboardSidebar.getDisplayName()).startsWith("SKYBLOCK"));
 
-            if (!wasOnSkyBlock && main.isOnSkyBlock()) {
+            if (!wasOnSkyBlock && isOnSkyBlock) {
                 // player wasn't on SkyBlock before but now is on SkyBlock
                 main.getLogger().info("Entered SkyBlock! Registering SkyBlock listeners");
                 registerSkyBlockListeners();
-            } else if (wasOnSkyBlock && !main.isOnSkyBlock()) {
+            } else if (wasOnSkyBlock && !isOnSkyBlock) {
                 // player was on SkyBlock before and is now in another gamemode
                 unregisterSkyBlockListeners();
                 main.getLogger().info("Leaving SkyBlock! Un-registering SkyBlock listeners");
@@ -104,6 +105,7 @@ public class PlayerListener {
     }
 
     private void unregisterSkyBlockListeners() {
+        main.getDungeonCache().onDungeonLeft();
         if (dungeonsListener != null) {
             MinecraftForge.EVENT_BUS.unregister(dungeonsListener);
             dungeonsListener = null;
@@ -116,7 +118,6 @@ public class PlayerListener {
 
     @SubscribeEvent
     public void onServerLeave(FMLNetworkEvent.ClientDisconnectionFromServerEvent e) {
-        main.setIsOnSkyBlock(false);
         main.getFriendsHandler().saveBestFriends();
         main.getPlayerCache().clearAllCaches();
         unregisterSkyBlockListeners();
