@@ -3,15 +3,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [1.8.9-0.9.0] - unreleased
+## [1.8.9-0.9.0] - 23.07.2020
 ### Added
 - Added SkyBlock Dungeon deaths counter
   - sends current deaths automatically; or manually with `/moo deaths`
 - New alias for `/moo` command: `/m`
 - New command `/rr`: alias for `/r` without the auto-replacement to `/msg <latest username>`
   - useful when someone has direct messages disabled and can only be messaged back with `/r`
-- Config option: Change position of item quality in tooltip of dungeon items
 - Added `/moo say [optional text]`: You can say `moo` again without triggering the command `/moo` 🎉 
+- Config option: Change position of item quality in tooltip of dungeon items
 
 ### Changed
 - SkyBlock related event listeners now only run while on SkyBlock, otherwise they are disabled
@@ -138,7 +138,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 *Note:* The 'best friends' list is currently available via <kbd>ESC</kbd> > Mod Options > Cowlection > Config > bestFriends.
 
-[1.8.9-0.9.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.8.1...master
+[1.8.9-0.9.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.8.1...v1.8.9-0.9.0
 [1.8.9-0.8.1]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.8.0...v1.8.9-0.8.1
 [1.8.9-0.8.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.7.1...v1.8.9-0.8.0
 [1.8.9-0.7.1]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.7.0...v1.8.9-0.7.1
