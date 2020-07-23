@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Added SkyBlock Dungeon deaths counter
   - sends current deaths automatically; or manually with `/moo deaths`
 - New alias for `/moo` command: `/m`
+- New command `/rr`: alias for `/r` without the auto-replacement to `/msg <latest username>`
+  - useful when someone has direct messages disabled and can only be messaged back with `/r`
 - Config option: Change position of item quality in tooltip of dungeon items
 - Added `/moo say [optional text]`: You can say `moo` again without triggering the command `/moo` 🎉 
 

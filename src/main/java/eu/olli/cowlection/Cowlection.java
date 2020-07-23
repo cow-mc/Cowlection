@@ -1,6 +1,7 @@
 package eu.olli.cowlection;
 
 import eu.olli.cowlection.command.MooCommand;
+import eu.olli.cowlection.command.ReplyCommand;
 import eu.olli.cowlection.command.ShrugCommand;
 import eu.olli.cowlection.command.TabCompletableCommand;
 import eu.olli.cowlection.config.MooConfig;
@@ -65,6 +66,7 @@ public class Cowlection {
         MinecraftForge.EVENT_BUS.register(new ChatListener(this));
         MinecraftForge.EVENT_BUS.register(new PlayerListener(this));
         ClientCommandHandler.instance.registerCommand(new MooCommand(this));
+        ClientCommandHandler.instance.registerCommand(new ReplyCommand(this));
         ClientCommandHandler.instance.registerCommand(new ShrugCommand(this));
         for (String tabCompletableNamesCommand : MooConfig.tabCompletableNamesCommands) {
             ClientCommandHandler.instance.registerCommand(new TabCompletableCommand(this, tabCompletableNamesCommand));

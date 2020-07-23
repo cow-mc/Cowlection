@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 public class ChatHelper {
     private static final Pattern USELESS_JSON_CONTENT_PATTERN = Pattern.compile("\"[A-Za-z]+\":false,?");
     private static final int DISPLAY_DURATION = 5000;
-    private List<IChatComponent> offlineMessages = new ArrayList<>();
+    private final List<IChatComponent> offlineMessages = new ArrayList<>();
     private String[] aboveChatMessage;
     private long aboveChatMessageExpiration;
 

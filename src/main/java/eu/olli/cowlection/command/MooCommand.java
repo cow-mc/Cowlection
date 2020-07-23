@@ -180,6 +180,8 @@ public class MooCommand extends CommandBase {
                 Minecraft.getMinecraft().gameSettings.guiScale = scale;
                 main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u2714 New GUI scale: " + EnumChatFormatting.DARK_GREEN + scale + EnumChatFormatting.GREEN + " (previous: " + EnumChatFormatting.DARK_GREEN + currentGuiScale + EnumChatFormatting.GREEN + ")");
             }
+        } else if (args[0].equalsIgnoreCase("rr")) {
+            Minecraft.getMinecraft().thePlayer.sendChatMessage("/r " + CommandBase.buildString(args, 1));
         } else if (args[0].equalsIgnoreCase("shrug")) {
             main.getChatHelper().sendShrug(buildString(args, 1));
         } else if (args[0].equalsIgnoreCase("apikey")) {
@@ -516,6 +518,7 @@ public class MooCommand extends CommandBase {
                 .appendSibling(createCmdHelpEntry("config", "Open mod's configuration"))
                 .appendSibling(createCmdHelpEntry("search", "Open Minecraft log search"))
                 .appendSibling(createCmdHelpEntry("guiScale", "Change GUI scale"))
+                .appendSibling(createCmdHelpEntry("rr", "Alias for /r without auto-replacement to /msg"))
                 .appendSibling(createCmdHelpEntry("shrug", "\u00AF\\_(\u30C4)_/\u00AF")) // ¯\_(ツ)_/¯
                 .appendSibling(createCmdHelpSection(3, "Update mod"))
                 .appendSibling(createCmdHelpEntry("update", "Check for new mod updates"))
@@ -546,7 +549,7 @@ public class MooCommand extends CommandBase {
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args,
                     /* friends & other players */ "stalk", "stalkskyblock", "skyblockstalk", "analyzeIsland", "deaths", "add", "remove", "list", "nameChangeCheck", "toggle",
-                    /* miscellaneous */ "config", "search", "guiscale", "shrug", "apikey",
+                    /* miscellaneous */ "config", "search", "guiscale", "rr", "shrug", "apikey",
                     /* update mod */ "update", "updateHelp", "version", "directory",
                     /* help */ "help");
         } else if (args.length == 2 && args[0].equalsIgnoreCase("remove")) {
