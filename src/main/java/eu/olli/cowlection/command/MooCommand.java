@@ -292,34 +292,34 @@ public class MooCommand extends CommandBase {
                             + (session.getMode() != null ? ": " + EnumChatFormatting.GOLD + session.getMode() : "")
                             + (session.getMap() != null ? EnumChatFormatting.YELLOW + " (Map: " + EnumChatFormatting.GOLD + session.getMap() + EnumChatFormatting.YELLOW + ")" : ""));
                 } else {
-                    ApiUtils.fetchPlayerOfflineStatus(stalkedPlayer, slothStalking -> {
-                        if (slothStalking == null) {
-                            throw new ApiContactException("Slothpixel", "couldn't stalk " + EnumChatFormatting.DARK_RED + stalkedPlayer.getName() + EnumChatFormatting.RED + " but they appear to be offline currently.");
-                        } else if (slothStalking.hasNeverJoinedHypixel()) {
+                    ApiUtils.fetchPlayerOfflineStatus(stalkedPlayer, hyPlayerData -> {
+                        if (hyPlayerData == null) {
+                            throw new ApiContactException("Hypixel", "couldn't stalk " + EnumChatFormatting.DARK_RED + stalkedPlayer.getName() + EnumChatFormatting.RED + " but they appear to be offline currently.");
+                        } else if (hyPlayerData.hasNeverJoinedHypixel()) {
                             main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, EnumChatFormatting.GOLD + stalkedPlayer.getName() + EnumChatFormatting.YELLOW + " has " + EnumChatFormatting.GOLD + "never " + EnumChatFormatting.YELLOW + "been on Hypixel (or might be nicked).");
-                        } else if (slothStalking.isHidingOnlineStatus()) {
-                            main.getChatHelper().sendMessage(new ChatComponentText(slothStalking.getPlayerNameFormatted()).appendSibling(new ChatComponentText(" is hiding their online status from the Hypixel API. You can see their online status with ").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.YELLOW)))
-                                    .appendSibling(new ChatComponentText("/profile " + slothStalking.getPlayerName()).setChatStyle(new ChatStyle()
+                        } else if (hyPlayerData.isHidingOnlineStatus()) {
+                            main.getChatHelper().sendMessage(new ChatComponentText(hyPlayerData.getPlayerNameFormatted()).appendSibling(new ChatComponentText(" is hiding their online status from the Hypixel API. You can see their online status with ").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.YELLOW)))
+                                    .appendSibling(new ChatComponentText("/profile " + hyPlayerData.getPlayerName()).setChatStyle(new ChatStyle()
                                             .setColor(EnumChatFormatting.GOLD)
-                                            .setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/profile " + slothStalking.getPlayerName()))
-                                            .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.YELLOW + "Run " + EnumChatFormatting.GOLD + "/profile " + slothStalking.getPlayerName())))))
+                                            .setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/profile " + hyPlayerData.getPlayerName()))
+                                            .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.YELLOW + "Run " + EnumChatFormatting.GOLD + "/profile " + hyPlayerData.getPlayerName())))))
                                     .appendSibling(new ChatComponentText(" while you're in a lobby (tooltip of the player head on the top left).").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.YELLOW))));
-                        } else if (slothStalking.hasNeverLoggedOut()) {
-                            Pair<String, String> lastOnline = Utils.getDurationAsWords(slothStalking.getLastLogin());
+                        } else if (hyPlayerData.hasNeverLoggedOut()) {
+                            Pair<String, String> lastOnline = Utils.getDurationAsWords(hyPlayerData.getLastLogin());
 
-                            main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, slothStalking.getPlayerNameFormatted() + EnumChatFormatting.YELLOW + " was last online " + EnumChatFormatting.GOLD + lastOnline.first() + EnumChatFormatting.YELLOW + " ago"
+                            main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, hyPlayerData.getPlayerNameFormatted() + EnumChatFormatting.YELLOW + " was last online " + EnumChatFormatting.GOLD + lastOnline.first() + EnumChatFormatting.YELLOW + " ago"
                                     + (lastOnline.second() != null ? " (" + EnumChatFormatting.GOLD + lastOnline.second() + EnumChatFormatting.YELLOW + ")" : "") + ".");
-                        } else if (slothStalking.getLastLogin() > slothStalking.getLastLogout()) {
+                        } else if (hyPlayerData.getLastLogin() > hyPlayerData.getLastLogout()) {
                             // player is logged in but is hiding their session details from API (My Profile > API settings > Online Status)
-                            main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, EnumChatFormatting.GOLD + slothStalking.getPlayerNameFormatted() + EnumChatFormatting.YELLOW + " is currently playing " + EnumChatFormatting.GOLD + slothStalking.getLastGame() + "\n" + EnumChatFormatting.DARK_GRAY + "(" + slothStalking.getPlayerName() + " hides their session details from the API so that only their current game mode is visible)");
+                            main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, EnumChatFormatting.GOLD + hyPlayerData.getPlayerNameFormatted() + EnumChatFormatting.YELLOW + " is currently playing " + EnumChatFormatting.GOLD + hyPlayerData.getLastGame() + "\n" + EnumChatFormatting.DARK_GRAY + "(" + hyPlayerData.getPlayerName() + " hides their session details from the API so that only their current game mode is visible)");
                         } else {
-                            Pair<String, String> lastOnline = Utils.getDurationAsWords(slothStalking.getLastLogout());
+                            Pair<String, String> lastOnline = Utils.getDurationAsWords(hyPlayerData.getLastLogout());
 
-                            main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, slothStalking.getPlayerNameFormatted() + EnumChatFormatting.YELLOW + " is " + EnumChatFormatting.GOLD + "offline" + EnumChatFormatting.YELLOW + " for " + EnumChatFormatting.GOLD + lastOnline.first() + EnumChatFormatting.YELLOW
-                                    + ((lastOnline.second() != null || slothStalking.getLastGame() != null) ? (" ("
+                            main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, hyPlayerData.getPlayerNameFormatted() + EnumChatFormatting.YELLOW + " is " + EnumChatFormatting.GOLD + "offline" + EnumChatFormatting.YELLOW + " for " + EnumChatFormatting.GOLD + lastOnline.first() + EnumChatFormatting.YELLOW
+                                    + ((lastOnline.second() != null || hyPlayerData.getLastGame() != null) ? (" ("
                                     + (lastOnline.second() != null ? EnumChatFormatting.GOLD + lastOnline.second() + EnumChatFormatting.YELLOW : "") // = last online date
-                                    + (lastOnline.second() != null && slothStalking.getLastGame() != null ? "; " : "") // = delimiter
-                                    + (slothStalking.getLastGame() != null ? "last played gamemode: " + EnumChatFormatting.GOLD + slothStalking.getLastGame() + EnumChatFormatting.YELLOW : "") // = last gamemode
+                                    + (lastOnline.second() != null && hyPlayerData.getLastGame() != null ? "; " : "") // = delimiter
+                                    + (hyPlayerData.getLastGame() != null ? "last played gamemode: " + EnumChatFormatting.GOLD + hyPlayerData.getLastGame() + EnumChatFormatting.YELLOW : "") // = last gamemode
                                     + ")") : "") + ".");
                         }
                     });

@@ -9,7 +9,7 @@ import eu.olli.cowlection.config.MooConfig;
 import eu.olli.cowlection.data.Friend;
 import eu.olli.cowlection.data.HySkyBlockStats;
 import eu.olli.cowlection.data.HyStalkingData;
-import eu.olli.cowlection.data.SlothStalkingData;
+import eu.olli.cowlection.data.HyPlayerData;
 import org.apache.http.HttpStatus;
 
 import java.io.BufferedReader;
@@ -25,9 +25,9 @@ public class ApiUtils {
     public static final String UUID_NOT_FOUND = "UUID-NOT-FOUND";
     private static final String NAME_TO_UUID_URL = "https://api.mojang.com/users/profiles/minecraft/";
     private static final String UUID_TO_NAME_URL = "https://api.mojang.com/user/profiles/%s/names";
-    private static final String STALKING_URL_OFFICIAL = "https://api.hypixel.net/status?key=%s&uuid=%s";
-    private static final String SKYBLOCK_STATS_URL_OFFICIAL = "https://api.hypixel.net/skyblock/profiles?key=%s&uuid=%s";
-    private static final String STALKING_URL_UNOFFICIAL = "https://api.slothpixel.me/api/players/%s";
+    private static final String ONLINE_STATUS_URL = "https://api.hypixel.net/status?key=%s&uuid=%s";
+    private static final String SKYBLOCK_STATS_URL = "https://api.hypixel.net/skyblock/profiles?key=%s&uuid=%s";
+    private static final String PLAYER_URL = "https://api.hypixel.net/player?key=%s&uuid=%s";
     private static final ExecutorService pool = Executors.newCachedThreadPool();
 
     private ApiUtils() {
@@ -75,7 +75,7 @@ public class ApiUtils {
     }
 
     private static HyStalkingData stalkPlayer(Friend friend) {
-        try (BufferedReader reader = makeApiCall(String.format(STALKING_URL_OFFICIAL, MooConfig.moo, UUIDTypeAdapter.fromUUID(friend.getUuid())))) {
+        try (BufferedReader reader = makeApiCall(String.format(ONLINE_STATUS_URL, MooConfig.moo, UUIDTypeAdapter.fromUUID(friend.getUuid())))) {
             if (reader != null) {
                 return GsonUtils.fromJson(reader, HyStalkingData.class);
             }
@@ -90,7 +90,7 @@ public class ApiUtils {
     }
 
     private static HySkyBlockStats stalkSkyBlockStats(Friend friend) {
-        try (BufferedReader reader = makeApiCall(String.format(SKYBLOCK_STATS_URL_OFFICIAL, MooConfig.moo, UUIDTypeAdapter.fromUUID(friend.getUuid())))) {
+        try (BufferedReader reader = makeApiCall(String.format(SKYBLOCK_STATS_URL, MooConfig.moo, UUIDTypeAdapter.fromUUID(friend.getUuid())))) {
             if (reader != null) {
                 return GsonUtils.fromJson(reader, HySkyBlockStats.class);
             }
@@ -100,14 +100,14 @@ public class ApiUtils {
         return null;
     }
 
-    public static void fetchPlayerOfflineStatus(Friend stalkedPlayer, ThrowingConsumer<SlothStalkingData> action) {
+    public static void fetchPlayerOfflineStatus(Friend stalkedPlayer, ThrowingConsumer<HyPlayerData> action) {
         pool.execute(() -> action.accept(stalkOfflinePlayer(stalkedPlayer)));
     }
 
-    private static SlothStalkingData stalkOfflinePlayer(Friend stalkedPlayer) {
-        try (BufferedReader reader = makeApiCall(String.format(STALKING_URL_UNOFFICIAL, UUIDTypeAdapter.fromUUID(stalkedPlayer.getUuid())))) {
+    private static HyPlayerData stalkOfflinePlayer(Friend stalkedPlayer) {
+        try (BufferedReader reader = makeApiCall(String.format(PLAYER_URL, MooConfig.moo, UUIDTypeAdapter.fromUUID(stalkedPlayer.getUuid())))) {
             if (reader != null) {
-                return GsonUtils.fromJson(reader, SlothStalkingData.class);
+                return GsonUtils.fromJson(reader, HyPlayerData.class);
             }
         } catch (IOException e) {
             e.printStackTrace();

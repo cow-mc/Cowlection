@@ -2,6 +2,7 @@ package eu.olli.cowlection.util;
 
 import com.google.gson.*;
 import com.mojang.util.UUIDTypeAdapter;
+import eu.olli.cowlection.data.HyPlayerData;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -13,7 +14,7 @@ import java.lang.reflect.Type;
 import java.util.UUID;
 
 public final class GsonUtils {
-    private static final Gson gson = new GsonBuilder().registerTypeAdapter(UUID.class, new UUIDTypeAdapter()).create();
+    private static final Gson gson = new GsonBuilder().registerTypeAdapter(UUID.class, new UUIDTypeAdapter()).registerTypeAdapter(HyPlayerData.class, new HyPlayerDataDeserializer()).create();
     private static final Gson gsonPrettyPrinter = new GsonBuilder().registerTypeAdapter(UUID.class, new UUIDTypeAdapter()).setPrettyPrinting().create();
 
     private GsonUtils() {
@@ -72,5 +73,22 @@ public final class GsonUtils {
             return jsonObject;
         }
         return new JsonObject();
+    }
+
+    public static class HyPlayerDataDeserializer implements JsonDeserializer<HyPlayerData> {
+        @Override
+        public HyPlayerData deserialize(JsonElement json, Type type, JsonDeserializationContext jdc) throws JsonParseException {
+            if (!json.getAsJsonObject().get("success").getAsBoolean()) {
+                // status: failed
+                return null;
+            }
+            JsonElement player = json.getAsJsonObject().get("player");
+            HyPlayerData hyPlayerData = gsonPrettyPrinter.fromJson(player, HyPlayerData.class);
+            if (hyPlayerData == null) {
+                // player hasn't played Hypixel before
+                return new HyPlayerData();
+            }
+            return hyPlayerData;
+        }
     }
 }

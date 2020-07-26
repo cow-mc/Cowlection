@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [1.8.9-xxx] - unreleased
+### Changed
+- `/moo stalk`: Replaced 3rd party with official API
+
 ### Fixed
 - Remove ": " when copying chat messages
 - Fix dungeon tooltip cleaner cleaning a little bit too much

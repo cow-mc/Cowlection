@@ -43,14 +43,7 @@ public class HyStalkingData {
         }
 
         public String getGameType() {
-            String cleanGameType;
-            try {
-                cleanGameType = GameType.valueOf(gameType).getCleanName();
-            } catch (IllegalArgumentException e) {
-                // no matching game type found
-                cleanGameType = Utils.fancyCase(gameType);
-            }
-            return cleanGameType;
+            return DataHelper.GameType.getFancyName(gameType);
         }
 
         public String getMode() {
@@ -59,7 +52,7 @@ public class HyStalkingData {
                 return null;
             }
             String gameType = getGameType();
-            if (GameType.BEDWARS.cleanName.equals(gameType)) {
+            if (DataHelper.GameType.BEDWARS.getCleanName().equals(gameType)) {
                 // BedWars related
                 String playerMode;
                 String specialMode;
@@ -92,7 +85,7 @@ public class HyStalkingData {
                         playerModeClean = playerMode;
                 }
                 return Utils.fancyCase(specialMode + playerModeClean);
-            } else if (GameType.SKYBLOCK.cleanName.equals(gameType)) {
+            } else if (DataHelper.GameType.SKYBLOCK.getCleanName().equals(gameType)) {
                 // SkyBlock related
                 switch (mode) {
                     case "dynamic":
@@ -122,47 +115,6 @@ public class HyStalkingData {
 
         public String getMap() {
             return map;
-        }
-
-        // TODO replace with api request: https://github.com/HypixelDev/PublicAPI/blob/master/Documentation/misc/GameType.md
-        public enum GameType {
-            QUAKECRAFT("Quakecraft"),
-            WALLS("Walls"),
-            PAINTBALL("Paintball"),
-            SURVIVAL_GAMES("Blitz Survival Games"),
-            TNTGAMES("The TNT Games"),
-            VAMPIREZ("VampireZ"),
-            WALLS3("Mega Walls"),
-            ARCADE("Arcade"),
-            ARENA("Arena Brawl"),
-            UHC("UHC Champions"),
-            MCGO("Cops and Crims"),
-            BATTLEGROUND("Warlords"),
-            SUPER_SMASH("Smash Heroes"),
-            GINGERBREAD("Turbo Kart Racers"),
-            HOUSING("Housing"),
-            SKYWARS("SkyWars"),
-            TRUE_COMBAT("Crazy Walls"),
-            SPEED_UHC("Speed UHC"),
-            SKYCLASH("SkyClash"),
-            LEGACY("Classic Games"),
-            PROTOTYPE("Prototype"),
-            BEDWARS("Bed Wars"),
-            MURDER_MYSTERY("Murder Mystery"),
-            BUILD_BATTLE("Build Battle"),
-            DUELS("Duels"),
-            SKYBLOCK("SkyBlock"),
-            PIT("Pit");
-
-            private final String cleanName;
-
-            GameType(String cleanName) {
-                this.cleanName = cleanName;
-            }
-
-            public String getCleanName() {
-                return cleanName;
-            }
         }
     }
 }
