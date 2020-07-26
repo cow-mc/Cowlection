@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.8.9-xxx] - unreleased
+### Fixed
+- Remove ": " when copying chat messages
+- Fix dungeon tooltip cleaner cleaning a little bit too much
+- Temporary work-around to fix crash with other mods which are not able to handle offline messages
+
 ## [1.8.9-0.9.0] - 23.07.2020
 ### Added
 - Added SkyBlock Dungeon deaths counter
@@ -138,6 +144,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 *Note:* The 'best friends' list is currently available via <kbd>ESC</kbd> > Mod Options > Cowlection > Config > bestFriends.
 
+[1.8.9-xxx]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.9.0...master
 [1.8.9-0.9.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.8.1...v1.8.9-0.9.0
 [1.8.9-0.8.1]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.8.0...v1.8.9-0.8.1
 [1.8.9-0.8.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.7.1...v1.8.9-0.8.0

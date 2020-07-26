@@ -120,7 +120,13 @@ public class VersionChecker {
         }
 
         if (statusMsg != null) {
-            main.getChatHelper().sendMessage(statusMsg);
+            if (isCommandTriggered) {
+                main.getChatHelper().sendMessage(statusMsg);
+            } else {
+                IChatComponent finalStatusMsg = statusMsg;
+                new TickDelay(() -> main.getChatHelper().sendMessage(finalStatusMsg)
+                        , 6 * 20);
+            }
         }
     }
 

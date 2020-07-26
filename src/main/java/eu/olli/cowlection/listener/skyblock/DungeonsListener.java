@@ -152,6 +152,7 @@ public class DungeonsListener {
                 while (tooltipIterator.hasNext()) {
                     String line = tooltipIterator.next();
                     Matcher lineMatcher = TOOLTIP_LINE_PATTERN.matcher(line);
+                    String lineWithoutFormatting = EnumChatFormatting.getTextWithoutFormattingCodes(line);
                     if (lineMatcher.matches()) {
                         if (EnumChatFormatting.getTextWithoutFormattingCodes(lineMatcher.group("prefix")).equals("Gear Score: ")) {
                             // replace meaningless gear score with item quality (gear score includes reforges etc)
@@ -214,6 +215,9 @@ public class DungeonsListener {
                             tooltipIterator.set(newToolTipLine);
                         } catch (NumberFormatException ignored) {
                         }
+                    } else if (lineWithoutFormatting.startsWith("Item Ability: ") || lineWithoutFormatting.startsWith("Full Set Bonus: ")) {
+                        // stop replacing tooltip entries once we reach item ability or full set bonus
+                        break;
                     }
                 }
                 if (itemQualityBottom != null) {
@@ -274,7 +278,7 @@ public class DungeonsListener {
                     if (inventorySlot.getHasStack()) {
                         int slotRow = inventorySlot.slotNumber / 9;
                         int slotColumn = inventorySlot.slotNumber % 9;
-                        // check if slot is one of the middle slots with actual minions
+                        // check if slot is one of the middle slots with parties
                         int maxRow = inventoryRows - 2;
                         if (slotRow > 0 && slotRow < maxRow && slotColumn > 0 && slotColumn < 8) {
                             int slotX = (int) ((guiLeft + inventorySlot.xDisplayPosition) / scaleFactor);

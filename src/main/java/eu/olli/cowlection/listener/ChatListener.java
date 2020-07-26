@@ -107,6 +107,9 @@ public class ChatListener {
                         chatData = main.getChatHelper().cleanChatComponent(chatComponent);
                     } else {
                         chatData = StringUtils.stripControlCodes(chatComponent.getUnformattedText());
+                        if (chatData.startsWith(": ")) {
+                            chatData = chatData.substring(2);
+                        }
                     }
                     GuiControls.setClipboardString(chatData);
                     main.getChatHelper().sendAboveChatMessage(EnumChatFormatting.YELLOW + "Copied chat component to clipboard:", "" + EnumChatFormatting.BOLD + EnumChatFormatting.GOLD + "\u276E" + EnumChatFormatting.RESET + (copyWithFormatting ? chatComponent.getUnformattedText() : chatData) + EnumChatFormatting.BOLD + EnumChatFormatting.GOLD + "\u276F");
