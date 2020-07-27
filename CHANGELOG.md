@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [1.8.9-xxx] - unreleased
 ### Changed
+- renamed package to match [cowtipper.de](https://cowtipper.de)
 - `/moo stalk`:
   - Replaced 3rd party with official API
   - new, shorter alias: `/moo s`
