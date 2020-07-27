@@ -73,6 +73,7 @@ public class PlayerListener {
         main.getVersionChecker().runUpdateCheck(false);
         new TickDelay(() -> main.getChatHelper().sendOfflineMessages(), 6 * 20);
         isOnSkyBlock = false;
+        main.getLogger().info("Joined the server");
     }
 
     @SubscribeEvent
@@ -113,6 +114,7 @@ public class PlayerListener {
         if (skyBlockListener != null) {
             MinecraftForge.EVENT_BUS.unregister(skyBlockListener);
             skyBlockListener = null;
+            main.getLogger().info("Left SkyBlock");
         }
     }
 
@@ -121,5 +123,6 @@ public class PlayerListener {
         main.getFriendsHandler().saveBestFriends();
         main.getPlayerCache().clearAllCaches();
         unregisterSkyBlockListeners();
+        main.getLogger().info("Left the server");
     }
 }

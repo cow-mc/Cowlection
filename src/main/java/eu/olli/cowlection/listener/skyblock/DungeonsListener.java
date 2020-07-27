@@ -271,7 +271,7 @@ public class DungeonsListener {
                 int guiTop = (guiChest.height - ySize) / 2;
                 GlStateManager.pushMatrix();
 
-                GlStateManager.translate(0, 0, 1);
+                GlStateManager.translate(0, 0, 280);
                 float scaleFactor = 0.8f;
                 GlStateManager.scale(scaleFactor, scaleFactor, 0);
                 for (Slot inventorySlot : inventorySlots.inventorySlots) {

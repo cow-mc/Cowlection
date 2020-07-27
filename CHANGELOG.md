@@ -5,7 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [1.8.9-xxx] - unreleased
 ### Changed
-- `/moo stalk`: Replaced 3rd party with official API
+- `/moo stalk`:
+  - Replaced 3rd party with official API
+  - new, shorter alias: `/moo s`
+  - new, gentler alias: `/moo askPolitelyWhereTheyAre` (stalking = bad)
+- `/moo stalkskyblock`:
+  - added new stats: skill average, slayer levels, pets
+  - new, shorter alias: `/moo ss`
+  - new, gentler alias: `/moo askPolitelyAboutTheirSkyBlockProgress`
 
 ### Fixed
 - Remove ": " when copying chat messages

@@ -7,10 +7,8 @@ import eu.olli.cowlection.command.exception.InvalidPlayerNameException;
 import eu.olli.cowlection.command.exception.MooCommandException;
 import eu.olli.cowlection.config.MooConfig;
 import eu.olli.cowlection.config.MooGuiConfig;
-import eu.olli.cowlection.data.DataHelper;
-import eu.olli.cowlection.data.Friend;
-import eu.olli.cowlection.data.HySkyBlockStats;
-import eu.olli.cowlection.data.HyStalkingData;
+import eu.olli.cowlection.data.*;
+import eu.olli.cowlection.data.HySkyBlockStats.Profile.Pet;
 import eu.olli.cowlection.handler.DungeonCache;
 import eu.olli.cowlection.search.GuiSearch;
 import eu.olli.cowlection.util.*;
@@ -53,7 +51,9 @@ public class MooCommand extends CommandBase {
             // work-around so you can still say 'moo' in chat without triggering the client-side command
             String msg = CommandBase.buildString(args, 1);
             Minecraft.getMinecraft().thePlayer.sendChatMessage(getCommandName() + (!msg.isEmpty() ? " " + msg : ""));
-        } else if (args[0].equalsIgnoreCase("stalk")) {
+        } else if (args[0].equalsIgnoreCase("stalk")
+                || args[0].equalsIgnoreCase("s")
+                || args[0].equalsIgnoreCase("askPolitelyWhereTheyAre")) {
             if (args.length != 2) {
                 throw new WrongUsageException("/" + getCommandName() + " stalk <playerName>");
             } else if (!Utils.isValidMcName(args[1])) {
@@ -61,9 +61,12 @@ public class MooCommand extends CommandBase {
             } else {
                 handleStalking(args[1]);
             }
-        } else if (args[0].equalsIgnoreCase("stalksb") || args[0].equalsIgnoreCase("stalkskyblock") || args[0].equalsIgnoreCase("skyblockstalk")) {
+        } else if (args[0].equalsIgnoreCase("stalkskyblock") || args[0].equalsIgnoreCase("skyblockstalk")
+                || args[0].equalsIgnoreCase("ss")
+                || args[0].equalsIgnoreCase("stalksb") || args[0].equalsIgnoreCase("sbstalk")
+                || args[0].equalsIgnoreCase("askPolitelyAboutTheirSkyBlockProgress")) {
             if (args.length != 2) {
-                throw new WrongUsageException("/" + getCommandName() + " stalkskyblock <playerName>");
+                throw new WrongUsageException("/" + getCommandName() + " skyblockstalk <playerName>");
             } else if (!Utils.isValidMcName(args[1])) {
                 throw new InvalidPlayerNameException(args[1]);
             } else {
@@ -370,21 +373,25 @@ public class MooCommand extends CommandBase {
 
                 MooChatComponent skillLevels = new MooChatComponent("Skill levels:").gold();
                 HySkyBlockStats.Profile.Member member = activeProfile.getMember(stalkedPlayer.getUuid());
-                for (Map.Entry<HySkyBlockStats.SkillLevel, Double> entry : member.getSkills().entrySet()) {
+                int skillLevelsSum = 0;
+                for (Map.Entry<XpTables.Skill, Integer> entry : member.getSkills().entrySet()) {
                     String skill = Utils.fancyCase(entry.getKey().name());
-                    int level = entry.getKey().getLevel(entry.getValue());
-                    if (level > 0) {
-                        String skillLevel = MooConfig.useRomanNumerals() ? Utils.convertArabicToRoman(level) : String.valueOf(level);
-                        skillLevels.appendFreshSibling(new MooChatComponent.KeyValueTooltipComponent(skill, skillLevel));
-                    }
+                    int level = entry.getValue();
+                    String skillLevel = MooConfig.useRomanNumerals() ? Utils.convertArabicToRoman(level) : String.valueOf(level);
+                    skillLevels.appendFreshSibling(new MooChatComponent.KeyValueTooltipComponent(skill, skillLevel));
 
                     if (level > highestLevel) {
                         highestSkill = skill;
                         highestLevel = level;
                     }
+                    if (!skill.equals("Carpentry") && !skill.equals("Runecrafting")) {
+                        skillLevelsSum += level;
+                    }
                 }
 
                 // output inspired by /profiles hover
+
+                // coins:
                 String coinsBankAndPurse = (activeProfile.getCoinBank() >= 0) ? Utils.formatNumberWithAbbreviations(activeProfile.getCoinBank() + member.getCoinPurse()) : "API access disabled";
                 Pair<String, String> fancyFirstJoined = member.getFancyFirstJoined();
 
@@ -399,6 +406,7 @@ public class MooCommand extends CommandBase {
 
                 MooChatComponent sbStats = new MooChatComponent("SkyBlock stats of " + stalkedPlayer.getName() + " (" + activeProfile.getCuteName() + ")").gold().bold().setUrl("https://sky.lea.moe/stats/" + stalkedPlayer.getName() + "/" + activeProfile.getCuteName(), "Click to view SkyBlock stats on sky.lea.moe")
                         .appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Coins", coinsBankAndPurse).setHover(wealthHover));
+                // highest skill + skill average:
                 if (highestSkill != null) {
                     if (highestLevel == 0) {
                         sbStats.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Highest Skill", "All skills level 0"));
@@ -406,22 +414,93 @@ public class MooCommand extends CommandBase {
                         String highestSkillLevel = MooConfig.useRomanNumerals() ? Utils.convertArabicToRoman(highestLevel) : String.valueOf(highestLevel);
                         sbStats.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Highest Skill", highestSkill + " " + highestSkillLevel).setHover(skillLevels));
                     }
+                    double skillAverage = XpTables.Skill.getSkillAverage(skillLevelsSum);
+                    sbStats.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Skill average", String.format("%.1f", skillAverage))
+                            .setHover(new MooChatComponent("Average skill level over all non-cosmetic skills\n(all except Carpentry and Runecrafting)").gray()));
                 } else {
                     sbStats.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Highest Skill", "API access disabled"));
                 }
 
+                // slayer levels:
+                StringBuilder slayerLevels = new StringBuilder();
+                StringBuilder slayerLevelsTooltip = new StringBuilder();
+                MooChatComponent slayerLevelsTooltipComponent = new MooChatComponent("Slayer bosses:").gold();
+                for (Map.Entry<XpTables.Slayer, Integer> entry : member.getSlayerLevels().entrySet()) {
+                    String slayerBoss = Utils.fancyCase(entry.getKey().name());
+                    if (slayerLevels.length() > 0) {
+                        slayerLevels.append(EnumChatFormatting.GRAY).append(" | ").append(EnumChatFormatting.YELLOW);
+                        slayerLevelsTooltip.append(EnumChatFormatting.DARK_GRAY).append(" | ").append(EnumChatFormatting.WHITE);
+                    }
+                    slayerLevelsTooltip.append(slayerBoss);
+                    int level = entry.getValue();
+
+                    String slayerLevel = (level > 0) ? (MooConfig.useRomanNumerals() ? Utils.convertArabicToRoman(level) : String.valueOf(level)) : "0";
+                    slayerLevels.append(slayerLevel);
+                }
+                MooChatComponent slayerLevelsComponent = new MooChatComponent.KeyValueChatComponent("Slayer levels", slayerLevels.toString());
+                slayerLevelsComponent.setHover(slayerLevelsTooltipComponent.appendFreshSibling(new MooChatComponent(slayerLevelsTooltip.toString()).white()));
+                sbStats.appendFreshSibling(slayerLevelsComponent);
+
+                // pets:
+                Pet activePet = null;
+                Pet bestPet = null;
+                StringBuilder pets = new StringBuilder();
+                List<Pet> memberPets = member.getPets();
+                int showPetsLimit = Math.min(16, memberPets.size());
+                for (int i = 0; i < showPetsLimit; i++) {
+                    Pet pet = memberPets.get(i);
+                    if (pet.isActive()) {
+                        activePet = pet;
+                    } else {
+                        if (activePet == null && bestPet == null && pets.length() == 0) {
+                            // no active pet, display highest pet instead
+                            bestPet = pet;
+                            continue;
+                        } else if (pets.length() > 0) {
+                            pets.append("\n");
+                        }
+                        pets.append(pet.toFancyString());
+                    }
+                }
+                int remainingPets = memberPets.size() - showPetsLimit;
+                if (remainingPets > 0 && pets.length() > 0) {
+                    pets.append("\n").append(EnumChatFormatting.GRAY).append(" + ").append(remainingPets).append(" other pets");
+                }
+                MooChatComponent petsComponent = null;
+                if (activePet != null) {
+                    petsComponent = new MooChatComponent.KeyValueChatComponent("Active Pet", activePet.toFancyString());
+                } else if (bestPet != null) {
+                    petsComponent = new MooChatComponent.KeyValueChatComponent("Best Pet", bestPet.toFancyString());
+                }
+                if (pets.length() > 0 && petsComponent != null) {
+                    petsComponent.setHover(new MooChatComponent("Other pets:").gold().bold().appendFreshSibling(new MooChatComponent(pets.toString())));
+                }
+                if (petsComponent == null) {
+                    petsComponent = new MooChatComponent.KeyValueChatComponent("Pet", "none");
+                }
+                sbStats.appendFreshSibling(petsComponent);
+
+                // minions:
                 Pair<Integer, Integer> uniqueMinionsData = activeProfile.getUniqueMinions();
                 String uniqueMinions = String.valueOf(uniqueMinionsData.first());
+                String uniqueMinionsHoverText = null;
                 if (uniqueMinionsData.second() > activeProfile.coopCount()) {
                     // all players have their unique minions api access disabled
                     uniqueMinions = "API access disabled";
                 } else if (uniqueMinionsData.second() > 0) {
                     // at least one player has their unique minions api access disabled
-                    uniqueMinions += " or more (" + uniqueMinionsData.second() + "/" + (activeProfile.coopCount() + 1) + " have their API access disabled)";
+                    uniqueMinions += EnumChatFormatting.GRAY + " or more";
+                    uniqueMinionsHoverText = "" + EnumChatFormatting.WHITE + uniqueMinionsData.second() + " out of " + (activeProfile.coopCount() + 1) + EnumChatFormatting.GRAY + " Co-op members have disabled API access, so some unique minions may be missing";
                 }
 
-                sbStats.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Unique Minions", uniqueMinions));
+                MooChatComponent.KeyValueChatComponent uniqueMinionsComponent = new MooChatComponent.KeyValueChatComponent("Unique Minions", uniqueMinions);
+                if (uniqueMinionsHoverText != null) {
+                    uniqueMinionsComponent.setHover(new MooChatComponent(uniqueMinionsHoverText).gray());
+                }
+                sbStats.appendFreshSibling(uniqueMinionsComponent);
+                // fairy souls:
                 sbStats.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Fairy Souls", (member.getFairySoulsCollected() >= 0) ? String.valueOf(member.getFairySoulsCollected()) : "API access disabled"));
+                // profile age:
                 sbStats.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Profile age", fancyFirstJoined.first()).setHover(new MooChatComponent.KeyValueTooltipComponent("Join date", fancyFirstJoined.second())));
 
                 main.getChatHelper().sendMessage(sbStats);
@@ -548,7 +627,7 @@ public class MooCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args,
-                    /* friends & other players */ "stalk", "stalkskyblock", "skyblockstalk", "analyzeIsland", "deaths", "add", "remove", "list", "nameChangeCheck", "toggle",
+                    /* friends & other players */ "stalk", "askPolitelyWhereTheyAre", "stalkskyblock", "skyblockstalk", "askPolitelyAboutTheirSkyBlockProgress", "analyzeIsland", "deaths", "add", "remove", "list", "nameChangeCheck", "toggle",
                     /* miscellaneous */ "config", "search", "guiscale", "rr", "shrug", "apikey",
                     /* update mod */ "update", "updateHelp", "version", "directory",
                     /* help */ "help");

@@ -2,14 +2,15 @@ package eu.olli.cowlection.util;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import com.mojang.util.UUIDTypeAdapter;
 import eu.olli.cowlection.Cowlection;
 import eu.olli.cowlection.command.exception.ThrowingConsumer;
 import eu.olli.cowlection.config.MooConfig;
 import eu.olli.cowlection.data.Friend;
+import eu.olli.cowlection.data.HyPlayerData;
 import eu.olli.cowlection.data.HySkyBlockStats;
 import eu.olli.cowlection.data.HyStalkingData;
-import eu.olli.cowlection.data.HyPlayerData;
 import org.apache.http.HttpStatus;
 
 import java.io.BufferedReader;
@@ -44,7 +45,7 @@ public class ApiUtils {
             } else {
                 return GsonUtils.fromJson(reader, Friend.class);
             }
-        } catch (IOException e) {
+        } catch (IOException | JsonSyntaxException e) {
             e.printStackTrace();
         }
         return null;
@@ -64,7 +65,7 @@ public class ApiUtils {
                     return nameHistoryData.get(nameHistoryData.size() - 1).getAsJsonObject().get("name").getAsString();
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException | JsonSyntaxException e) {
             e.printStackTrace();
         }
         return null;
@@ -79,7 +80,7 @@ public class ApiUtils {
             if (reader != null) {
                 return GsonUtils.fromJson(reader, HyStalkingData.class);
             }
-        } catch (IOException e) {
+        } catch (IOException | JsonSyntaxException e) {
             e.printStackTrace();
         }
         return null;
@@ -94,7 +95,7 @@ public class ApiUtils {
             if (reader != null) {
                 return GsonUtils.fromJson(reader, HySkyBlockStats.class);
             }
-        } catch (IOException e) {
+        } catch (IOException | JsonSyntaxException e) {
             e.printStackTrace();
         }
         return null;
@@ -109,7 +110,7 @@ public class ApiUtils {
             if (reader != null) {
                 return GsonUtils.fromJson(reader, HyPlayerData.class);
             }
-        } catch (IOException e) {
+        } catch (IOException | JsonSyntaxException e) {
             e.printStackTrace();
         }
         return null;
@@ -118,7 +119,7 @@ public class ApiUtils {
     private static BufferedReader makeApiCall(String url) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
         connection.setConnectTimeout(5000);
-        connection.setReadTimeout(5000);
+        connection.setReadTimeout(10000);
         connection.addRequestProperty("User-Agent", "Forge Mod " + Cowlection.MODNAME + "/" + Cowlection.VERSION + " (" + Cowlection.GITURL + ")");
 
         connection.getResponseCode();

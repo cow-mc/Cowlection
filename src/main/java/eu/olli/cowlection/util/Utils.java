@@ -174,6 +174,9 @@ public final class Utils {
      * @see <a href="https://stackoverflow.com/a/48357180">Source</a>
      */
     public static String convertArabicToRoman(int number) {
+        if (number == 0) {
+            return "0";
+        }
         String romanOnes = arabicToRomanChars(number % 10, "I", "V", "X");
         number /= 10;
 

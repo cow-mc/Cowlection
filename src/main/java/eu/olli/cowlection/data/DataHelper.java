@@ -1,12 +1,39 @@
 package eu.olli.cowlection.data;
 
 import eu.olli.cowlection.util.Utils;
+import net.minecraft.util.EnumChatFormatting;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 public final class DataHelper {
     private DataHelper() {
+    }
+
+    public enum SkyBlockRarity {
+        COMMON(EnumChatFormatting.WHITE),
+        UNCOMMON(EnumChatFormatting.GREEN),
+        RARE(EnumChatFormatting.BLUE),
+        EPIC(EnumChatFormatting.DARK_PURPLE),
+        LEGENDARY(EnumChatFormatting.GOLD),
+        MYTHIC(EnumChatFormatting.LIGHT_PURPLE),
+        SPECIAL(EnumChatFormatting.RED),
+        VERY_SPECIAL(EnumChatFormatting.RED);
+
+        public final EnumChatFormatting rarityColor;
+
+        SkyBlockRarity(EnumChatFormatting color) {
+            this.rarityColor = color;
+        }
+
+        public static SkyBlockRarity[] getPetRarities() {
+            return Arrays.stream(values(), 0, 5).toArray(SkyBlockRarity[]::new);
+        }
+
+        public EnumChatFormatting getColor() {
+            return rarityColor;
+        }
     }
 
     // TODO replace with api request: https://github.com/HypixelDev/PublicAPI/blob/master/Documentation/misc/GameType.md

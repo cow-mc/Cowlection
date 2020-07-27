@@ -1,13 +1,11 @@
 package eu.olli.cowlection.data;
 
+import com.google.common.collect.ComparisonChain;
 import com.mojang.realmsclient.util.Pair;
 import com.mojang.util.UUIDTypeAdapter;
 import eu.olli.cowlection.util.Utils;
 
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.UUID;
+import java.util.*;
 
 public class HySkyBlockStats {
     private boolean success;
@@ -115,6 +113,8 @@ public class HySkyBlockStats {
             private double experience_skill_carpentry = -1;
             private double experience_skill_runecrafting = -1;
             private double experience_skill_taming = -1;
+            private Map<String, SlayerBossDetails> slayer_bosses;
+            private List<Pet> pets;
 
             /**
              * No-args constructor for GSON
@@ -134,39 +134,81 @@ public class HySkyBlockStats {
                 return fairy_souls_collected;
             }
 
-            public Map<SkillLevel, Double> getSkills() {
-                Map<SkillLevel, Double> skills = new TreeMap<>();
+            public Map<XpTables.Skill, Integer> getSkills() {
+                Map<XpTables.Skill, Integer> skills = new TreeMap<>();
                 if (experience_skill_farming >= 0) {
-                    skills.put(SkillLevel.FARMING, experience_skill_farming);
+                    skills.put(XpTables.Skill.FARMING, XpTables.Skill.FARMING.getLevel(experience_skill_farming));
                 }
                 if (experience_skill_mining >= 0) {
-                    skills.put(SkillLevel.MINING, experience_skill_mining);
+                    skills.put(XpTables.Skill.MINING, XpTables.Skill.MINING.getLevel(experience_skill_mining));
                 }
                 if (experience_skill_combat >= 0) {
-                    skills.put(SkillLevel.COMBAT, experience_skill_combat);
+                    skills.put(XpTables.Skill.COMBAT, XpTables.Skill.COMBAT.getLevel(experience_skill_combat));
                 }
                 if (experience_skill_foraging >= 0) {
-                    skills.put(SkillLevel.FORAGING, experience_skill_foraging);
+                    skills.put(XpTables.Skill.FORAGING, XpTables.Skill.FORAGING.getLevel(experience_skill_foraging));
                 }
                 if (experience_skill_fishing >= 0) {
-                    skills.put(SkillLevel.FISHING, experience_skill_fishing);
+                    skills.put(XpTables.Skill.FISHING, XpTables.Skill.FISHING.getLevel(experience_skill_fishing));
                 }
                 if (experience_skill_enchanting >= 0) {
-                    skills.put(SkillLevel.ENCHANTING, experience_skill_enchanting);
+                    skills.put(XpTables.Skill.ENCHANTING, XpTables.Skill.ENCHANTING.getLevel(experience_skill_enchanting));
                 }
                 if (experience_skill_alchemy >= 0) {
-                    skills.put(SkillLevel.ALCHEMY, experience_skill_alchemy);
+                    skills.put(XpTables.Skill.ALCHEMY, XpTables.Skill.ALCHEMY.getLevel(experience_skill_alchemy));
                 }
                 if (experience_skill_carpentry >= 0) {
-                    skills.put(SkillLevel.CARPENTRY, experience_skill_carpentry);
+                    skills.put(XpTables.Skill.CARPENTRY, XpTables.Skill.CARPENTRY.getLevel(experience_skill_carpentry));
                 }
                 if (experience_skill_runecrafting >= 0) {
-                    skills.put(SkillLevel.RUNECRAFTING, experience_skill_runecrafting);
+                    skills.put(XpTables.Skill.RUNECRAFTING, XpTables.Skill.RUNECRAFTING.getLevel(experience_skill_runecrafting));
                 }
                 if (experience_skill_taming >= 0) {
-                    skills.put(SkillLevel.TAMING, experience_skill_taming);
+                    skills.put(XpTables.Skill.TAMING, XpTables.Skill.TAMING.getLevel(experience_skill_taming));
                 }
                 return skills;
+            }
+
+            public Map<XpTables.Slayer, Integer> getSlayerLevels() {
+                Map<XpTables.Slayer, Integer> slayerLevels = new EnumMap<>(XpTables.Slayer.class);
+                for (XpTables.Slayer slayerBoss : XpTables.Slayer.values()) {
+                    SlayerBossDetails bossDetails = slayer_bosses.get(slayerBoss.name().toLowerCase());
+                    int slayerLevel = slayerBoss.getLevel(bossDetails.xp);
+                    slayerLevels.put(slayerBoss, slayerLevel);
+                }
+                return slayerLevels;
+            }
+
+            public List<Pet> getPets() {
+                pets.sort((p1, p2) -> ComparisonChain.start().compare(p2.active, p1.active).compare(p2.getRarity(), p1.getRarity()).compare(p2.exp, p1.exp).result());
+                return pets;
+            }
+        }
+
+        private static class SlayerBossDetails {
+            private int xp;
+        }
+
+        public static class Pet {
+            private String type;
+            private double exp;
+            private String tier;
+            private boolean active;
+
+            public boolean isActive() {
+                return active;
+            }
+
+            public DataHelper.SkyBlockRarity getRarity() {
+                return DataHelper.SkyBlockRarity.valueOf(tier);
+            }
+
+            public String toFancyString() {
+                return getRarity().getColor() + Utils.fancyCase(type) + " " + getLevel();
+            }
+
+            private int getLevel() {
+                return XpTables.Pet.getLevel(tier, exp);
             }
         }
 
@@ -192,111 +234,6 @@ public class HySkyBlockStats {
             //      private Transaction() {
             //      }
             //  }
-        }
-    }
-
-    public enum SkillLevel {
-        FARMING, MINING, COMBAT, FORAGING, FISHING, ENCHANTING, ALCHEMY, CARPENTRY, RUNECRAFTING(true), TAMING;
-        private final boolean alternativeXpFormula;
-        private static final TreeMap<Integer, Integer> XP_TO_LEVEL = new TreeMap<>();
-        private static final TreeMap<Integer, Integer> XP_TO_LEVEL_ALTERNATIVE = new TreeMap<>();
-
-        static {
-            // exp data taken from https://api.hypixel.net/resources/skyblock/skills
-            XP_TO_LEVEL.put(0, 0);
-            XP_TO_LEVEL.put(50, 1);
-            XP_TO_LEVEL.put(175, 2);
-            XP_TO_LEVEL.put(375, 3);
-            XP_TO_LEVEL.put(675, 4);
-            XP_TO_LEVEL.put(1175, 5);
-            XP_TO_LEVEL.put(1925, 6);
-            XP_TO_LEVEL.put(2925, 7);
-            XP_TO_LEVEL.put(4425, 8);
-            XP_TO_LEVEL.put(6425, 9);
-            XP_TO_LEVEL.put(9925, 10);
-            XP_TO_LEVEL.put(14925, 11);
-            XP_TO_LEVEL.put(22425, 12);
-            XP_TO_LEVEL.put(32425, 13);
-            XP_TO_LEVEL.put(47425, 14);
-            XP_TO_LEVEL.put(67425, 15);
-            XP_TO_LEVEL.put(97425, 16);
-            XP_TO_LEVEL.put(147425, 17);
-            XP_TO_LEVEL.put(222425, 18);
-            XP_TO_LEVEL.put(322425, 19);
-            XP_TO_LEVEL.put(522425, 20);
-            XP_TO_LEVEL.put(822425, 21);
-            XP_TO_LEVEL.put(1222425, 22);
-            XP_TO_LEVEL.put(1722425, 23);
-            XP_TO_LEVEL.put(2322425, 24);
-            XP_TO_LEVEL.put(3022425, 25);
-            XP_TO_LEVEL.put(3822425, 26);
-            XP_TO_LEVEL.put(4722425, 27);
-            XP_TO_LEVEL.put(5722425, 28);
-            XP_TO_LEVEL.put(6822425, 29);
-            XP_TO_LEVEL.put(8022425, 30);
-            XP_TO_LEVEL.put(9322425, 31);
-            XP_TO_LEVEL.put(10722425, 32);
-            XP_TO_LEVEL.put(12222425, 33);
-            XP_TO_LEVEL.put(13822425, 34);
-            XP_TO_LEVEL.put(15522425, 35);
-            XP_TO_LEVEL.put(17322425, 36);
-            XP_TO_LEVEL.put(19222425, 37);
-            XP_TO_LEVEL.put(21222425, 38);
-            XP_TO_LEVEL.put(23322425, 39);
-            XP_TO_LEVEL.put(25522425, 40);
-            XP_TO_LEVEL.put(27822425, 41);
-            XP_TO_LEVEL.put(30222425, 42);
-            XP_TO_LEVEL.put(32722425, 43);
-            XP_TO_LEVEL.put(35322425, 44);
-            XP_TO_LEVEL.put(38072425, 45);
-            XP_TO_LEVEL.put(40972425, 46);
-            XP_TO_LEVEL.put(44072425, 47);
-            XP_TO_LEVEL.put(47472425, 48);
-            XP_TO_LEVEL.put(51172425, 49);
-            XP_TO_LEVEL.put(55172425, 50);
-
-            XP_TO_LEVEL_ALTERNATIVE.put(0, 0);
-            XP_TO_LEVEL_ALTERNATIVE.put(50, 1);
-            XP_TO_LEVEL_ALTERNATIVE.put(150, 2);
-            XP_TO_LEVEL_ALTERNATIVE.put(275, 3);
-            XP_TO_LEVEL_ALTERNATIVE.put(435, 4);
-            XP_TO_LEVEL_ALTERNATIVE.put(635, 5);
-            XP_TO_LEVEL_ALTERNATIVE.put(885, 6);
-            XP_TO_LEVEL_ALTERNATIVE.put(1200, 7);
-            XP_TO_LEVEL_ALTERNATIVE.put(1600, 8);
-            XP_TO_LEVEL_ALTERNATIVE.put(2100, 9);
-            XP_TO_LEVEL_ALTERNATIVE.put(2725, 10);
-            XP_TO_LEVEL_ALTERNATIVE.put(3510, 11);
-            XP_TO_LEVEL_ALTERNATIVE.put(4510, 12);
-            XP_TO_LEVEL_ALTERNATIVE.put(5760, 13);
-            XP_TO_LEVEL_ALTERNATIVE.put(7325, 14);
-            XP_TO_LEVEL_ALTERNATIVE.put(9325, 15);
-            XP_TO_LEVEL_ALTERNATIVE.put(11825, 16);
-            XP_TO_LEVEL_ALTERNATIVE.put(14950, 17);
-            XP_TO_LEVEL_ALTERNATIVE.put(18950, 18);
-            XP_TO_LEVEL_ALTERNATIVE.put(23950, 19);
-            XP_TO_LEVEL_ALTERNATIVE.put(30200, 20);
-            XP_TO_LEVEL_ALTERNATIVE.put(38050, 21);
-            XP_TO_LEVEL_ALTERNATIVE.put(47850, 22);
-            XP_TO_LEVEL_ALTERNATIVE.put(60100, 23);
-            XP_TO_LEVEL_ALTERNATIVE.put(75400, 24);
-
-        }
-
-        SkillLevel() {
-            this(false);
-        }
-
-        SkillLevel(boolean alternativeXpFormula) {
-            this.alternativeXpFormula = alternativeXpFormula;
-        }
-
-        public int getLevel(double exp) {
-            if (alternativeXpFormula) {
-                return XP_TO_LEVEL_ALTERNATIVE.floorEntry((int) exp).getValue();
-            } else {
-                return XP_TO_LEVEL.floorEntry((int) exp).getValue();
-            }
         }
     }
 }

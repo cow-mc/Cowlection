@@ -73,7 +73,7 @@ public class HyPlayerData {
                 case "ADMIN":
                     return EnumChatFormatting.RED + "[ADMIN]";
                 case "YOUTUBER":
-                    return EnumChatFormatting.RED + "[" + EnumChatFormatting.WHITE + "YOUTUBER" + EnumChatFormatting.RED + "]";
+                    return EnumChatFormatting.RED + "[" + EnumChatFormatting.WHITE + "YOUTUBE" + EnumChatFormatting.RED + "]";
             }
         }
         if (rankPlusColor == null) {
