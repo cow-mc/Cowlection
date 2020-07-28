@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [1.8.9-xxx] - unreleased
+### Added
+- Best friends online check:
+  - check if one of your best friends is currently online
+  - checked automatically after joining a server (can be disabled via `/moo config`)
+  - also, manually with `/moo online`
+
 ### Changed
 - renamed package to match [cowtipper.de](https://cowtipper.de)
 - `/moo stalk`:

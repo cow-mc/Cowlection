@@ -38,6 +38,7 @@ public class MooConfig {
     public static boolean showBestFriendNotifications;
     public static boolean showFriendNotifications;
     public static boolean showGuildNotifications;
+    public static boolean doBestFriendsOnlineCheck;
     public static boolean showAdvancedTooltips;
     public static String[] tabCompletableNamesCommands;
     private static String numeralSystem;
@@ -132,6 +133,8 @@ public class MooConfig {
                 "showFriendNotifications", true, "Set to true to receive friends' login/logout messages, set to false hide them."), true);
         Property propShowGuildNotifications = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
                 "showGuildNotifications", true, "Set to true to receive guild members' login/logout messages, set to false hide them."), true);
+        Property propDoBestFriendsOnlineCheck = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
+                "doBestFriendsOnlineCheck", true, "Set to true to check best friends' online status when joining a server, set to false to disable."), true);
         Property propShowAdvancedTooltips = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
                 "showAdvancedTooltips", true, "Set to true to show advanced tooltips, set to false show default tooltips."), true);
         Property propNumeralSystem = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
@@ -174,6 +177,7 @@ public class MooConfig {
             showBestFriendNotifications = propShowBestFriendNotifications.getBoolean();
             showFriendNotifications = propShowFriendNotifications.getBoolean();
             showGuildNotifications = propShowGuildNotifications.getBoolean();
+            doBestFriendsOnlineCheck = propDoBestFriendsOnlineCheck.getBoolean();
             showAdvancedTooltips = propShowAdvancedTooltips.getBoolean();
             numeralSystem = propNumeralSystem.getString();
             tabCompletableNamesCommands = propTabCompletableNamesCommands.getStringList();
@@ -198,6 +202,7 @@ public class MooConfig {
         propShowBestFriendNotifications.set(showBestFriendNotifications);
         propShowFriendNotifications.set(showFriendNotifications);
         propShowGuildNotifications.set(showGuildNotifications);
+        propDoBestFriendsOnlineCheck.set(doBestFriendsOnlineCheck);
         propShowAdvancedTooltips.set(showAdvancedTooltips);
         propNumeralSystem.set(numeralSystem);
         propTabCompletableNamesCommands.set(tabCompletableNamesCommands);

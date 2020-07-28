@@ -6,11 +6,10 @@ import de.cowtipper.cowlection.Cowlection;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+@SuppressWarnings("UnstableApiUsage")
 public class PlayerCache {
-    @SuppressWarnings("UnstableApiUsage")
     private final EvictingQueue<String> nameCache = EvictingQueue.create(50);
-    @SuppressWarnings("UnstableApiUsage")
-    private final EvictingQueue<String> bestFriendCache = EvictingQueue.create(50);
+    private final EvictingQueue<String> bestFriendCache = EvictingQueue.create(100);
     private final Cowlection main;
 
     public PlayerCache(Cowlection main) {

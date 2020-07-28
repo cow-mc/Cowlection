@@ -11,6 +11,8 @@ import de.cowtipper.cowlection.data.Friend;
 import de.cowtipper.cowlection.data.HyPlayerData;
 import de.cowtipper.cowlection.data.HySkyBlockStats;
 import de.cowtipper.cowlection.data.HyStalkingData;
+import de.cowtipper.cowlection.event.ApiErrorEvent;
+import net.minecraftforge.common.MinecraftForge;
 import org.apache.http.HttpStatus;
 
 import java.io.BufferedReader;
@@ -101,17 +103,19 @@ public class ApiUtils {
         return null;
     }
 
-    public static void fetchPlayerOfflineStatus(Friend stalkedPlayer, ThrowingConsumer<HyPlayerData> action) {
-        pool.execute(() -> action.accept(stalkOfflinePlayer(stalkedPlayer)));
+    public static void fetchHyPlayerDetails(Friend stalkedPlayer, ThrowingConsumer<HyPlayerData> action) {
+        pool.execute(() -> action.accept(stalkHyPlayer(stalkedPlayer)));
     }
 
-    private static HyPlayerData stalkOfflinePlayer(Friend stalkedPlayer) {
+    private static HyPlayerData stalkHyPlayer(Friend stalkedPlayer) {
         try (BufferedReader reader = makeApiCall(String.format(PLAYER_URL, MooConfig.moo, UUIDTypeAdapter.fromUUID(stalkedPlayer.getUuid())))) {
             if (reader != null) {
                 return GsonUtils.fromJson(reader, HyPlayerData.class);
             }
         } catch (IOException | JsonSyntaxException e) {
             e.printStackTrace();
+            ApiErrorEvent event = new ApiErrorEvent(stalkedPlayer.getName());
+            MinecraftForge.EVENT_BUS.post(event);
         }
         return null;
     }
@@ -119,7 +123,7 @@ public class ApiUtils {
     private static BufferedReader makeApiCall(String url) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
         connection.setConnectTimeout(5000);
-        connection.setReadTimeout(10000);
+        connection.setReadTimeout(8000);
         connection.addRequestProperty("User-Agent", "Forge Mod " + Cowlection.MODNAME + "/" + Cowlection.VERSION + " (" + Cowlection.GITURL + ")");
 
         connection.getResponseCode();

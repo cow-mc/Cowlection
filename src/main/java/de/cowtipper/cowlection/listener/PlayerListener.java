@@ -1,6 +1,8 @@
 package de.cowtipper.cowlection.listener;
 
 import de.cowtipper.cowlection.Cowlection;
+import de.cowtipper.cowlection.config.MooConfig;
+import de.cowtipper.cowlection.event.ApiErrorEvent;
 import de.cowtipper.cowlection.listener.skyblock.DungeonsListener;
 import de.cowtipper.cowlection.listener.skyblock.SkyBlockListener;
 import de.cowtipper.cowlection.util.GsonUtils;
@@ -72,8 +74,16 @@ public class PlayerListener {
     public void onServerJoin(FMLNetworkEvent.ClientConnectedToServerEvent e) {
         main.getVersionChecker().runUpdateCheck(false);
         new TickDelay(() -> main.getChatHelper().sendOfflineMessages(), 6 * 20);
+        if (MooConfig.doBestFriendsOnlineCheck) {
+            main.getFriendsHandler().runBestFriendsOnlineCheck(false);
+        }
         isOnSkyBlock = false;
         main.getLogger().info("Joined the server");
+    }
+
+    @SubscribeEvent
+    public void onApiError(ApiErrorEvent e) {
+        main.getFriendsHandler().addErroredApiRequest(e.getPlayerName());
     }
 
     @SubscribeEvent

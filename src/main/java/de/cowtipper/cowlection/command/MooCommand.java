@@ -163,6 +163,9 @@ public class MooCommand extends CommandBase {
             handleBestFriendRemove(args);
         } else if (args[0].equalsIgnoreCase("list")) {
             handleListBestFriends();
+        } else if (args[0].equalsIgnoreCase("online")) {
+            main.getChatHelper().sendMessage(EnumChatFormatting.GRAY, "Checking online status of " + EnumChatFormatting.WHITE + main.getFriendsHandler().getBestFriends().size() + EnumChatFormatting.GRAY + " best friends. This may take a few seconds.");
+            main.getFriendsHandler().runBestFriendsOnlineCheck(true);
         } else if (args[0].equalsIgnoreCase("nameChangeCheck")) {
             handleNameChangeCheck(args);
         }
@@ -295,7 +298,7 @@ public class MooCommand extends CommandBase {
                             + (session.getMode() != null ? ": " + EnumChatFormatting.GOLD + session.getMode() : "")
                             + (session.getMap() != null ? EnumChatFormatting.YELLOW + " (Map: " + EnumChatFormatting.GOLD + session.getMap() + EnumChatFormatting.YELLOW + ")" : ""));
                 } else {
-                    ApiUtils.fetchPlayerOfflineStatus(stalkedPlayer, hyPlayerData -> {
+                    ApiUtils.fetchHyPlayerDetails(stalkedPlayer, hyPlayerData -> {
                         if (hyPlayerData == null) {
                             throw new ApiContactException("Hypixel", "couldn't stalk " + EnumChatFormatting.DARK_RED + stalkedPlayer.getName() + EnumChatFormatting.RED + " but they appear to be offline currently.");
                         } else if (hyPlayerData.hasNeverJoinedHypixel()) {
@@ -501,7 +504,7 @@ public class MooCommand extends CommandBase {
                 // fairy souls:
                 sbStats.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Fairy Souls", (member.getFairySoulsCollected() >= 0) ? String.valueOf(member.getFairySoulsCollected()) : "API access disabled"));
                 // profile age:
-                sbStats.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Profile age", fancyFirstJoined.first()).setHover(new MooChatComponent.KeyValueTooltipComponent("Join date", fancyFirstJoined.second())));
+                sbStats.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Profile age", fancyFirstJoined.first()).setHover(new MooChatComponent.KeyValueTooltipComponent("Join date", (fancyFirstJoined.second() == null ? "today" : fancyFirstJoined.second()))));
 
                 main.getChatHelper().sendMessage(sbStats);
             } else {
@@ -518,6 +521,8 @@ public class MooCommand extends CommandBase {
             throw new InvalidPlayerNameException(args[1]);
         } else if (main.getFriendsHandler().isBestFriend(args[1], true)) {
             throw new MooCommandException(EnumChatFormatting.DARK_RED + args[1] + EnumChatFormatting.RED + " is a best friend already.");
+        } else if (main.getFriendsHandler().getBestFriends().size() >= 100) {
+            throw new MooCommandException(EnumChatFormatting.RED + "The best friends list is limited to 100 players. Remove some with " + EnumChatFormatting.WHITE + "/" + getCommandName() + " remove <name> " + EnumChatFormatting.RED + "first");
         } else {
             // TODO Add check if 'best friend' is on normal friend list
             main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, "Fetching " + EnumChatFormatting.YELLOW + args[1] + EnumChatFormatting.GOLD + "'s unique user id. This may take a few seconds...");
@@ -545,7 +550,9 @@ public class MooCommand extends CommandBase {
         Set<String> bestFriends = main.getFriendsHandler().getBestFriends();
 
         // TODO show fancy gui with list of best friends; maybe with buttons to delete them
-        main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u279C Best friends: " + ((bestFriends.isEmpty())
+        main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u279C Best friends"
+                + (bestFriends.isEmpty() ? "" : " (" + EnumChatFormatting.DARK_GREEN + bestFriends.size() + EnumChatFormatting.GREEN + ")") + ": "
+                + ((bestFriends.isEmpty())
                 ? EnumChatFormatting.ITALIC + "none :c"
                 : EnumChatFormatting.DARK_GREEN + String.join(EnumChatFormatting.GREEN + ", " + EnumChatFormatting.DARK_GREEN, bestFriends)));
     }
@@ -562,7 +569,7 @@ public class MooCommand extends CommandBase {
         } else {
             main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, "Checking if " + bestFriend.getName() + " changed their name... This will take a few seconds...");
             // check for name change async
-            main.getFriendsHandler().updateBestFriend(bestFriend, true);
+            main.getFriendsHandler().doBestFriendNameChangeCheck(bestFriend, true);
         }
     }
 
@@ -591,6 +598,7 @@ public class MooCommand extends CommandBase {
                 .appendSibling(createCmdHelpEntry("add", "Add best friends"))
                 .appendSibling(createCmdHelpEntry("remove", "Remove best friends"))
                 .appendSibling(createCmdHelpEntry("list", "View list of best friends"))
+                .appendSibling(createCmdHelpEntry("online", "View list of best friends that are currently online"))
                 .appendSibling(createCmdHelpEntry("nameChangeCheck", "Force a scan for a changed name of a best friend"))
                 .appendSibling(createCmdHelpEntry("toggle", "Toggle join/leave notifications"))
                 .appendSibling(createCmdHelpSection(2, "Miscellaneous"))
@@ -627,13 +635,15 @@ public class MooCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args,
-                    /* friends & other players */ "stalk", "askPolitelyWhereTheyAre", "stalkskyblock", "skyblockstalk", "askPolitelyAboutTheirSkyBlockProgress", "analyzeIsland", "deaths", "add", "remove", "list", "nameChangeCheck", "toggle",
+                    /* friends & other players */ "stalk", "askPolitelyWhereTheyAre", "stalkskyblock", "skyblockstalk", "askPolitelyAboutTheirSkyBlockProgress", "analyzeIsland", "deaths", "add", "remove", "list", "online", "nameChangeCheck", "toggle",
                     /* miscellaneous */ "config", "search", "guiscale", "rr", "shrug", "apikey",
                     /* update mod */ "update", "updateHelp", "version", "directory",
                     /* help */ "help");
         } else if (args.length == 2 && args[0].equalsIgnoreCase("remove")) {
             return getListOfStringsMatchingLastWord(args, main.getFriendsHandler().getBestFriends());
-        } else if (args.length == 2 && args[0].toLowerCase().contains("stalk")) { // stalk & stalkskyblock
+        }
+        String commandArg = args[0].toLowerCase();
+        if (args.length == 2 && (commandArg.equals("s") || commandArg.equals("ss") || commandArg.equals("namechangecheck") || commandArg.contains("stalk") || commandArg.contains("askpolitely"))) { // stalk & stalkskyblock + namechangecheck
             return getListOfStringsMatchingLastWord(args, main.getPlayerCache().getAllNamesSorted());
         }
         return null;
