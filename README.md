@@ -9,7 +9,7 @@ It is a collection of different features mainly focused on Hypixel SkyBlock. üê
 
 | Feature                                                                 | Command/Usage                           |
 |-------------------------------------------------------------------------|-----------------------------------------|
-| 'Best friends' list to limit the amount of join and leave notifications (always up-to-date names even after player name changes). Also checks best friends' online status automatically | `/moo add/remove/list` |
+| 'Best friends' list to limit the amount of join and leave notifications (always up-to-date names even after player name changes). Also checks best friends' online status automatically | `/moo add/remove/list/online` |
 | Search through your Minecraft log files (click the `?` for more info)   | `/moo search`                           |
 | Stalk a player (check online status, current game, ...)                 | `/moo stalk`                            |
 | Toggle join/leave notifications for friends, guild members or best friends separately | `/moo toggle`             |
@@ -26,7 +26,7 @@ It is a collection of different features mainly focused on Hypixel SkyBlock. üê
 | Stalk SkyBlock stats of a player                                        | `/moo stalkskyblock`                    |
 | Analyze minions on a private island                                     | `/moo analyzeIsland`                    |
 | Dungeon interfaces enhancements (normalize dungeon item stats, improved party finder) | Hold <kbd>shift</kbd> while viewing a dungeon item tooltip |
-| Dungeon death counter                                                   | automatically; or with `/moo deaths`    |
+| Dungeon performance overlay: Skill score calculation, destroyed crypts tracker, and elapsed time indicator | automatically; or with `/moo dungeon`; Overlay can be edited with `/moo dungeonGui` |
 
 ## Download
 You can download the compiled .jar files from the [release section](https://github.com/cow-mc/Cowlection/releases).

@@ -46,6 +46,10 @@ public class MooConfig {
     public static int[] dungClassRange;
     public static boolean dungFilterPartiesWithDupes;
     public static String dungItemQualityPos;
+    public static boolean dungOverlayEnabled;
+    public static int dungOverlayGuiScale;
+    public static int dungOverlayPositionX;
+    public static int dungOverlayPositionY;
     // logs search config
     public static String[] logsDirs;
     private static String defaultStartDate;
@@ -153,7 +157,14 @@ public class MooConfig {
                 "dungFilterPartiesWithDupes", false, "Mark parties with duplicated classes?"), true);
         Property propDungItemQualityPos = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
                 "dungItemQualityPos", "top", "Position of item quality in tooltip", new String[]{"top", "bottom"}), true);
-
+        Property propDungOverlayEnabled = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
+                "dungOverlayEnabled", true, "Enable Dungeon performance overlay?"), false);
+        Property propDungOverlayPositionX = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
+                "dungGuiPositionX", 5, "Dungeon performance overlay position: x value", -1, 10000), false);
+        Property propDungOverlayPositionY = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
+                "dungGuiPositionY", 5, "Dungeon performance overlay position: y value", -1, 5000), false);
+        Property propDungOverlayGuiScale = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
+                "dungOverlayGuiScale", 100, "Dungeon performance overlay GUI scale", 50, 200), false);
         cfg.setCategoryPropertyOrder(Configuration.CATEGORY_CLIENT, propOrderGeneral);
 
         // config section: log files search
@@ -187,6 +198,10 @@ public class MooConfig {
             dungClassRange = propDungClassRange.getIntList();
             dungFilterPartiesWithDupes = propDungFilterPartiesWithDupes.getBoolean();
             dungItemQualityPos = propDungItemQualityPos.getString();
+            dungOverlayEnabled = propDungOverlayEnabled.getBoolean();
+            dungOverlayPositionX = propDungOverlayPositionX.getInt();
+            dungOverlayPositionY = propDungOverlayPositionY.getInt();
+            dungOverlayGuiScale = propDungOverlayGuiScale.getInt();
 
             // logs search config
             logsDirs = propLogsDirs.getStringList();
@@ -212,6 +227,10 @@ public class MooConfig {
         propDungClassRange.set(dungClassRange);
         propDungFilterPartiesWithDupes.set(dungFilterPartiesWithDupes);
         propDungItemQualityPos.set(dungItemQualityPos);
+        propDungOverlayEnabled.set(dungOverlayEnabled);
+        propDungOverlayPositionX.set(dungOverlayPositionX);
+        propDungOverlayPositionY.set(dungOverlayPositionY);
+        propDungOverlayGuiScale.set(dungOverlayGuiScale);
 
         // logs search config
         propLogsDirs.set(logsDirs);

@@ -2,51 +2,148 @@ package de.cowtipper.cowlection.handler;
 
 import de.cowtipper.cowlection.Cowlection;
 import de.cowtipper.cowlection.util.TickDelay;
+import net.minecraft.client.Minecraft;
+import net.minecraft.scoreboard.Score;
+import net.minecraft.scoreboard.ScoreObjective;
+import net.minecraft.scoreboard.ScorePlayerTeam;
+import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.util.EnumChatFormatting;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class DungeonCache {
-    private boolean isInDungeon;
-    private final Map<String, Integer> deathCounter;
     private final Cowlection main;
+    private final Map<String, Integer> deathCounter;
+    private final Set<String> failedPuzzles;
+    private final Set<UUID> destroyedCrypts;
+
+    private boolean isInDungeon;
+    private int elapsedMinutes;
+    private long lastScoreboardCheck;
 
     public DungeonCache(Cowlection main) {
         this.main = main;
         deathCounter = new HashMap<>();
-    }
-
-    public void onDungeonEntered() {
-        isInDungeon = true;
-        deathCounter.clear();
-    }
-
-    public void onDungeonLeft() {
-        isInDungeon = false;
-        deathCounter.clear();
-    }
-
-    public void addDeath(String playerName) {
-        int previousPlayerDeaths = deathCounter.getOrDefault(playerName, 0);
-        deathCounter.put(playerName, previousPlayerDeaths + 1);
-
-        new TickDelay(this::sendDeathCounts, 1);
+        failedPuzzles = new HashSet<>();
+        destroyedCrypts = new HashSet<>();
     }
 
     public boolean isInDungeon() {
         return isInDungeon;
     }
 
-    public void sendDeathCounts() {
+    public void onDungeonEntered() {
+        isInDungeon = true;
+        resetCounters();
+    }
+
+    public void onDungeonLeft() {
+        isInDungeon = false;
+        resetCounters();
+    }
+
+    public void sendDungeonPerformance() {
+        String dungeonPerformance;
+        boolean hasPointPenalty = false;
         if (deathCounter.isEmpty()) {
-            main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, "☠ Deaths: " + EnumChatFormatting.WHITE + "none \\o/");
+            dungeonPerformance = EnumChatFormatting.GOLD + "☠ Deaths: " + EnumChatFormatting.WHITE + "none \\o/";
         } else {
+            hasPointPenalty = true;
             String deaths = deathCounter.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.reverseOrder())).map(deathEntry -> "  " + EnumChatFormatting.WHITE + deathEntry.getKey() + ": " + EnumChatFormatting.LIGHT_PURPLE + deathEntry.getValue())
                     .collect(Collectors.joining("\n"));
-            main.getChatHelper().sendMessage(EnumChatFormatting.RED, "☠ " + EnumChatFormatting.BOLD + "Deaths:\n" + deaths);
+            dungeonPerformance = EnumChatFormatting.RED + "☠ " + EnumChatFormatting.BOLD + "Deaths: " + EnumChatFormatting.DARK_RED + "-" + (getTotalDeaths() * 2) + " Skill points\n" + deaths;
         }
+        if (failedPuzzles.size() > 0) {
+            hasPointPenalty = true;
+            dungeonPerformance += "\n" + EnumChatFormatting.RED + "Failed puzzles: " + EnumChatFormatting.LIGHT_PURPLE + failedPuzzles.size() + EnumChatFormatting.RED + " (" + EnumChatFormatting.DARK_RED + "-" + failedPuzzles.size() * 14 + " Skill points" + EnumChatFormatting.RED + ")";
+        }
+
+        if (hasPointPenalty) {
+            dungeonPerformance += "\n" + EnumChatFormatting.LIGHT_PURPLE + "➜ " + EnumChatFormatting.RED + EnumChatFormatting.BOLD + "Skill " + EnumChatFormatting.RED + "score penalty: " + EnumChatFormatting.DARK_RED + getSkillScorePenalty() + " points";
+        }
+        main.getChatHelper().sendMessage(EnumChatFormatting.WHITE, dungeonPerformance);
+    }
+
+    public void updateElapsedMinutesFromScoreboard() {
+        long now = System.currentTimeMillis();
+        if (now - lastScoreboardCheck > 10000) { // run every 10 seconds
+            lastScoreboardCheck = now;
+            Scoreboard scoreboard = Minecraft.getMinecraft().theWorld.getScoreboard();
+            ScoreObjective scoreboardSidebar = scoreboard.getObjectiveInDisplaySlot(1);
+            if (scoreboardSidebar != null) {
+                Collection<Score> scoreboardLines = scoreboard.getSortedScores(scoreboardSidebar);
+                for (Score line : scoreboardLines) {
+                    ScorePlayerTeam scorePlayerTeam = scoreboard.getPlayersTeam(line.getPlayerName());
+                    if (scorePlayerTeam != null) {
+                        String lineWithoutFormatting = EnumChatFormatting.getTextWithoutFormattingCodes(scorePlayerTeam.getColorPrefix() + scorePlayerTeam.getColorSuffix());
+
+                        if (lineWithoutFormatting.startsWith("Time Elapsed:")) {
+                            // dungeon timer: 05m22s
+                            String timeString = lineWithoutFormatting.substring(lineWithoutFormatting.lastIndexOf(' ') + 1);
+                            try {
+                                elapsedMinutes = (Integer.parseInt(timeString.substring(0, timeString.indexOf('m'))));
+                            } catch (NumberFormatException ex) {
+                                // couldn't parse dungeon time from scoreboard
+                                ex.printStackTrace();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // setter/adder
+    public void addDeath(String playerName) {
+        int previousPlayerDeaths = deathCounter.getOrDefault(playerName, 0);
+        deathCounter.put(playerName, previousPlayerDeaths + 1);
+
+        new TickDelay(this::sendDungeonPerformance, 1);
+    }
+
+    public void addFailedPuzzle(String text) {
+        failedPuzzles.add(text);
+    }
+
+    public boolean addDestroyedCrypt(UUID uuid) {
+        return destroyedCrypts.add(uuid);
+    }
+
+    // getter
+    public int getMaxSkillScore() {
+        return 100 - getSkillScorePenalty();
+    }
+
+    private int getSkillScorePenalty() {
+        return getTotalDeaths() * 2 + failedPuzzles.size() * 14;
+    }
+
+    public int getTotalDeaths() {
+        int totalDeaths = 0;
+        for (int deathCount : deathCounter.values()) {
+            totalDeaths += deathCount;
+        }
+        return totalDeaths;
+    }
+
+    public int getFailedPuzzles() {
+        return failedPuzzles.size();
+    }
+
+    public int getDestroyedCrypts() {
+        return destroyedCrypts.size();
+    }
+
+    public int getElapsedMinutes() {
+        return elapsedMinutes;
+    }
+
+    // resetter
+    private void resetCounters() {
+        deathCounter.clear();
+        failedPuzzles.clear();
+        destroyedCrypts.clear();
+        elapsedMinutes = 0;
     }
 }

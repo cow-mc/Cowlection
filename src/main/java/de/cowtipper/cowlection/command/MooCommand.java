@@ -5,6 +5,7 @@ import de.cowtipper.cowlection.Cowlection;
 import de.cowtipper.cowlection.command.exception.ApiContactException;
 import de.cowtipper.cowlection.command.exception.InvalidPlayerNameException;
 import de.cowtipper.cowlection.command.exception.MooCommandException;
+import de.cowtipper.cowlection.config.DungeonOverlayGuiConfig;
 import de.cowtipper.cowlection.config.MooConfig;
 import de.cowtipper.cowlection.config.MooGuiConfig;
 import de.cowtipper.cowlection.data.*;
@@ -150,13 +151,19 @@ public class MooCommand extends CommandBase {
                                 .append(EnumChatFormatting.RED).append("Unknown minion ").append(EnumChatFormatting.YELLOW).append("(new or with minion skin) ").append(tierColor).append(minionTier);
                     });
             main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, analysisResults.toString());
-        } else if (args[0].equalsIgnoreCase("deaths")) {
+        } else if (args[0].equalsIgnoreCase("dungeon") || args[0].equalsIgnoreCase("dung")) {
             DungeonCache dungeonCache = main.getDungeonCache();
-            if (dungeonCache.isInDungeon()) {
-                dungeonCache.sendDeathCounts();
+            if (args.length == 2 && args[1].equalsIgnoreCase("gui")) {
+                // edit dungeon gui
+                new TickDelay(() -> Minecraft.getMinecraft().displayGuiScreen(new DungeonOverlayGuiConfig(main)), 1); // delay by 1 tick, because the chat closing would close the new gui instantly as well.
+            } else if (dungeonCache.isInDungeon()) {
+                dungeonCache.sendDungeonPerformance();
             } else {
-                throw new MooCommandException(EnumChatFormatting.DARK_RED + "Looks like you're not in a dungeon...");
+                throw new MooCommandException(EnumChatFormatting.DARK_RED + "Looks like you're not in a dungeon... However, you can edit the Dungeon Performance overlay with " + EnumChatFormatting.RED + "/" + getCommandName() + " dungeon gui");
             }
+        } else if (args[0].equalsIgnoreCase("dungeonGui") || args[0].equalsIgnoreCase("guiDungeon")
+                || args[0].equalsIgnoreCase("guiDung") || args[0].equalsIgnoreCase("dungGui")) {
+            new TickDelay(() -> Minecraft.getMinecraft().displayGuiScreen(new DungeonOverlayGuiConfig(main)), 1); // delay by 1 tick, because the chat closing would close the new gui instantly as well.
         } else if (args[0].equalsIgnoreCase("add")) {
             handleBestFriendAdd(args);
         } else if (args[0].equalsIgnoreCase("remove")) {
@@ -524,7 +531,6 @@ public class MooCommand extends CommandBase {
         } else if (main.getFriendsHandler().getBestFriends().size() >= 100) {
             throw new MooCommandException(EnumChatFormatting.RED + "The best friends list is limited to 100 players. Remove some with " + EnumChatFormatting.WHITE + "/" + getCommandName() + " remove <name> " + EnumChatFormatting.RED + "first");
         } else {
-            // TODO Add check if 'best friend' is on normal friend list
             main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, "Fetching " + EnumChatFormatting.YELLOW + args[1] + EnumChatFormatting.GOLD + "'s unique user id. This may take a few seconds...");
             // add friend async
             main.getFriendsHandler().addBestFriend(args[1]);
@@ -594,7 +600,8 @@ public class MooCommand extends CommandBase {
                 .appendSibling(createCmdHelpEntry("stalk", "Get info of player's status"))
                 .appendSibling(createCmdHelpEntry("stalkskyblock", "Get info of player's SkyBlock stats"))
                 .appendSibling(createCmdHelpEntry("analyzeIsland", "Analyze a SkyBlock private island"))
-                .appendSibling(createCmdHelpEntry("deaths", "SkyBlock Dungeons: death counts"))
+                .appendSibling(createCmdHelpEntry("dungeon", "SkyBlock Dungeons: display current dungeon performance"))
+                .appendSibling(createCmdHelpEntry("dungeonGui", "SkyBlock Dungeons: edit dungeon performance GUI"))
                 .appendSibling(createCmdHelpEntry("add", "Add best friends"))
                 .appendSibling(createCmdHelpEntry("remove", "Remove best friends"))
                 .appendSibling(createCmdHelpEntry("list", "View list of best friends"))
@@ -635,7 +642,7 @@ public class MooCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args,
-                    /* friends & other players */ "stalk", "askPolitelyWhereTheyAre", "stalkskyblock", "skyblockstalk", "askPolitelyAboutTheirSkyBlockProgress", "analyzeIsland", "deaths", "add", "remove", "list", "online", "nameChangeCheck", "toggle",
+                    /* friends & other players */ "stalk", "askPolitelyWhereTheyAre", "stalkskyblock", "skyblockstalk", "askPolitelyAboutTheirSkyBlockProgress", "analyzeIsland", "dungeon", "dungeonGui", "guiDungeon", "add", "remove", "list", "online", "nameChangeCheck", "toggle",
                     /* miscellaneous */ "config", "search", "guiscale", "rr", "shrug", "apikey",
                     /* update mod */ "update", "updateHelp", "version", "directory",
                     /* help */ "help");

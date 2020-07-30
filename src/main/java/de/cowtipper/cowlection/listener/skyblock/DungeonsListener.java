@@ -1,9 +1,12 @@
 package de.cowtipper.cowlection.listener.skyblock;
 
 import de.cowtipper.cowlection.Cowlection;
+import de.cowtipper.cowlection.config.DungeonOverlayGuiConfig;
 import de.cowtipper.cowlection.config.MooConfig;
+import de.cowtipper.cowlection.handler.DungeonCache;
 import de.cowtipper.cowlection.util.TickDelay;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.inventory.Container;
@@ -20,11 +23,14 @@ import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.MathHelper;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.entity.player.PlayerSetSpawnEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.relauncher.Side;
 import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.input.Keyboard;
 
@@ -363,6 +369,7 @@ public class DungeonsListener {
                     String lineWithoutFormatting = EnumChatFormatting.getTextWithoutFormattingCodes(scorePlayerTeam.getColorPrefix() + scorePlayerTeam.getColorSuffix());
 
                     if (lineWithoutFormatting.startsWith(" ⏣")) {
+                        // current location: dungeon or outside?
                         boolean isInDungeonNow = lineWithoutFormatting.startsWith(" ⏣ The Catacombs");
 
                         if (!wasInDungeon && isInDungeonNow) {
@@ -392,7 +399,77 @@ public class DungeonsListener {
                 main.getDungeonCache().addDeath(playerName);
             } else if (text.trim().equals("> EXTRA STATS <")) {
                 // dungeon "end screen"
-                new TickDelay(() -> main.getDungeonCache().sendDeathCounts(), 5);
+                new TickDelay(() -> main.getDungeonCache().sendDungeonPerformance(), 5);
+            } else if (text.startsWith("PUZZLE FAIL!")) {
+                // Skill: failed puzzle
+                main.getDungeonCache().addFailedPuzzle(text);
+            }
+        }
+    }
+
+
+    @SubscribeEvent
+    public void onPlayerTick(TickEvent.PlayerTickEvent e) {
+        if (e.phase != TickEvent.Phase.END && e.side != Side.CLIENT && e.type != TickEvent.Type.PLAYER) {
+            return;
+        }
+        if ("Crypt Undead".equals(e.player.getName())) {
+            boolean isNewDestroyedCrypt = main.getDungeonCache().addDestroyedCrypt(e.player.getUniqueID());
+            if (isNewDestroyedCrypt) {
+                main.getLogger().info("[Dungeon Bonus Score] Crypt Undead spawned @ " + e.player.getPosition() + " - distance to player: " + Math.sqrt(e.player.getPosition().distanceSq(Minecraft.getMinecraft().thePlayer.getPosition())));
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public void onRenderGameOverlay(RenderGameOverlayEvent.Post e) {
+        if (e.type == RenderGameOverlayEvent.ElementType.EXPERIENCE) {
+            DungeonCache dungeonCache = main.getDungeonCache();
+
+            if (dungeonCache.isInDungeon()) {
+                dungeonCache.updateElapsedMinutesFromScoreboard();
+            }
+
+            boolean isConfigGui = Minecraft.getMinecraft().currentScreen instanceof DungeonOverlayGuiConfig;
+            if (MooConfig.dungOverlayEnabled && dungeonCache.isInDungeon() || isConfigGui) {
+                ArrayList<String> dungeonPerformanceEntries = new ArrayList<>();
+                int maxSkillScore = dungeonCache.getMaxSkillScore();
+                int totalDeaths = dungeonCache.getTotalDeaths();
+                int failedPuzzles = dungeonCache.getFailedPuzzles();
+                int destroyedCrypts = dungeonCache.getDestroyedCrypts();
+                int elapsedMinutes = dungeonCache.getElapsedMinutes();
+
+                dungeonPerformanceEntries.add("Max Skill score: " + (maxSkillScore == 100 ? EnumChatFormatting.GREEN : EnumChatFormatting.YELLOW) + maxSkillScore + " / 100");
+                if (totalDeaths > 0 || isConfigGui) {
+                    dungeonPerformanceEntries.add("  Deaths: " + EnumChatFormatting.RED + totalDeaths);
+                }
+                if (failedPuzzles > 0 || isConfigGui) {
+                    dungeonPerformanceEntries.add("  Failed Puzzles: " + EnumChatFormatting.RED + failedPuzzles);
+                }
+                dungeonPerformanceEntries.add("Destroyed Crypts: " + (destroyedCrypts >= 5 ? EnumChatFormatting.GREEN : EnumChatFormatting.YELLOW) + destroyedCrypts + " / 5");
+                EnumChatFormatting color = EnumChatFormatting.GREEN;
+                if (elapsedMinutes > 20) {
+                    color = EnumChatFormatting.DARK_RED;
+                } else if (elapsedMinutes > 18) {
+                    color = EnumChatFormatting.RED;
+                } else if (elapsedMinutes > 15) {
+                    color = EnumChatFormatting.YELLOW;
+                }
+                dungeonPerformanceEntries.add("Elapsed Minutes: " + color + elapsedMinutes + (elapsedMinutes > 15 && elapsedMinutes <= 20 ? EnumChatFormatting.RED + " (> 20 mins = point penalty)" : ""));
+                if (elapsedMinutes > 20) {
+                    dungeonPerformanceEntries.add(EnumChatFormatting.GOLD + "  Time penalty: " + EnumChatFormatting.RED + ((int) (2.2 * (elapsedMinutes - 20))) + " points");
+                }
+
+                FontRenderer fontRenderer = Minecraft.getMinecraft().fontRendererObj;
+                GlStateManager.pushMatrix();
+                float scaleFactor = MooConfig.dungOverlayGuiScale / 100f;
+                GlStateManager.scale(scaleFactor, scaleFactor, 0);
+                for (int line = 0; line < dungeonPerformanceEntries.size(); line++) {
+                    String dungeonPerformanceEntry = dungeonPerformanceEntries.get(line);
+                    int yPos = MooConfig.dungOverlayPositionY + fontRenderer.FONT_HEIGHT * line + 2;
+                    fontRenderer.drawString(dungeonPerformanceEntry, MooConfig.dungOverlayPositionX, yPos, 0xffFFAA00);
+                }
+                GlStateManager.popMatrix();
             }
         }
     }

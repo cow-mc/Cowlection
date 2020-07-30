@@ -9,6 +9,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - check if one of your best friends is currently online
   - checked automatically after joining a server (can be disabled via `/moo config`)
   - also, manually with `/moo online`
+  - names of online best friends can be tab-completed as well
+- SkyBlock Dungeon performance tracker:
+  - Features: Skill score calculation (death counter and failed puzzle counter), destroyed crypts tracker (only detects up to ~50 blocks away from the player), and elapsed time indicator
+  - Overlay + chat output
+    - Chat output: runs automatically; or manually with `/moo dungeon`
+    - Overlay can be modified with `/moo dungeonGui`
+  - (replaces Dungeon deaths tracker)
 
 ### Changed
 - renamed package to match [cowtipper.de](https://cowtipper.de)

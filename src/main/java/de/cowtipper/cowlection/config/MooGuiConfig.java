@@ -2,7 +2,6 @@ package de.cowtipper.cowlection.config;
 
 import de.cowtipper.cowlection.Cowlection;
 import de.cowtipper.cowlection.search.GuiTooltip;
-import de.cowtipper.cowlection.util.Utils;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
@@ -31,7 +30,7 @@ public class MooGuiConfig extends GuiConfig {
                 false,
                 false,
                 EnumChatFormatting.BOLD + "Configuration for " + Cowlection.MODNAME);
-        titleLine2 = EnumChatFormatting.GRAY + Utils.toRealPath(MooConfig.getConfig().getConfigFile());
+        titleLine2 = EnumChatFormatting.GRAY + GuiConfig.getAbridgedConfigPath(MooConfig.getConfig().toString());
     }
 
     private static List<IConfigElement> getConfigElements() {
