@@ -1,10 +1,13 @@
 package de.cowtipper.cowlection.config;
 
 import de.cowtipper.cowlection.Cowlection;
+import de.cowtipper.cowlection.command.TabCompletableCommand;
 import de.cowtipper.cowlection.util.Utils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.command.ICommand;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.Util;
+import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.ForgeModContainer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
@@ -13,6 +16,7 @@ import net.minecraftforge.fml.client.FMLConfigGuiFactory;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.File;
 import java.time.LocalDate;
@@ -21,6 +25,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -237,13 +242,30 @@ public class MooConfig {
         propDefaultStartDate.set(defaultStartDate);
 
         if (cfg.hasChanged()) {
-            if (Minecraft.getMinecraft().thePlayer != null) {
-                if (modifiedTabCompletableCommandsList) {
-                    main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Added or removed commands with tab-completable usernames take effect after a game restart!");
+            boolean isPlayerIngame = Minecraft.getMinecraft().thePlayer != null;
+            if (modifiedTabCompletableCommandsList) {
+                if (isPlayerIngame) {
+                    main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Added or removed commands with tab-completable usernames take effect after a game restart! If player names cannot be tab-completed for a command after a game restart, check the capitalization of the command name.");
                 }
-                if (dungClassRange[0] > -1 && dungClassRange[1] > -1 && dungClassRange[0] > dungClassRange[1]) {
-                    main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Dungeon class range minimum value cannot be higher than the maximum value.");
+                Map<String, ICommand> clientCommandsMap = ClientCommandHandler.instance.getCommands();
+                List<String> removedCommands = new ArrayList<>();
+                for (String tabCompletableCommandName : tabCompletableNamesCommands) {
+                    ICommand possibleClientCommand = clientCommandsMap.get(tabCompletableCommandName);
+                    if (possibleClientCommand != null && !(possibleClientCommand instanceof TabCompletableCommand)) {
+                        // tried to add a client side command to tab-completable commands; however, this would overwrite the original command
+                        removedCommands.add(tabCompletableCommandName);
+                    }
                 }
+                if (removedCommands.size() > 0) {
+                    if (isPlayerIngame) {
+                        main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, " ⚠ " + EnumChatFormatting.GOLD + "Client-side commands from other mods cannot be added to commands with tab-completable usernames. " + EnumChatFormatting.RED + "This would overwrite the other command! Therefore the following commands have been removed from the list of commands with tab-completable usernames: " + EnumChatFormatting.GOLD + String.join(EnumChatFormatting.RED + ", " + EnumChatFormatting.GOLD, removedCommands));
+                    }
+                    tabCompletableNamesCommands = (String[]) ArrayUtils.removeElements(tabCompletableNamesCommands, removedCommands.toArray());
+                    propTabCompletableNamesCommands.set(tabCompletableNamesCommands);
+                }
+            }
+            if (isPlayerIngame && dungClassRange[0] > -1 && dungClassRange[1] > -1 && dungClassRange[0] > dungClassRange[1]) {
+                main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Dungeon class range minimum value cannot be higher than the maximum value.");
             }
             cfg.save();
         }

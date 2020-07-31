@@ -32,6 +32,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Remove ": " when copying chat messages
 - Fix dungeon tooltip cleaner cleaning a little bit too much
 - Temporary work-around to fix crash with other mods which are not able to handle offline messages
+- Prevent adding client-side commands to commands with Tab-completable usernames
+  - This would either overwrite the existing command, or wouldn't do anything at all. Only *one* client-side command can be registered for a command name.
 
 ## [1.8.9-0.9.0] - 23.07.2020
 ### Added

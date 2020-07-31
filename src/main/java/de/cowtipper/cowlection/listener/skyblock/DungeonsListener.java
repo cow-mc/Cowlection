@@ -407,7 +407,6 @@ public class DungeonsListener {
         }
     }
 
-
     @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent e) {
         if (e.phase != TickEvent.Phase.END && e.side != Side.CLIENT && e.type != TickEvent.Type.PLAYER) {
@@ -455,8 +454,10 @@ public class DungeonsListener {
                 } else if (elapsedMinutes > 15) {
                     color = EnumChatFormatting.YELLOW;
                 }
-                dungeonPerformanceEntries.add("Elapsed Minutes: " + color + elapsedMinutes + (elapsedMinutes > 15 && elapsedMinutes <= 20 ? EnumChatFormatting.RED + " (> 20 mins = point penalty)" : ""));
-                if (elapsedMinutes > 20) {
+                dungeonPerformanceEntries.add("Elapsed Minutes: " + color + elapsedMinutes);
+                if (elapsedMinutes > 15 && elapsedMinutes <= 20) {
+                    dungeonPerformanceEntries.add(EnumChatFormatting.RED + "  ⚠ slower than 20 mins = point penalty");
+                } else if (elapsedMinutes > 20) {
                     dungeonPerformanceEntries.add(EnumChatFormatting.GOLD + "  Time penalty: " + EnumChatFormatting.RED + ((int) (2.2 * (elapsedMinutes - 20))) + " points");
                 }
 
