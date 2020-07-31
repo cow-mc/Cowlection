@@ -167,7 +167,7 @@ public class ChatListener {
                 messageSender = partyOrGameInviteMatcher.group(1);
             } else if (dungeonPartyFinderJoinedMatcher.find()) {
                 messageSender = dungeonPartyFinderJoinedMatcher.group(1);
-                if (!"disabled".equals(MooConfig.dungPartyFinderArmorLookup)) {
+                if (!"disabled".equals(MooConfig.dungPartyFinderArmorLookup) && !messageSender.equals(Minecraft.getMinecraft().thePlayer.getName())) {
                     String dungeonClass = dungeonPartyFinderJoinedMatcher.group(2) + " Lvl " + dungeonPartyFinderJoinedMatcher.group(3);
                     getDungeonPartyMemberDetails(messageSender, dungeonClass);
                 }
