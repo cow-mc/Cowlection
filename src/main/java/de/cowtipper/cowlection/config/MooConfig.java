@@ -50,6 +50,7 @@ public class MooConfig {
     // SkyBlock dungeon
     public static int[] dungClassRange;
     public static boolean dungFilterPartiesWithDupes;
+    public static String dungPartyFinderArmorLookup;
     public static String dungItemQualityPos;
     public static boolean dungOverlayEnabled;
     public static int dungOverlayGuiScale;
@@ -160,6 +161,8 @@ public class MooConfig {
                 .setMinValue(-1).setIsListLengthFixed(true);
         Property propDungFilterPartiesWithDupes = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
                 "dungFilterPartiesWithDupes", false, "Mark parties with duplicated classes?"), true);
+        Property propDungPartyFinderArmorLookup = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
+                "dungPartyFinderArmorLookup", "as a tooltip", "Show armor of player joining via party finder as a tooltip or in chat?", new String[]{"as a tooltip", "in chat", "disabled"}), true);
         Property propDungItemQualityPos = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
                 "dungItemQualityPos", "top", "Position of item quality in tooltip", new String[]{"top", "bottom"}), true);
         Property propDungOverlayEnabled = addConfigEntry(cfg.get(Configuration.CATEGORY_CLIENT,
@@ -202,6 +205,7 @@ public class MooConfig {
             // SkyBlock dungeon
             dungClassRange = propDungClassRange.getIntList();
             dungFilterPartiesWithDupes = propDungFilterPartiesWithDupes.getBoolean();
+            dungPartyFinderArmorLookup = propDungPartyFinderArmorLookup.getString();
             dungItemQualityPos = propDungItemQualityPos.getString();
             dungOverlayEnabled = propDungOverlayEnabled.getBoolean();
             dungOverlayPositionX = propDungOverlayPositionX.getInt();
@@ -231,6 +235,7 @@ public class MooConfig {
         // SkyBlock dungeon
         propDungClassRange.set(dungClassRange);
         propDungFilterPartiesWithDupes.set(dungFilterPartiesWithDupes);
+        propDungPartyFinderArmorLookup.set(dungPartyFinderArmorLookup);
         propDungItemQualityPos.set(dungItemQualityPos);
         propDungOverlayEnabled.set(dungOverlayEnabled);
         propDungOverlayPositionX.set(dungOverlayPositionX);
@@ -339,6 +344,10 @@ public class MooConfig {
 
     public static boolean isDungItemQualityAtTop() {
         return dungItemQualityPos.equals("top");
+    }
+
+    public static boolean showArmorLookupInChat() {
+        return "in chat".equals(dungPartyFinderArmorLookup);
     }
 
     public class ConfigEventHandler {

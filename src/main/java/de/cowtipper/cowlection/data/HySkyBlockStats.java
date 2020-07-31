@@ -4,7 +4,15 @@ import com.google.common.collect.ComparisonChain;
 import com.mojang.realmsclient.util.Pair;
 import com.mojang.util.UUIDTypeAdapter;
 import de.cowtipper.cowlection.util.Utils;
+import net.minecraft.nbt.CompressedStreamTools;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.EnumChatFormatting;
+import net.minecraftforge.common.util.Constants;
+import org.apache.commons.codec.binary.Base64;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.*;
 
 public class HySkyBlockStats {
@@ -101,6 +109,7 @@ public class HySkyBlockStats {
             private long last_save;
             private long first_join;
             private double coin_purse;
+            private NbtData inv_armor;
             private List<String> crafted_generators;
             private int fairy_souls_collected = -1;
             private double experience_skill_farming = -1;
@@ -182,6 +191,39 @@ public class HySkyBlockStats {
             public List<Pet> getPets() {
                 pets.sort((p1, p2) -> ComparisonChain.start().compare(p2.active, p1.active).compare(p2.getRarity(), p1.getRarity()).compare(p2.exp, p1.exp).result());
                 return pets;
+            }
+
+            public List<String> getArmor() {
+                NBTTagCompound nbt = inv_armor.getDecodedData();
+                List<String> armorList = new ArrayList<>();
+                if (nbt.hasKey("i", Constants.NBT.TAG_LIST)) {
+                    NBTTagList armor = nbt.getTagList("i", Constants.NBT.TAG_COMPOUND);
+                    for (int i = 0; i < armor.tagCount(); i++) {
+                        NBTTagCompound armorPiece = armor.getCompoundTagAt(i);
+                        NBTTagCompound nbtDisplay = armorPiece.getCompoundTag("tag").getCompoundTag("display");
+                        if (nbtDisplay != null && nbtDisplay.hasKey("Name", Constants.NBT.TAG_STRING)) {
+                            String itemName = nbtDisplay.getString("Name");
+                            armorList.add(0, itemName);
+                        } else {
+                            armorList.add(0, "" + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + "(empty)");
+                        }
+                    }
+                }
+                return armorList;
+            }
+
+            private static class NbtData {
+                private int type;
+                private String data;
+
+                private NBTTagCompound getDecodedData() {
+                    try (ByteArrayInputStream bis = new ByteArrayInputStream(Base64.decodeBase64(this.data))) {
+                        return CompressedStreamTools.readCompressed(bis);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return new NBTTagCompound();
+                    }
+                }
             }
         }
 

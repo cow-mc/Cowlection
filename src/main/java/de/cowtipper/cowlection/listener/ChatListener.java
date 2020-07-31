@@ -2,6 +2,10 @@ package de.cowtipper.cowlection.listener;
 
 import de.cowtipper.cowlection.Cowlection;
 import de.cowtipper.cowlection.config.MooConfig;
+import de.cowtipper.cowlection.data.Friend;
+import de.cowtipper.cowlection.data.HySkyBlockStats;
+import de.cowtipper.cowlection.util.ApiUtils;
+import de.cowtipper.cowlection.util.MooChatComponent;
 import de.cowtipper.cowlection.util.Utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiChat;
@@ -163,12 +167,45 @@ public class ChatListener {
                 messageSender = partyOrGameInviteMatcher.group(1);
             } else if (dungeonPartyFinderJoinedMatcher.find()) {
                 messageSender = dungeonPartyFinderJoinedMatcher.group(1);
+                if (!"disabled".equals(MooConfig.dungPartyFinderArmorLookup)) {
+                    String dungeonClass = dungeonPartyFinderJoinedMatcher.group(2) + " Lvl " + dungeonPartyFinderJoinedMatcher.group(3);
+                    getDungeonPartyMemberDetails(messageSender, dungeonClass);
+                }
             }
 
             if (messageSender != null) {
                 main.getPlayerCache().add(messageSender);
             }
         }
+    }
+
+    private void getDungeonPartyMemberDetails(String playerName, String dungeonClass) {
+        ApiUtils.fetchFriendData(playerName, stalkedPlayer -> {
+            if (stalkedPlayer != null && !stalkedPlayer.equals(Friend.FRIEND_NOT_FOUND)) {
+                ApiUtils.fetchSkyBlockStats(stalkedPlayer, hySBStalking -> {
+                    if (hySBStalking != null && hySBStalking.isSuccess()) {
+                        HySkyBlockStats.Profile activeProfile = hySBStalking.getActiveProfile(stalkedPlayer.getUuid());
+                        if (activeProfile == null) {
+                            // player hasn't played SkyBlock but joined via dungeon party finder? Maybe an API error
+                            return;
+                        }
+                        HySkyBlockStats.Profile.Member member = activeProfile.getMember(stalkedPlayer.getUuid());
+                        MooChatComponent armorLookupComponent;
+                        String armorLookupPrefix = " ❈ " + EnumChatFormatting.DARK_GREEN + playerName;
+                        String delimiter = "\n" + (MooConfig.showArmorLookupInChat() ? "     " : "");
+                        String armorLookupResult = EnumChatFormatting.LIGHT_PURPLE + " ➜ " + EnumChatFormatting.GRAY + dungeonClass + delimiter + String.join(delimiter, member.getArmor());
+                        if (MooConfig.showArmorLookupInChat()) {
+                            armorLookupComponent = new MooChatComponent(armorLookupPrefix + armorLookupResult).green();
+                        } else {
+                            // as a tooltip
+                            armorLookupComponent = new MooChatComponent(armorLookupPrefix + EnumChatFormatting.GREEN + (playerName.endsWith("s") ? "" : "'s") + " armor (hover me)").green()
+                                    .setHover(new MooChatComponent(EnumChatFormatting.BOLD + playerName + armorLookupResult));
+                        }
+                        main.getChatHelper().sendMessage(armorLookupComponent.setSuggestCommand("/p kick " + playerName, MooConfig.showArmorLookupInChat()));
+                    }
+                });
+            }
+        });
     }
 
     @SubscribeEvent

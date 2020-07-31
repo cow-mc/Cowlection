@@ -143,8 +143,15 @@ public class MooChatComponent extends ChatComponentText {
     }
 
     public MooChatComponent setSuggestCommand(String command) {
+        setSuggestCommand(command, true);
+        return this;
+    }
+
+    public MooChatComponent setSuggestCommand(String command, boolean addTooltip) {
         setChatStyle(getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, command)));
-        setHover(new KeyValueChatComponent("Run", command, " "));
+        if (addTooltip) {
+            setHover(new KeyValueChatComponent("Run", command, " "));
+        }
         return this;
     }
 

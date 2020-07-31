@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - Chat output: runs automatically; or manually with `/moo dungeon`
     - Overlay can be modified with `/moo dungeonGui`
   - (replaces Dungeon deaths tracker)
+- SkyBlock Dungeon Party Finder: Lookup of joined players' armor
+  - can be disabled or changed with `/moo config`
 
 ### Changed
 - renamed package to match [cowtipper.de](https://cowtipper.de)
