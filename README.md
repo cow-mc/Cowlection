@@ -26,7 +26,7 @@ It is a collection of different features mainly focused on Hypixel SkyBlock. üê
 | Stalk SkyBlock stats of a player                                        | `/moo stalkskyblock`                    |
 | Analyze minions on a private island                                     | `/moo analyzeIsland`                    |
 | Dungeon interfaces enhancements (normalize dungeon item stats, improved party finder) | Hold <kbd>shift</kbd> while viewing a dungeon item tooltip |
-| Dungeon performance overlay: Skill score calculation, destroyed crypts tracker, and elapsed time indicator | automatically; or with `/moo dungeon`; Overlay can be edited with `/moo dungeonGui` |
+| Dungeon performance tracker: Skill score calculation, class milestone tracker, destroyed crypts tracker, and elapsed time indicator | automatically; or with `/moo dungeon`; Overlay can be edited with `/moo dungeonGui` |
 
 ## Download
 You can download the compiled .jar files from the [release section](https://github.com/cow-mc/Cowlection/releases).

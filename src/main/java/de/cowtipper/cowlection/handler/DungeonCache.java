@@ -20,6 +20,7 @@ public class DungeonCache {
 
     private boolean isInDungeon;
     private int elapsedMinutes;
+    private int classMilestone;
     private long lastScoreboardCheck;
 
     public DungeonCache(Cowlection main) {
@@ -106,6 +107,10 @@ public class DungeonCache {
         failedPuzzles.add(text);
     }
 
+    public void setClassMilestone(int classMilestone) {
+        this.classMilestone = classMilestone;
+    }
+
     public boolean addDestroyedCrypt(UUID uuid) {
         return destroyedCrypts.add(uuid);
     }
@@ -131,6 +136,10 @@ public class DungeonCache {
         return failedPuzzles.size();
     }
 
+    public int getClassMilestone() {
+        return classMilestone;
+    }
+
     public int getDestroyedCrypts() {
         return destroyedCrypts.size();
     }
@@ -145,5 +154,6 @@ public class DungeonCache {
         failedPuzzles.clear();
         destroyedCrypts.clear();
         elapsedMinutes = 0;
+        classMilestone = 0;
     }
 }

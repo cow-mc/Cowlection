@@ -80,6 +80,14 @@ public class DungeonsListener {
      * </ul>
      */
     private final Pattern DUNGEON_DEATH_PATTERN = Pattern.compile("^ ☠ (\\w+) (?:.*?) and became a ghost\\.$");
+    /**
+     * Class milestones:
+     * <ul>
+     * <li>Archer Milestone ❶: You have dealt 60000 Ranged Damage so far! 00m17s</li>
+     * <li>Tank Milestone ❼: You have tanked and dealt 2000000 Total Damage so far! 14m33s</li>
+     * </ul>
+     */
+    private final Pattern DUNGEON_CLASS_MILESTONE_PATTERN = Pattern.compile("^[A-Za-z]+ Milestone (.): ");
 
     private String activeDungeonClass;
 
@@ -403,6 +411,17 @@ public class DungeonsListener {
             } else if (text.startsWith("PUZZLE FAIL!")) {
                 // Skill: failed puzzle
                 main.getDungeonCache().addFailedPuzzle(text);
+            } else {
+                Matcher dungeonClassMilestoneMatcher = DUNGEON_CLASS_MILESTONE_PATTERN.matcher(text);
+                if (dungeonClassMilestoneMatcher.find()) {
+                    // class milestone reached
+                    int classMilestoneSymbol = dungeonClassMilestoneMatcher.group(1).charAt(0);
+                    // 1 ❶ = 10102
+                    // 9 ❾ = 10110
+                    if (classMilestoneSymbol >= /* 1 */ 10102 && classMilestoneSymbol <= /* 10 */ 10111) {
+                        main.getDungeonCache().setClassMilestone(classMilestoneSymbol - 10101);
+                    }
+                }
             }
         }
     }
@@ -435,6 +454,7 @@ public class DungeonsListener {
                 int maxSkillScore = dungeonCache.getMaxSkillScore();
                 int totalDeaths = dungeonCache.getTotalDeaths();
                 int failedPuzzles = dungeonCache.getFailedPuzzles();
+                int classMilestone = dungeonCache.getClassMilestone();
                 int destroyedCrypts = dungeonCache.getDestroyedCrypts();
                 int elapsedMinutes = dungeonCache.getElapsedMinutes();
 
@@ -445,6 +465,7 @@ public class DungeonsListener {
                 if (failedPuzzles > 0 || isConfigGui) {
                     dungeonPerformanceEntries.add("  Failed Puzzles: " + EnumChatFormatting.RED + failedPuzzles);
                 }
+                dungeonPerformanceEntries.add("Class Milestone: " + (classMilestone < 3 ? EnumChatFormatting.RED : EnumChatFormatting.GREEN) + classMilestone);
                 dungeonPerformanceEntries.add("Destroyed Crypts: " + (destroyedCrypts >= 5 ? EnumChatFormatting.GREEN : EnumChatFormatting.YELLOW) + destroyedCrypts + " / 5");
                 EnumChatFormatting color = EnumChatFormatting.GREEN;
                 if (elapsedMinutes > 20) {
