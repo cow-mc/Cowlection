@@ -14,6 +14,7 @@ import de.cowtipper.cowlection.handler.DungeonCache;
 import de.cowtipper.cowlection.search.GuiSearch;
 import de.cowtipper.cowlection.util.*;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.command.*;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityArmorStand;
@@ -41,13 +42,28 @@ public class MooCommand extends CommandBase {
     }
 
     @Override
+    public String getCommandName() {
+        return "moo";
+    }
+
+    @Override
+    public List<String> getCommandAliases() {
+        return Collections.singletonList("m");
+    }
+
+    @Override
+    public String getCommandUsage(ICommandSender sender) {
+        return "/" + getCommandName() + " help";
+    }
+
+    @Override
     public void processCommand(ICommandSender sender, String[] args) throws CommandException {
         if (args.length == 0) {
             main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, "Tried to say " + EnumChatFormatting.YELLOW + getCommandName() + EnumChatFormatting.GOLD + "? Use " + EnumChatFormatting.YELLOW + getCommandName() + " say [optional text]" + EnumChatFormatting.GOLD + " instead.\n"
                     + "Tried to use the command " + EnumChatFormatting.YELLOW + "/" + getCommandName() + EnumChatFormatting.GOLD + "? Use " + EnumChatFormatting.YELLOW + "/" + getCommandName() + " help" + EnumChatFormatting.GOLD + " for a list of available commands");
             return;
         }
-        // sub commands: friends & other players
+        //region sub commands: Best friends, friends & other players
         if (args[0].equalsIgnoreCase("say")) {
             // work-around so you can still say 'moo' in chat without triggering the client-side command
             String msg = CommandBase.buildString(args, 1);
@@ -55,115 +71,7 @@ public class MooCommand extends CommandBase {
         } else if (args[0].equalsIgnoreCase("stalk")
                 || args[0].equalsIgnoreCase("s")
                 || args[0].equalsIgnoreCase("askPolitelyWhereTheyAre")) {
-            if (args.length != 2) {
-                throw new WrongUsageException("/" + getCommandName() + " stalk <playerName>");
-            } else if (!Utils.isValidMcName(args[1])) {
-                throw new InvalidPlayerNameException(args[1]);
-            } else {
-                handleStalking(args[1]);
-            }
-        } else if (args[0].equalsIgnoreCase("stalkskyblock") || args[0].equalsIgnoreCase("skyblockstalk")
-                || args[0].equalsIgnoreCase("ss")
-                || args[0].equalsIgnoreCase("stalksb") || args[0].equalsIgnoreCase("sbstalk")
-                || args[0].equalsIgnoreCase("askPolitelyAboutTheirSkyBlockProgress")) {
-            if (args.length != 2) {
-                throw new WrongUsageException("/" + getCommandName() + " skyblockstalk <playerName>");
-            } else if (!Utils.isValidMcName(args[1])) {
-                throw new InvalidPlayerNameException(args[1]);
-            } else {
-                handleStalkingSkyBlock(args[1]);
-            }
-        } else if (args[0].equalsIgnoreCase("analyzeIsland")) {
-            Map<String, String> minions = DataHelper.getMinions();
-
-            Map<String, Integer> detectedMinions = new HashMap<>();
-            Map<Integer, Integer> detectedMinionsWithSkin = new HashMap<>();
-            int detectedMinionCount = 0;
-            int minionsWithSkinCount = 0;
-            entityLoop:
-            for (Entity entity : sender.getEntityWorld().loadedEntityList) {
-                if (entity instanceof EntityArmorStand) {
-                    EntityArmorStand minion = (EntityArmorStand) entity;
-
-                    if (minion.isInvisible() || !minion.isSmall() || minion.getHeldItem() == null) {
-                        // not a minion: invisible, or not small armor stand, or no item in hand (= minion in a minion chair)
-                        continue;
-                    }
-                    for (int slot = 0; slot < 4; slot++) {
-                        if (minion.getCurrentArmor(slot) == null) {
-                            // not a minion: missing equipment
-                            continue entityLoop;
-                        }
-                    }
-                    ItemStack skullItem = minion.getCurrentArmor(3); // head slot
-                    if (skullItem.getItem() instanceof ItemSkull && skullItem.getMetadata() == 3 && skullItem.hasTagCompound()) {
-                        // is a player head!
-                        if (skullItem.getTagCompound().hasKey("SkullOwner", Constants.NBT.TAG_COMPOUND)) {
-                            NBTTagCompound skullOwner = skullItem.getTagCompound().getCompoundTag("SkullOwner");
-                            String skullDataBase64 = skullOwner.getCompoundTag("Properties").getTagList("textures", Constants.NBT.TAG_COMPOUND).getCompoundTagAt(0).getString("Value");
-                            String skullData = new String(Base64.decodeBase64(skullDataBase64));
-                            String minionSkinId = StringUtils.substringBetween(skullData, "http://textures.minecraft.net/texture/", "\"");
-                            String detectedMinion = minions.get(minionSkinId);
-                            if (detectedMinion != null) {
-                                // minion head matches one know minion tier
-                                detectedMinions.put(detectedMinion, detectedMinions.getOrDefault(detectedMinion, 0) + 1);
-                                detectedMinionCount++;
-                            } else {
-                                int minionTier = ImageUtils.getTierFromTexture(minionSkinId);
-                                if (minionTier > 0) {
-                                    detectedMinionsWithSkin.put(minionTier, detectedMinionsWithSkin.getOrDefault(minionTier, 0) + 1);
-                                    minionsWithSkinCount++;
-                                } else {
-                                    // looked like a minion but has no matching tier badge
-                                    main.getLogger().info("[/moo analyzeIsland] Found an armor stand that could be a minion but it is missing a tier badge: " + minionSkinId + "\t\t\t" + minion.serializeNBT());
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            StringBuilder analysisResults = new StringBuilder("Found ").append(EnumChatFormatting.GOLD).append(detectedMinionCount).append(EnumChatFormatting.YELLOW).append(" minions");
-            if (minionsWithSkinCount > 0) {
-                analysisResults.append(" + ").append(EnumChatFormatting.GOLD).append(minionsWithSkinCount).append(EnumChatFormatting.YELLOW).append(" unknown minions with skins");
-            }
-            analysisResults.append(" on this island");
-            detectedMinions.entrySet().stream()
-                    .sorted(Map.Entry.comparingByKey()) // sort alphabetically by minion name and tier
-                    .forEach(minion -> {
-                        String minionWithTier = minion.getKey();
-                        int lastSpace = minionWithTier.lastIndexOf(' ');
-
-                        String tierRoman = minionWithTier.substring(lastSpace + 1);
-
-                        int tierArabic = Utils.convertRomanToArabic(tierRoman);
-                        EnumChatFormatting tierColor = Utils.getMinionTierColor(tierArabic);
-
-                        minionWithTier = minionWithTier.substring(0, lastSpace) + " " + tierColor + (MooConfig.useRomanNumerals() ? tierRoman : tierArabic);
-                        analysisResults.append("\n  ").append(EnumChatFormatting.GOLD).append(minion.getValue()).append(minion.getValue() > 1 ? "✕ " : "⨉ ")
-                                .append(EnumChatFormatting.YELLOW).append(minionWithTier);
-                    });
-            detectedMinionsWithSkin.entrySet().stream()
-                    .sorted(Map.Entry.comparingByKey()) // sort by tier
-                    .forEach(minionWithSkin -> {
-                        EnumChatFormatting tierColor = Utils.getMinionTierColor(minionWithSkin.getKey());
-                        String minionTier = MooConfig.useRomanNumerals() ? Utils.convertArabicToRoman(minionWithSkin.getKey()) : String.valueOf(minionWithSkin.getKey());
-                        analysisResults.append("\n  ").append(EnumChatFormatting.GOLD).append(minionWithSkin.getValue()).append(minionWithSkin.getValue() > 1 ? "✕ " : "⨉ ")
-                                .append(EnumChatFormatting.RED).append("Unknown minion ").append(EnumChatFormatting.YELLOW).append("(new or with minion skin) ").append(tierColor).append(minionTier);
-                    });
-            main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, analysisResults.toString());
-        } else if (args[0].equalsIgnoreCase("dungeon") || args[0].equalsIgnoreCase("dung")) {
-            DungeonCache dungeonCache = main.getDungeonCache();
-            if (args.length == 2 && args[1].equalsIgnoreCase("gui")) {
-                // edit dungeon gui
-                new TickDelay(() -> Minecraft.getMinecraft().displayGuiScreen(new DungeonOverlayGuiConfig(main)), 1); // delay by 1 tick, because the chat closing would close the new gui instantly as well.
-            } else if (dungeonCache.isInDungeon()) {
-                dungeonCache.sendDungeonPerformance();
-            } else {
-                throw new MooCommandException(EnumChatFormatting.DARK_RED + "Looks like you're not in a dungeon... However, you can edit the Dungeon Performance overlay with " + EnumChatFormatting.RED + "/" + getCommandName() + " dungeon gui");
-            }
-        } else if (args[0].equalsIgnoreCase("dungeonGui") || args[0].equalsIgnoreCase("guiDungeon")
-                || args[0].equalsIgnoreCase("guiDung") || args[0].equalsIgnoreCase("dungGui")) {
-            new TickDelay(() -> Minecraft.getMinecraft().displayGuiScreen(new DungeonOverlayGuiConfig(main)), 1); // delay by 1 tick, because the chat closing would close the new gui instantly as well.
+            handleStalking(args);
         } else if (args[0].equalsIgnoreCase("add")) {
             handleBestFriendAdd(args);
         } else if (args[0].equalsIgnoreCase("remove")) {
@@ -176,23 +84,30 @@ public class MooCommand extends CommandBase {
         } else if (args[0].equalsIgnoreCase("nameChangeCheck")) {
             handleNameChangeCheck(args);
         }
-        // sub-commands: miscellaneous
+        // + toggle (= alias for config)
+        //endregion
+        //region sub commands: SkyBlock
+        else if (args[0].equalsIgnoreCase("stalkskyblock") || args[0].equalsIgnoreCase("skyblockstalk")
+                || args[0].equalsIgnoreCase("ss")
+                || args[0].equalsIgnoreCase("stalksb") || args[0].equalsIgnoreCase("sbstalk")
+                || args[0].equalsIgnoreCase("askPolitelyAboutTheirSkyBlockProgress")) {
+            handleStalkingSkyBlock(args);
+        } else if (args[0].equalsIgnoreCase("analyzeIsland")) {
+            handleAnalyzeIsland(sender);
+        } else if (args[0].equalsIgnoreCase("dungeon") || args[0].equalsIgnoreCase("dung")) {
+            handleDungeon(args);
+        } else if (args[0].equalsIgnoreCase("dungeonGui") || args[0].equalsIgnoreCase("guiDungeon")
+                || args[0].equalsIgnoreCase("guiDung") || args[0].equalsIgnoreCase("dungGui")) {
+            displayGuiScreen(new DungeonOverlayGuiConfig(main));
+        }
+        //endregion
+        //region sub-commands: miscellaneous
         else if (args[0].equalsIgnoreCase("config") || args[0].equalsIgnoreCase("toggle")) {
-            new TickDelay(() -> Minecraft.getMinecraft().displayGuiScreen(new MooGuiConfig(null)), 1); // delay by 1 tick, because the chat closing would close the new gui instantly as well.
+            displayGuiScreen(new MooGuiConfig(null));
         } else if (args[0].equalsIgnoreCase("search")) {
-            new TickDelay(() -> Minecraft.getMinecraft().displayGuiScreen(new GuiSearch(main.getConfigDirectory())), 1); // delay by 1 tick, because the chat closing would close the new gui instantly as well.
+            displayGuiScreen(new GuiSearch(main.getConfigDirectory()));
         } else if (args[0].equalsIgnoreCase("guiscale")) {
-            int currentGuiScale = (Minecraft.getMinecraft()).gameSettings.guiScale;
-            if (args.length == 1) {
-                main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u279C Current GUI scale: " + EnumChatFormatting.DARK_GREEN + currentGuiScale);
-            } else {
-                int scale = MathHelper.parseIntWithDefault(args[1], -1);
-                if (scale == -1 || scale > 10) {
-                    throw new NumberInvalidException(EnumChatFormatting.DARK_RED + args[1] + EnumChatFormatting.RED + " is an invalid GUI scale value. Valid values are integers below 10");
-                }
-                Minecraft.getMinecraft().gameSettings.guiScale = scale;
-                main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u2714 New GUI scale: " + EnumChatFormatting.DARK_GREEN + scale + EnumChatFormatting.GREEN + " (previous: " + EnumChatFormatting.DARK_GREEN + currentGuiScale + EnumChatFormatting.GREEN + ")");
-            }
+            handleGuiScale(args);
         } else if (args[0].equalsIgnoreCase("rr")) {
             Minecraft.getMinecraft().thePlayer.sendChatMessage("/r " + CommandBase.buildString(args, 1));
         } else if (args[0].equalsIgnoreCase("shrug")) {
@@ -200,32 +115,12 @@ public class MooCommand extends CommandBase {
         } else if (args[0].equalsIgnoreCase("apikey")) {
             handleApiKey(args);
         }
-        // sub-commands: update mod
+        //endregion
+        //region sub-commands: update mod
         else if (args[0].equalsIgnoreCase("update")) {
-            boolean updateCheckStarted = main.getVersionChecker().runUpdateCheck(true);
-
-            if (updateCheckStarted) {
-                main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u279C Checking for a newer mod version...");
-                // VersionChecker#handleVersionStatus will run with a 5 seconds delay
-            } else {
-                long nextUpdate = main.getVersionChecker().getNextCheck();
-                String waitingTime = String.format("%02d:%02d",
-                        TimeUnit.MILLISECONDS.toMinutes(nextUpdate),
-                        TimeUnit.MILLISECONDS.toSeconds(nextUpdate) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(nextUpdate)));
-                throw new MooCommandException("\u26A0 Update checker is on cooldown. Please wait " + EnumChatFormatting.GOLD + EnumChatFormatting.BOLD + waitingTime + EnumChatFormatting.RESET + EnumChatFormatting.RED + " more minutes before checking again.");
-            }
+            handleUpdate(args);
         } else if (args[0].equalsIgnoreCase("updateHelp")) {
-            main.getChatHelper().sendMessage(new ChatComponentText("\u279C Update instructions:").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(true))
-                    .appendSibling(new ChatComponentText("\n\u278A" + EnumChatFormatting.YELLOW + " download latest mod version").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(false)
-                            .setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, main.getVersionChecker().getDownloadUrl()))
-                            .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.YELLOW + "Download the latest version of " + Cowlection.MODNAME + "\n\u279C Click to download latest mod file")))))
-                    .appendSibling(new ChatComponentText("\n\u278B" + EnumChatFormatting.YELLOW + " exit Minecraft").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(false)
-                            .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.GOLD + "\u278B" + EnumChatFormatting.YELLOW + " Without closing Minecraft first,\n" + EnumChatFormatting.YELLOW + "you can't delete the old .jar file!")))))
-                    .appendSibling(new ChatComponentText("\n\u278C" + EnumChatFormatting.YELLOW + " copy " + EnumChatFormatting.GOLD + Cowlection.MODNAME.replace(" ", "") + "-" + main.getVersionChecker().getNewVersion() + ".jar" + EnumChatFormatting.YELLOW + " into mods directory").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(false)
-                            .setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/moo directory"))
-                            .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.YELLOW + "Open mods directory with command " + EnumChatFormatting.GOLD + "/moo directory\n\u279C Click to open mods directory")))))
-                    .appendSibling(new ChatComponentText("\n\u278D" + EnumChatFormatting.YELLOW + " delete old mod file " + EnumChatFormatting.GOLD + Cowlection.MODNAME.replace(" ", "") + "-" + Cowlection.VERSION + ".jar ").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(false)))
-                    .appendSibling(new ChatComponentText("\n\u278E" + EnumChatFormatting.YELLOW + " start Minecraft again").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(false))));
+            handleUpdateHelp();
         } else if (args[0].equalsIgnoreCase("version")) {
             main.getVersionChecker().handleVersionStatus(true);
         } else if (args[0].equalsIgnoreCase("directory") || args[0].equalsIgnoreCase("folder")) {
@@ -235,7 +130,10 @@ public class MooCommand extends CommandBase {
                 e.printStackTrace();
                 throw new MooCommandException("\u2716 An error occurred trying to open the mod's directory. I guess you have to open it manually \u00af\\_(\u30c4)_/\u00af");
             }
-        } else if (args[0].equalsIgnoreCase("help")) {
+        }
+        //endregion
+        // help
+        else if (args[0].equalsIgnoreCase("help")) {
             sendCommandUsage(sender);
         }
         // "catch-all" remaining sub-commands
@@ -244,55 +142,36 @@ public class MooCommand extends CommandBase {
         }
     }
 
-    private void handleApiKey(String[] args) throws CommandException {
-        if (args.length == 1) {
-            String firstSentence;
-            EnumChatFormatting color;
-            EnumChatFormatting colorSecondary;
-            if (Utils.isValidUuid(MooConfig.moo)) {
-                firstSentence = "You already set your Hypixel API key.";
-                color = EnumChatFormatting.GREEN;
-                colorSecondary = EnumChatFormatting.DARK_GREEN;
-            } else {
-                firstSentence = "You haven't set your Hypixel API key yet.";
-                color = EnumChatFormatting.RED;
-                colorSecondary = EnumChatFormatting.DARK_RED;
-            }
-            main.getChatHelper().sendMessage(color, firstSentence + " Use " + colorSecondary + "/api new" + color + " to request a new API key from Hypixel or use " + colorSecondary + "/" + this.getCommandName() + " apikey <key>" + color + " to manually set your existing API key.");
-        } else {
-            String key = args[1];
-            if (Utils.isValidUuid(key)) {
-                MooConfig.moo = key;
-                main.getConfig().syncFromFields();
-                main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Updated API key!");
-            } else {
-                throw new SyntaxErrorException("That doesn't look like a valid API key...");
-            }
-        }
-    }
-
-    private void handleStalking(String playerName) throws CommandException {
+    //region sub commands: Best friends, friends & other players
+    private void handleStalking(String[] args) throws CommandException {
         if (!Utils.isValidUuid(MooConfig.moo)) {
             throw new MooCommandException("You haven't set your Hypixel API key yet. Use " + EnumChatFormatting.DARK_RED + "/api new" + EnumChatFormatting.RED + " to request a new API key from Hypixel or use " + EnumChatFormatting.DARK_RED + "/" + this.getCommandName() + " apikey <key>" + EnumChatFormatting.RED + " to manually set your existing API key.");
         }
-        main.getChatHelper().sendMessage(EnumChatFormatting.GRAY, "Stalking " + EnumChatFormatting.WHITE + playerName + EnumChatFormatting.GRAY + ". This may take a few seconds.");
-        boolean isBestFriend = main.getFriendsHandler().isBestFriend(playerName, true);
-        if (isBestFriend) {
-            Friend stalkedPlayer = main.getFriendsHandler().getBestFriend(playerName);
-            // we have the uuid already, so stalk the player
-            stalkPlayer(stalkedPlayer);
+        if (args.length != 2) {
+            throw new WrongUsageException("/" + getCommandName() + " stalk <playerName>");
+        } else if (!Utils.isValidMcName(args[1])) {
+            throw new InvalidPlayerNameException(args[1]);
         } else {
-            // fetch player uuid
-            ApiUtils.fetchFriendData(playerName, stalkedPlayer -> {
-                if (stalkedPlayer == null) {
-                    throw new ApiContactException("Mojang", "couldn't stalk " + EnumChatFormatting.DARK_RED + playerName);
-                } else if (stalkedPlayer.equals(Friend.FRIEND_NOT_FOUND)) {
-                    throw new PlayerNotFoundException("There is no player with the name " + EnumChatFormatting.DARK_RED + playerName + EnumChatFormatting.RED + ".");
-                } else {
-                    // ... then stalk the player
-                    stalkPlayer(stalkedPlayer);
-                }
-            });
+            String playerName = args[1];
+            main.getChatHelper().sendMessage(EnumChatFormatting.GRAY, "Stalking " + EnumChatFormatting.WHITE + playerName + EnumChatFormatting.GRAY + ". This may take a few seconds.");
+            boolean isBestFriend = main.getFriendsHandler().isBestFriend(playerName, true);
+            if (isBestFriend) {
+                Friend stalkedPlayer = main.getFriendsHandler().getBestFriend(playerName);
+                // we have the uuid already, so stalk the player
+                stalkPlayer(stalkedPlayer);
+            } else {
+                // fetch player uuid
+                ApiUtils.fetchFriendData(playerName, stalkedPlayer -> {
+                    if (stalkedPlayer == null) {
+                        throw new ApiContactException("Mojang", "couldn't stalk " + EnumChatFormatting.DARK_RED + playerName);
+                    } else if (stalkedPlayer.equals(Friend.FRIEND_NOT_FOUND)) {
+                        throw new PlayerNotFoundException("There is no player with the name " + EnumChatFormatting.DARK_RED + playerName + EnumChatFormatting.RED + ".");
+                    } else {
+                        // ... then stalk the player
+                        stalkPlayer(stalkedPlayer);
+                    }
+                });
+            }
         }
     }
 
@@ -344,28 +223,95 @@ public class MooCommand extends CommandBase {
         });
     }
 
-    private void handleStalkingSkyBlock(String playerName) throws CommandException {
+    private void handleBestFriendAdd(String[] args) throws CommandException {
+        if (args.length != 2) {
+            throw new WrongUsageException("/" + getCommandName() + " add <playerName>");
+        } else if (!Utils.isValidMcName(args[1])) {
+            throw new InvalidPlayerNameException(args[1]);
+        } else if (main.getFriendsHandler().isBestFriend(args[1], true)) {
+            throw new MooCommandException(EnumChatFormatting.DARK_RED + args[1] + EnumChatFormatting.RED + " is a best friend already.");
+        } else if (main.getFriendsHandler().getBestFriends().size() >= 100) {
+            throw new MooCommandException(EnumChatFormatting.RED + "The best friends list is limited to 100 players. Remove some with " + EnumChatFormatting.WHITE + "/" + getCommandName() + " remove <name> " + EnumChatFormatting.RED + "first");
+        } else {
+            main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, "Fetching " + EnumChatFormatting.YELLOW + args[1] + EnumChatFormatting.GOLD + "'s unique user id. This may take a few seconds...");
+            // add friend async
+            main.getFriendsHandler().addBestFriend(args[1]);
+        }
+    }
+
+    private void handleBestFriendRemove(String[] args) throws CommandException {
+        if (args.length != 2) {
+            throw new WrongUsageException("/" + getCommandName() + " remove <playerName>");
+        } else if (!Utils.isValidMcName(args[1])) {
+            throw new InvalidPlayerNameException(args[1]);
+        }
+        String username = args[1];
+        boolean removed = main.getFriendsHandler().removeBestFriend(username);
+        if (removed) {
+            main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Removed " + EnumChatFormatting.DARK_GREEN + username + EnumChatFormatting.GREEN + " from best friends list.");
+        } else {
+            throw new MooCommandException(EnumChatFormatting.DARK_RED + username + EnumChatFormatting.RED + " isn't a best friend.");
+        }
+    }
+
+    private void handleListBestFriends() {
+        Set<String> bestFriends = main.getFriendsHandler().getBestFriends();
+
+        // TODO show fancy gui with list of best friends; maybe with buttons to delete them
+        main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u279C Best friends"
+                + (bestFriends.isEmpty() ? "" : " (" + EnumChatFormatting.DARK_GREEN + bestFriends.size() + EnumChatFormatting.GREEN + ")") + ": "
+                + ((bestFriends.isEmpty())
+                ? EnumChatFormatting.ITALIC + "none :c"
+                : EnumChatFormatting.DARK_GREEN + String.join(EnumChatFormatting.GREEN + ", " + EnumChatFormatting.DARK_GREEN, bestFriends)));
+    }
+
+    private void handleNameChangeCheck(String[] args) throws CommandException {
+        if (args.length != 2) {
+            throw new WrongUsageException("/" + getCommandName() + " nameChangeCheck <playerName>");
+        } else if (!Utils.isValidMcName(args[1])) {
+            throw new InvalidPlayerNameException(args[1]);
+        }
+        Friend bestFriend = main.getFriendsHandler().getBestFriend(args[1]);
+        if (bestFriend.equals(Friend.FRIEND_NOT_FOUND)) {
+            throw new MooCommandException(EnumChatFormatting.DARK_RED + args[1] + EnumChatFormatting.RED + " isn't a best friend.");
+        } else {
+            main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, "Checking if " + bestFriend.getName() + " changed their name... This will take a few seconds...");
+            // check for name change async
+            main.getFriendsHandler().doBestFriendNameChangeCheck(bestFriend, true);
+        }
+    }
+    //endregion
+
+    //region sub commands: SkyBlock
+    private void handleStalkingSkyBlock(String[] args) throws CommandException {
         if (!Utils.isValidUuid(MooConfig.moo)) {
             throw new MooCommandException("You haven't set your Hypixel API key yet. Use " + EnumChatFormatting.DARK_RED + "/api new" + EnumChatFormatting.RED + " to request a new API key from Hypixel or use " + EnumChatFormatting.DARK_RED + "/" + this.getCommandName() + " apikey <key>" + EnumChatFormatting.RED + " to manually set your existing API key.");
         }
-        main.getChatHelper().sendMessage(EnumChatFormatting.GRAY, "Stalking " + EnumChatFormatting.WHITE + playerName + EnumChatFormatting.GRAY + "'s SkyBlock stats. This may take a few seconds.");
-        boolean isBestFriend = main.getFriendsHandler().isBestFriend(playerName, true);
-        if (isBestFriend) {
-            Friend stalkedPlayer = main.getFriendsHandler().getBestFriend(playerName);
-            // we have the uuid already, so stalk the player
-            stalkSkyBlockStats(stalkedPlayer);
+        if (args.length != 2) {
+            throw new WrongUsageException("/" + getCommandName() + " skyblockstalk <playerName>");
+        } else if (!Utils.isValidMcName(args[1])) {
+            throw new InvalidPlayerNameException(args[1]);
         } else {
-            // fetch player uuid
-            ApiUtils.fetchFriendData(playerName, stalkedPlayer -> {
-                if (stalkedPlayer == null) {
-                    throw new ApiContactException("Mojang", "couldn't stalk " + EnumChatFormatting.DARK_RED + playerName);
-                } else if (stalkedPlayer.equals(Friend.FRIEND_NOT_FOUND)) {
-                    throw new PlayerNotFoundException("There is no player with the name " + EnumChatFormatting.DARK_RED + playerName + EnumChatFormatting.RED + ".");
-                } else {
-                    // ... then stalk the player
-                    stalkSkyBlockStats(stalkedPlayer);
-                }
-            });
+            String playerName = args[1];
+            main.getChatHelper().sendMessage(EnumChatFormatting.GRAY, "Stalking " + EnumChatFormatting.WHITE + playerName + EnumChatFormatting.GRAY + "'s SkyBlock stats. This may take a few seconds.");
+            boolean isBestFriend = main.getFriendsHandler().isBestFriend(playerName, true);
+            if (isBestFriend) {
+                Friend stalkedPlayer = main.getFriendsHandler().getBestFriend(playerName);
+                // we have the uuid already, so stalk the player
+                stalkSkyBlockStats(stalkedPlayer);
+            } else {
+                // fetch player uuid
+                ApiUtils.fetchFriendData(playerName, stalkedPlayer -> {
+                    if (stalkedPlayer == null) {
+                        throw new ApiContactException("Mojang", "couldn't stalk " + EnumChatFormatting.DARK_RED + playerName);
+                    } else if (stalkedPlayer.equals(Friend.FRIEND_NOT_FOUND)) {
+                        throw new PlayerNotFoundException("There is no player with the name " + EnumChatFormatting.DARK_RED + playerName + EnumChatFormatting.RED + ".");
+                    } else {
+                        // ... then stalk the player
+                        stalkSkyBlockStats(stalkedPlayer);
+                    }
+                });
+            }
         }
     }
 
@@ -521,100 +467,205 @@ public class MooCommand extends CommandBase {
         });
     }
 
-    private void handleBestFriendAdd(String[] args) throws CommandException {
-        if (args.length != 2) {
-            throw new WrongUsageException("/" + getCommandName() + " add <playerName>");
-        } else if (!Utils.isValidMcName(args[1])) {
-            throw new InvalidPlayerNameException(args[1]);
-        } else if (main.getFriendsHandler().isBestFriend(args[1], true)) {
-            throw new MooCommandException(EnumChatFormatting.DARK_RED + args[1] + EnumChatFormatting.RED + " is a best friend already.");
-        } else if (main.getFriendsHandler().getBestFriends().size() >= 100) {
-            throw new MooCommandException(EnumChatFormatting.RED + "The best friends list is limited to 100 players. Remove some with " + EnumChatFormatting.WHITE + "/" + getCommandName() + " remove <name> " + EnumChatFormatting.RED + "first");
+    private void handleAnalyzeIsland(ICommandSender sender) {
+        Map<String, String> minions = DataHelper.getMinions();
+
+        Map<String, Integer> detectedMinions = new HashMap<>();
+        Map<Integer, Integer> detectedMinionsWithSkin = new HashMap<>();
+        int detectedMinionCount = 0;
+        int minionsWithSkinCount = 0;
+        entityLoop:
+        for (Entity entity : sender.getEntityWorld().loadedEntityList) {
+            if (entity instanceof EntityArmorStand) {
+                EntityArmorStand minion = (EntityArmorStand) entity;
+
+                if (minion.isInvisible() || !minion.isSmall() || minion.getHeldItem() == null) {
+                    // not a minion: invisible, or not small armor stand, or no item in hand (= minion in a minion chair)
+                    continue;
+                }
+                for (int slot = 0; slot < 4; slot++) {
+                    if (minion.getCurrentArmor(slot) == null) {
+                        // not a minion: missing equipment
+                        continue entityLoop;
+                    }
+                }
+                ItemStack skullItem = minion.getCurrentArmor(3); // head slot
+                if (skullItem.getItem() instanceof ItemSkull && skullItem.getMetadata() == 3 && skullItem.hasTagCompound()) {
+                    // is a player head!
+                    if (skullItem.getTagCompound().hasKey("SkullOwner", Constants.NBT.TAG_COMPOUND)) {
+                        NBTTagCompound skullOwner = skullItem.getTagCompound().getCompoundTag("SkullOwner");
+                        String skullDataBase64 = skullOwner.getCompoundTag("Properties").getTagList("textures", Constants.NBT.TAG_COMPOUND).getCompoundTagAt(0).getString("Value");
+                        String skullData = new String(Base64.decodeBase64(skullDataBase64));
+                        String minionSkinId = StringUtils.substringBetween(skullData, "http://textures.minecraft.net/texture/", "\"");
+                        String detectedMinion = minions.get(minionSkinId);
+                        if (detectedMinion != null) {
+                            // minion head matches one know minion tier
+                            detectedMinions.put(detectedMinion, detectedMinions.getOrDefault(detectedMinion, 0) + 1);
+                            detectedMinionCount++;
+                        } else {
+                            int minionTier = ImageUtils.getTierFromTexture(minionSkinId);
+                            if (minionTier > 0) {
+                                detectedMinionsWithSkin.put(minionTier, detectedMinionsWithSkin.getOrDefault(minionTier, 0) + 1);
+                                minionsWithSkinCount++;
+                            } else {
+                                // looked like a minion but has no matching tier badge
+                                main.getLogger().info("[/moo analyzeIsland] Found an armor stand that could be a minion but it is missing a tier badge: " + minionSkinId + "\t\t\t" + minion.serializeNBT());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        StringBuilder analysisResults = new StringBuilder("Found ").append(EnumChatFormatting.GOLD).append(detectedMinionCount).append(EnumChatFormatting.YELLOW).append(" minions");
+        if (minionsWithSkinCount > 0) {
+            analysisResults.append(" + ").append(EnumChatFormatting.GOLD).append(minionsWithSkinCount).append(EnumChatFormatting.YELLOW).append(" unknown minions with skins");
+        }
+        analysisResults.append(" on this island");
+        detectedMinions.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey()) // sort alphabetically by minion name and tier
+                .forEach(minion -> {
+                    String minionWithTier = minion.getKey();
+                    int lastSpace = minionWithTier.lastIndexOf(' ');
+
+                    String tierRoman = minionWithTier.substring(lastSpace + 1);
+
+                    int tierArabic = Utils.convertRomanToArabic(tierRoman);
+                    EnumChatFormatting tierColor = Utils.getMinionTierColor(tierArabic);
+
+                    minionWithTier = minionWithTier.substring(0, lastSpace) + " " + tierColor + (MooConfig.useRomanNumerals() ? tierRoman : tierArabic);
+                    analysisResults.append("\n  ").append(EnumChatFormatting.GOLD).append(minion.getValue()).append(minion.getValue() > 1 ? "✕ " : "⨉ ")
+                            .append(EnumChatFormatting.YELLOW).append(minionWithTier);
+                });
+        detectedMinionsWithSkin.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey()) // sort by tier
+                .forEach(minionWithSkin -> {
+                    EnumChatFormatting tierColor = Utils.getMinionTierColor(minionWithSkin.getKey());
+                    String minionTier = MooConfig.useRomanNumerals() ? Utils.convertArabicToRoman(minionWithSkin.getKey()) : String.valueOf(minionWithSkin.getKey());
+                    analysisResults.append("\n  ").append(EnumChatFormatting.GOLD).append(minionWithSkin.getValue()).append(minionWithSkin.getValue() > 1 ? "✕ " : "⨉ ")
+                            .append(EnumChatFormatting.RED).append("Unknown minion ").append(EnumChatFormatting.YELLOW).append("(new or with minion skin) ").append(tierColor).append(minionTier);
+                });
+        main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, analysisResults.toString());
+    }
+
+    private void handleDungeon(String[] args) throws MooCommandException {
+        DungeonCache dungeonCache = main.getDungeonCache();
+        if (args.length == 2 && args[1].equalsIgnoreCase("gui")) {
+            // edit dungeon gui
+            displayGuiScreen(new DungeonOverlayGuiConfig(main));
+        } else if (dungeonCache.isInDungeon()) {
+            dungeonCache.sendDungeonPerformance();
         } else {
-            main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, "Fetching " + EnumChatFormatting.YELLOW + args[1] + EnumChatFormatting.GOLD + "'s unique user id. This may take a few seconds...");
-            // add friend async
-            main.getFriendsHandler().addBestFriend(args[1]);
+            throw new MooCommandException(EnumChatFormatting.DARK_RED + "Looks like you're not in a dungeon... However, you can edit the Dungeon Performance overlay with " + EnumChatFormatting.RED + "/" + getCommandName() + " dungeon gui");
         }
     }
+    //endregion
 
-    private void handleBestFriendRemove(String[] args) throws CommandException {
-        if (args.length != 2) {
-            throw new WrongUsageException("/" + getCommandName() + " remove <playerName>");
-        } else if (!Utils.isValidMcName(args[1])) {
-            throw new InvalidPlayerNameException(args[1]);
-        }
-        String username = args[1];
-        boolean removed = main.getFriendsHandler().removeBestFriend(username);
-        if (removed) {
-            main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Removed " + EnumChatFormatting.DARK_GREEN + username + EnumChatFormatting.GREEN + " from best friends list.");
+    //region sub-commands: miscellaneous
+    private void handleGuiScale(String[] args) throws CommandException {
+        int currentGuiScale = (Minecraft.getMinecraft()).gameSettings.guiScale;
+        if (args.length == 1) {
+            main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u279C Current GUI scale: " + EnumChatFormatting.DARK_GREEN + currentGuiScale);
         } else {
-            throw new MooCommandException(EnumChatFormatting.DARK_RED + username + EnumChatFormatting.RED + " isn't a best friend.");
+            int scale = MathHelper.parseIntWithDefault(args[1], -1);
+            if (scale == -1 || scale > 10) {
+                throw new NumberInvalidException(EnumChatFormatting.DARK_RED + args[1] + EnumChatFormatting.RED + " is an invalid GUI scale value. Valid values are integers below 10");
+            }
+            Minecraft.getMinecraft().gameSettings.guiScale = scale;
+            main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u2714 New GUI scale: " + EnumChatFormatting.DARK_GREEN + scale + EnumChatFormatting.GREEN + " (previous: " + EnumChatFormatting.DARK_GREEN + currentGuiScale + EnumChatFormatting.GREEN + ")");
         }
     }
 
-    private void handleListBestFriends() {
-        Set<String> bestFriends = main.getFriendsHandler().getBestFriends();
-
-        // TODO show fancy gui with list of best friends; maybe with buttons to delete them
-        main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u279C Best friends"
-                + (bestFriends.isEmpty() ? "" : " (" + EnumChatFormatting.DARK_GREEN + bestFriends.size() + EnumChatFormatting.GREEN + ")") + ": "
-                + ((bestFriends.isEmpty())
-                ? EnumChatFormatting.ITALIC + "none :c"
-                : EnumChatFormatting.DARK_GREEN + String.join(EnumChatFormatting.GREEN + ", " + EnumChatFormatting.DARK_GREEN, bestFriends)));
-    }
-
-    private void handleNameChangeCheck(String[] args) throws CommandException {
-        if (args.length != 2) {
-            throw new WrongUsageException("/" + getCommandName() + " nameChangeCheck <playerName>");
-        } else if (!Utils.isValidMcName(args[1])) {
-            throw new InvalidPlayerNameException(args[1]);
-        }
-        Friend bestFriend = main.getFriendsHandler().getBestFriend(args[1]);
-        if (bestFriend.equals(Friend.FRIEND_NOT_FOUND)) {
-            throw new MooCommandException(EnumChatFormatting.DARK_RED + args[1] + EnumChatFormatting.RED + " isn't a best friend.");
+    private void handleApiKey(String[] args) throws CommandException {
+        if (args.length == 1) {
+            String firstSentence;
+            EnumChatFormatting color;
+            EnumChatFormatting colorSecondary;
+            if (Utils.isValidUuid(MooConfig.moo)) {
+                firstSentence = "You already set your Hypixel API key.";
+                color = EnumChatFormatting.GREEN;
+                colorSecondary = EnumChatFormatting.DARK_GREEN;
+            } else {
+                firstSentence = "You haven't set your Hypixel API key yet.";
+                color = EnumChatFormatting.RED;
+                colorSecondary = EnumChatFormatting.DARK_RED;
+            }
+            main.getChatHelper().sendMessage(color, firstSentence + " Use " + colorSecondary + "/api new" + color + " to request a new API key from Hypixel or use " + colorSecondary + "/" + this.getCommandName() + " apikey <key>" + color + " to manually set your existing API key.");
         } else {
-            main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, "Checking if " + bestFriend.getName() + " changed their name... This will take a few seconds...");
-            // check for name change async
-            main.getFriendsHandler().doBestFriendNameChangeCheck(bestFriend, true);
+            String key = args[1];
+            if (Utils.isValidUuid(key)) {
+                MooConfig.moo = key;
+                main.getConfig().syncFromFields();
+                main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Updated API key!");
+            } else {
+                throw new SyntaxErrorException("That doesn't look like a valid API key...");
+            }
+        }
+    }
+    //endregion
+
+    //region sub-commands: update mod
+    private void handleUpdate(String[] args) throws MooCommandException {
+        if (args.length == 2 && args[1].equalsIgnoreCase("help")) {
+            handleUpdateHelp();
+            return;
+        }
+        boolean updateCheckStarted = main.getVersionChecker().runUpdateCheck(true);
+
+        if (updateCheckStarted) {
+            main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u279C Checking for a newer mod version...");
+            // VersionChecker#handleVersionStatus will run with a 5 seconds delay
+        } else {
+            long nextUpdate = main.getVersionChecker().getNextCheck();
+            String waitingTime = String.format("%02d:%02d",
+                    TimeUnit.MILLISECONDS.toMinutes(nextUpdate),
+                    TimeUnit.MILLISECONDS.toSeconds(nextUpdate) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(nextUpdate)));
+            throw new MooCommandException("\u26A0 Update checker is on cooldown. Please wait " + EnumChatFormatting.GOLD + EnumChatFormatting.BOLD + waitingTime + EnumChatFormatting.RESET + EnumChatFormatting.RED + " more minutes before checking again.");
         }
     }
 
-    @Override
-    public String getCommandName() {
-        return "moo";
+    private void handleUpdateHelp() {
+        main.getChatHelper().sendMessage(new ChatComponentText("\u279C Update instructions:").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(true))
+                .appendSibling(new ChatComponentText("\n\u278A" + EnumChatFormatting.YELLOW + " download latest mod version").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(false)
+                        .setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, main.getVersionChecker().getDownloadUrl()))
+                        .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.YELLOW + "Download the latest version of " + Cowlection.MODNAME + "\n\u279C Click to download latest mod file")))))
+                .appendSibling(new ChatComponentText("\n\u278B" + EnumChatFormatting.YELLOW + " exit Minecraft").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(false)
+                        .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.GOLD + "\u278B" + EnumChatFormatting.YELLOW + " Without closing Minecraft first,\n" + EnumChatFormatting.YELLOW + "you can't delete the old .jar file!")))))
+                .appendSibling(new ChatComponentText("\n\u278C" + EnumChatFormatting.YELLOW + " copy " + EnumChatFormatting.GOLD + Cowlection.MODNAME.replace(" ", "") + "-" + main.getVersionChecker().getNewVersion() + ".jar" + EnumChatFormatting.YELLOW + " into mods directory").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(false)
+                        .setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/moo directory"))
+                        .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.YELLOW + "Open mods directory with command " + EnumChatFormatting.GOLD + "/moo directory\n\u279C Click to open mods directory")))))
+                .appendSibling(new ChatComponentText("\n\u278D" + EnumChatFormatting.YELLOW + " delete old mod file " + EnumChatFormatting.GOLD + Cowlection.MODNAME.replace(" ", "") + "-" + Cowlection.VERSION + ".jar ").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(false)))
+                .appendSibling(new ChatComponentText("\n\u278E" + EnumChatFormatting.YELLOW + " start Minecraft again").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(false))));
     }
+    //endregion
 
-    @Override
-    public List<String> getCommandAliases() {
-        return Collections.singletonList("m");
-    }
-
-    @Override
-    public String getCommandUsage(ICommandSender sender) {
-        return "/" + getCommandName() + " help";
+    // other helper methods:
+    private void displayGuiScreen(GuiScreen gui) {
+        // delay by 1 tick, because the chat closing would close the new gui instantly as well.
+        new TickDelay(() -> Minecraft.getMinecraft().displayGuiScreen(gui), 1);
     }
 
     private void sendCommandUsage(ICommandSender sender) {
         IChatComponent usage = new MooChatComponent("\u279C " + Cowlection.MODNAME + " commands:").gold().bold()
-                .appendSibling(createCmdHelpSection(1, "Friends & other players"))
+                .appendSibling(createCmdHelpSection(1, "Best friends, friends & other players"))
                 .appendSibling(createCmdHelpEntry("stalk", "Get info of player's status"))
-                .appendSibling(createCmdHelpEntry("stalkskyblock", "Get info of player's SkyBlock stats"))
-                .appendSibling(createCmdHelpEntry("analyzeIsland", "Analyze a SkyBlock private island"))
-                .appendSibling(createCmdHelpEntry("dungeon", "SkyBlock Dungeons: display current dungeon performance"))
-                .appendSibling(createCmdHelpEntry("dungeonGui", "SkyBlock Dungeons: edit dungeon performance GUI"))
                 .appendSibling(createCmdHelpEntry("add", "Add best friends"))
                 .appendSibling(createCmdHelpEntry("remove", "Remove best friends"))
                 .appendSibling(createCmdHelpEntry("list", "View list of best friends"))
                 .appendSibling(createCmdHelpEntry("online", "View list of best friends that are currently online"))
-                .appendSibling(createCmdHelpEntry("nameChangeCheck", "Force a scan for a changed name of a best friend"))
+                .appendSibling(createCmdHelpEntry("nameChangeCheck", "Force a scan for a changed name of a best friend (is done automatically as well)"))
                 .appendSibling(createCmdHelpEntry("toggle", "Toggle join/leave notifications"))
-                .appendSibling(createCmdHelpSection(2, "Miscellaneous"))
+                .appendSibling(createCmdHelpSection(2, "SkyBlock"))
+                .appendSibling(createCmdHelpEntry("stalkskyblock", "Get info of player's SkyBlock stats"))
+                .appendSibling(createCmdHelpEntry("analyzeIsland", "Analyze a SkyBlock private island"))
+                .appendSibling(createCmdHelpEntry("dungeon", "SkyBlock Dungeons: display current dungeon performance"))
+                .appendSibling(createCmdHelpEntry("dungeonGui", "SkyBlock Dungeons: edit dungeon performance GUI"))
+                .appendSibling(createCmdHelpSection(3, "Miscellaneous"))
                 .appendSibling(createCmdHelpEntry("config", "Open mod's configuration"))
                 .appendSibling(createCmdHelpEntry("search", "Open Minecraft log search"))
                 .appendSibling(createCmdHelpEntry("guiScale", "Change GUI scale"))
                 .appendSibling(createCmdHelpEntry("rr", "Alias for /r without auto-replacement to /msg"))
                 .appendSibling(createCmdHelpEntry("shrug", "\u00AF\\_(\u30C4)_/\u00AF")) // ¯\_(ツ)_/¯
-                .appendSibling(createCmdHelpSection(3, "Update mod"))
+                .appendSibling(createCmdHelpSection(4, "Update mod"))
                 .appendSibling(createCmdHelpEntry("update", "Check for new mod updates"))
                 .appendSibling(createCmdHelpEntry("updateHelp", "Show mod update instructions"))
                 .appendSibling(createCmdHelpEntry("version", "View results of last mod update check"))
@@ -642,10 +693,12 @@ public class MooCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args,
-                    /* friends & other players */ "stalk", "askPolitelyWhereTheyAre", "stalkskyblock", "skyblockstalk", "askPolitelyAboutTheirSkyBlockProgress", "analyzeIsland", "dungeon", "dungeonGui", "guiDungeon", "add", "remove", "list", "online", "nameChangeCheck", "toggle",
+                    /* Best friends, friends & other players */ "stalk", "add", "remove", "list", "online", "nameChangeCheck", "toggle",
+                    /* SkyBlock */ "stalkskyblock", "skyblockstalk", "analyzeIsland", "dungeon", "dungeonGui", "guiDungeon",
                     /* miscellaneous */ "config", "search", "guiscale", "rr", "shrug", "apikey",
                     /* update mod */ "update", "updateHelp", "version", "directory",
-                    /* help */ "help");
+                    /* help */ "help",
+                    /* rarely used aliases */ "askPolitelyWhereTheyAre", "askPolitelyAboutTheirSkyBlockProgress");
         } else if (args.length == 2 && args[0].equalsIgnoreCase("remove")) {
             return getListOfStringsMatchingLastWord(args, main.getFriendsHandler().getBestFriends());
         }

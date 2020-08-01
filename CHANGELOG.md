@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Dungeon performance tracker: added Class Milestones
 
+### Changed
+- Reorganized `/moo` command (internally and `/moo help`)
+
 ## [1.8.9-0.10.0] - 31.07.2020
 ### Added
 - Best friends online check:
