@@ -192,7 +192,12 @@ public class FriendsHandler {
                             bestFriendsComponent.appendFreshSibling(new MooChatComponent("Failed to check " + EnumChatFormatting.DARK_RED + bestFriendsOnlineStatusWithApiErrors.size() + EnumChatFormatting.RED + " best friends' online status due to Hypixel API errors: " + EnumChatFormatting.DARK_RED + bestFriendsWithApiErrors).red());
                             bestFriendsOnlineStatusWithApiErrors.clear();
                         }
-                        main.getChatHelper().sendMessage(bestFriendsComponent);
+                        if (isCommandTriggered) {
+                            main.getChatHelper().sendMessage(bestFriendsComponent);
+                        } else {
+                            // delay by 4 seconds so the message doesn't get buried due to the server welcome messages
+                            new TickDelay(() -> main.getChatHelper().sendMessage(bestFriendsComponent), 80);
+                        }
                     }
                 });
             }
