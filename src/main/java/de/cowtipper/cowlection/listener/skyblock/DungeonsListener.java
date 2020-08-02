@@ -441,7 +441,7 @@ public class DungeonsListener {
 
     @SubscribeEvent
     public void onRenderGameOverlay(RenderGameOverlayEvent.Post e) {
-        if (e.type == RenderGameOverlayEvent.ElementType.EXPERIENCE) {
+        if (e.type == RenderGameOverlayEvent.ElementType.ALL) {
             DungeonCache dungeonCache = main.getDungeonCache();
 
             if (dungeonCache.isInDungeon()) {
