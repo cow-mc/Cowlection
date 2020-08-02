@@ -34,12 +34,24 @@ public class DungeonCache {
         return isInDungeon;
     }
 
+    public void onDungeonEnterOrLeave(boolean isInDungeonNow) {
+        boolean wasInDungeon = isInDungeon;
+
+        if (!wasInDungeon && isInDungeonNow) {
+            onDungeonEntered();
+        } else if (wasInDungeon && !isInDungeonNow) {
+            onDungeonLeft();
+        }
+    }
+
     public void onDungeonEntered() {
+        main.getLogger().info("Entered SkyBlock Dungeon!");
         isInDungeon = true;
         resetCounters();
     }
 
     public void onDungeonLeft() {
+        main.getLogger().info("Leaving SkyBlock Dungeon!");
         isInDungeon = false;
         resetCounters();
     }

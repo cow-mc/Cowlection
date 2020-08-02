@@ -368,7 +368,6 @@ public class DungeonsListener {
             if (scoreboardSidebar == null) {
                 return;
             }
-            boolean wasInDungeon = main.getDungeonCache().isInDungeon();
 
             Collection<Score> scoreboardLines = scoreboard.getSortedScores(scoreboardSidebar);
             for (Score line : scoreboardLines) {
@@ -379,25 +378,27 @@ public class DungeonsListener {
                     if (lineWithoutFormatting.startsWith(" ⏣")) {
                         // current location: dungeon or outside?
                         boolean isInDungeonNow = lineWithoutFormatting.startsWith(" ⏣ The Catacombs");
-
-                        if (!wasInDungeon && isInDungeonNow) {
-                            main.getLogger().info("Entered SkyBlock Dungeon!");
-                            main.getDungeonCache().onDungeonEntered();
-                        } else if (wasInDungeon && !isInDungeonNow) {
-                            main.getLogger().info("Leaving SkyBlock Dungeon!");
-                            main.getDungeonCache().onDungeonLeft();
-                        }
+                        main.getDungeonCache().onDungeonEnterOrLeave(isInDungeonNow);
                         return;
                     }
                 }
             }
-        }, 20); // 1 second delay, making sure scoreboard got sent
+        }, 40); // 2 second delay, making sure scoreboard got sent
     }
 
     @SubscribeEvent
     public void onMessageReceived(ClientChatReceivedEvent e) {
-        if (main.getDungeonCache().isInDungeon() && e.type != 2) { // normal chat or system msg (not above action bar)
+        if (e.type != 2) { // normal chat or system msg (not above action bar)
             String text = EnumChatFormatting.getTextWithoutFormattingCodes(e.message.getUnformattedText());
+
+            if (!main.getDungeonCache().isInDungeon()) {
+                if (text.startsWith("[NPC] Mort: ")) {
+                    // Mort said something, probably entered dungeons
+                    main.getDungeonCache().onDungeonEnterOrLeave(true);
+                }
+                return;
+            }
+            // player is in dungeon:
             Matcher dungeonDeathMatcher = DUNGEON_DEATH_PATTERN.matcher(text);
             if (dungeonDeathMatcher.matches()) {
                 String playerName = dungeonDeathMatcher.group(1);
@@ -411,6 +412,9 @@ public class DungeonsListener {
             } else if (text.startsWith("PUZZLE FAIL!")) {
                 // Skill: failed puzzle
                 main.getDungeonCache().addFailedPuzzle(text);
+            } else if (text.startsWith("Sending to server ")) {
+                // changed worlds => left dungeons
+                main.getDungeonCache().onDungeonEnterOrLeave(false);
             } else {
                 Matcher dungeonClassMilestoneMatcher = DUNGEON_CLASS_MILESTONE_PATTERN.matcher(text);
                 if (dungeonClassMilestoneMatcher.find()) {

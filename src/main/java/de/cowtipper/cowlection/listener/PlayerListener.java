@@ -103,7 +103,7 @@ public class PlayerListener {
                 unregisterSkyBlockListeners();
                 main.getLogger().info("Leaving SkyBlock! Un-registering SkyBlock listeners");
             }
-        }, 20); // 1 second delay, making sure scoreboard got sent
+        }, 40); // 2 second delay, making sure scoreboard got sent
     }
 
     private void registerSkyBlockListeners() {
