@@ -74,7 +74,7 @@ public class PlayerListener {
     public void onServerJoin(FMLNetworkEvent.ClientConnectedToServerEvent e) {
         main.getVersionChecker().runUpdateCheck(false);
         new TickDelay(() -> main.getChatHelper().sendOfflineMessages(), 6 * 20);
-        if (MooConfig.doBestFriendsOnlineCheck) {
+        if (MooConfig.doBestFriendsOnlineCheck && main.getFriendsHandler().getBestFriends().size() > 0) {
             main.getFriendsHandler().runBestFriendsOnlineCheck(false);
         }
         isOnSkyBlock = false;

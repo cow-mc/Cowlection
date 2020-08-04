@@ -9,6 +9,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Reorganized `/moo` command (internally and `/moo help`)
+- Added optional parameter: `/moo search [initial query]` to set the initial search query before opening the Log search
+
+### Fixed
+- Added another way to detect entering a SkyBlock dungeon
+- Some very small not mention-worthy fixes
 
 ## [1.8.9-0.10.0] - 31.07.2020
 ### Added

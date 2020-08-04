@@ -79,8 +79,12 @@ public class MooCommand extends CommandBase {
         } else if (args[0].equalsIgnoreCase("list")) {
             handleListBestFriends();
         } else if (args[0].equalsIgnoreCase("online")) {
-            main.getChatHelper().sendMessage(EnumChatFormatting.GRAY, "Checking online status of " + EnumChatFormatting.WHITE + main.getFriendsHandler().getBestFriends().size() + EnumChatFormatting.GRAY + " best friends. This may take a few seconds.");
-            main.getFriendsHandler().runBestFriendsOnlineCheck(true);
+            if (main.getFriendsHandler().getBestFriends().size() > 0) {
+                main.getChatHelper().sendMessage(EnumChatFormatting.GRAY, "Checking online status of " + EnumChatFormatting.WHITE + main.getFriendsHandler().getBestFriends().size() + EnumChatFormatting.GRAY + " best friends. This may take a few seconds.");
+                main.getFriendsHandler().runBestFriendsOnlineCheck(true);
+            } else {
+                main.getChatHelper().sendMessage(EnumChatFormatting.RED, "You haven't added anyone to your best friends list yet. Do so with " + EnumChatFormatting.WHITE + "/moo add <playerName>");
+            }
         } else if (args[0].equalsIgnoreCase("nameChangeCheck")) {
             handleNameChangeCheck(args);
         }
@@ -105,7 +109,7 @@ public class MooCommand extends CommandBase {
         else if (args[0].equalsIgnoreCase("config") || args[0].equalsIgnoreCase("toggle")) {
             displayGuiScreen(new MooGuiConfig(null));
         } else if (args[0].equalsIgnoreCase("search")) {
-            displayGuiScreen(new GuiSearch(main.getConfigDirectory()));
+            displayGuiScreen(new GuiSearch(main.getConfigDirectory(), CommandBase.buildString(args, 1)));
         } else if (args[0].equalsIgnoreCase("guiscale")) {
             handleGuiScale(args);
         } else if (args[0].equalsIgnoreCase("rr")) {

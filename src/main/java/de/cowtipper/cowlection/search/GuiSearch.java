@@ -51,6 +51,7 @@ public class GuiSearch extends GuiScreen {
             60L, TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(), new ThreadFactoryBuilder().setNameFormat(Cowlection.MODID + "-logfilesearcher-%d").build());
     // data
+    private boolean hasInitialSearchQuery;
     private String searchQuery;
     private boolean chatOnly;
     private boolean matchCase;
@@ -79,14 +80,19 @@ public class GuiSearch extends GuiScreen {
     private String analyzedFilesWithHits;
     private boolean areEntriesSearchResults;
 
-    public GuiSearch(File configDirectory) {
+    public GuiSearch(File configDirectory, String initialSearchQuery) {
         this.mcLogOutputFile = new File(configDirectory, "mc-log.txt");
         try {
             mcLogOutputFile.createNewFile();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        this.searchQuery = SEARCH_QUERY_PLACE_HOLDER;
+        if (initialSearchQuery.length() > 0) {
+            hasInitialSearchQuery = true;
+            this.searchQuery = initialSearchQuery;
+        } else {
+            this.searchQuery = SEARCH_QUERY_PLACE_HOLDER;
+        }
         this.searchResults = new ArrayList<>();
         this.dateStart = MooConfig.calculateStartDate();
         this.dateEnd = LocalDate.now();
@@ -107,6 +113,9 @@ public class GuiSearch extends GuiScreen {
         if (SEARCH_QUERY_PLACE_HOLDER.equals(searchQuery)) {
             this.fieldSearchQuery.setFocused(true);
             this.fieldSearchQuery.setSelectionPos(0);
+        } else if (hasInitialSearchQuery) {
+            this.fieldSearchQuery.setFocused(true);
+            this.hasInitialSearchQuery = false;
         }
 
         // date field: start
