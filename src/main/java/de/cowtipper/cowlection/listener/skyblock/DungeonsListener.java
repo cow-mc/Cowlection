@@ -6,6 +6,7 @@ import de.cowtipper.cowlection.config.MooConfig;
 import de.cowtipper.cowlection.handler.DungeonCache;
 import de.cowtipper.cowlection.util.TickDelay;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.SoundCategory;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.renderer.GlStateManager;
@@ -33,6 +34,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 
 import java.awt.*;
 import java.util.List;
@@ -47,6 +49,10 @@ public class DungeonsListener {
      * example: (space)Robin_Hood: Archer (42)
      */
     private final Pattern DUNGEON_PARTY_FINDER_PLAYER = Pattern.compile("^ (?:\\w+): ([A-Za-z]+) \\((\\d+)\\)$");
+    /**
+     * example: (Adventuring|Playing|Plundering|Looting|...) The Catacombs with 5/5 players on Floor II!
+     */
+    private final Pattern DUNGEON_ENTERED_DUNGEON = Pattern.compile("^[A-Za-z ]+ The Catacombs( Entrance)? with [0-9]+/[0-9]+ players(?: on Floor ([IVX]+))?!$");
     /**
      * Example tooltip lines:
      * <ul>
@@ -395,6 +401,24 @@ public class DungeonsListener {
                 if (text.startsWith("[NPC] Mort: ")) {
                     // Mort said something, probably entered dungeons
                     main.getDungeonCache().onDungeonEnterOrLeave(true);
+                    return;
+                }
+                Matcher dungeonEnteredMatcher = DUNGEON_ENTERED_DUNGEON.matcher(text);
+                if (dungeonEnteredMatcher.matches()) {
+                    String floor = dungeonEnteredMatcher.group(1) != null ? "Entrance" : dungeonEnteredMatcher.group(2);
+                    if (floor == null) {
+                        // this shouldn't ever happen: neither a floor nor the entrance was entered
+                        return;
+                    }
+                    String queuedFloor = main.getDungeonCache().getQueuedFloor();
+                    if (queuedFloor != null && !queuedFloor.equals(floor)) {
+                        // queued and entered dungeon floors are different!
+                        new TickDelay(() -> {
+                            String attentionSeeker = "" + EnumChatFormatting.LIGHT_PURPLE + EnumChatFormatting.OBFUSCATED + "#";
+                            main.getChatHelper().sendMessage(EnumChatFormatting.RED, attentionSeeker + EnumChatFormatting.RED + " You entered dungeon floor " + EnumChatFormatting.DARK_RED + floor + EnumChatFormatting.RED + " but originally queued for floor " + EnumChatFormatting.DARK_RED + queuedFloor + " " + attentionSeeker);
+                            Minecraft.getMinecraft().thePlayer.playSound("mob.cow.hurt", Minecraft.getMinecraft().gameSettings.getSoundLevel(SoundCategory.MASTER), 1);
+                        }, 100);
+                    }
                 }
                 return;
             }
@@ -424,6 +448,73 @@ public class DungeonsListener {
                     // 9 ❾ = 10110
                     if (classMilestoneSymbol >= /* 1 */ 10102 && classMilestoneSymbol <= /* 10 */ 10111) {
                         main.getDungeonCache().setClassMilestone(classMilestoneSymbol - 10101);
+                    }
+                }
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public void onMouseInteractionInGui(GuiScreenEvent.MouseInputEvent.Pre e) {
+        if (Mouse.getEventButton() < 0) {
+            // no button press, just mouse-hover
+            return;
+        }
+        if (e.gui instanceof GuiChest) {
+            GuiChest guiChest = (GuiChest) e.gui;
+
+            IInventory inventory = guiChest.inventorySlots.getSlot(0).inventory;
+            if (inventory.getName().equals("Party Finder")) {
+                // get dungeon floor nr when joining a dungeon party via party finder
+                Slot hoveredSlot = guiChest.getSlotUnderMouse();
+                if (hoveredSlot != null && hoveredSlot.getHasStack()) {
+                    // clicked on an item
+                    List<String> itemToolTip = hoveredSlot.getStack().getTooltip(Minecraft.getMinecraft().thePlayer, false);
+                    if (itemToolTip.size() < 5) {
+                        // not a valid dungeon party tooltip
+                        return;
+                    }
+                    for (String toolTipLine : itemToolTip) {
+                        String line = EnumChatFormatting.getTextWithoutFormattingCodes(toolTipLine);
+                        if (line.startsWith("Floor: ")) {
+                            // extract floor number
+                            int lastSpace = line.lastIndexOf(' ');
+                            if (lastSpace > 5) {
+                                String floorNr = line.substring(lastSpace + 1);
+                                main.getDungeonCache().setQueuedFloor(floorNr);
+                            }
+                            break;
+                        }
+                    }
+                }
+            } else if (inventory.getName().equals("Group Builder")) {
+                // get dungeon floor nr when creating a dungeon party for party finder
+                Slot hoveredSlot = guiChest.getSlotUnderMouse();
+                if (hoveredSlot != null && hoveredSlot.getHasStack() && hoveredSlot.getStack().hasDisplayName()) {
+                    // clicked on an item
+                    String clickedItemName = EnumChatFormatting.getTextWithoutFormattingCodes(hoveredSlot.getStack().getDisplayName());
+                    if (clickedItemName.equals("Confirm Group")) {
+                        // created dungeon party group
+                        ItemStack selectedFloorItem = inventory.getStackInSlot(13);
+                        if (selectedFloorItem != null && selectedFloorItem.hasDisplayName() && EnumChatFormatting.getTextWithoutFormattingCodes(selectedFloorItem.getDisplayName()).equals("Select Floor")) {
+                            List<String> itemToolTip = selectedFloorItem.getTooltip(Minecraft.getMinecraft().thePlayer, false);
+                            if (itemToolTip.size() < 5) {
+                                // not a valid dungeon floor tooltip
+                                return;
+                            }
+                            for (String toolTipLine : itemToolTip) {
+                                String line = EnumChatFormatting.getTextWithoutFormattingCodes(toolTipLine);
+                                if (line.startsWith("Currently Selected: ")) {
+                                    // extract floor number
+                                    int lastSpace = line.lastIndexOf(' ');
+                                    if (lastSpace > 18) {
+                                        String floorNr = line.substring(lastSpace + 1);
+                                        main.getDungeonCache().setQueuedFloor(floorNr);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

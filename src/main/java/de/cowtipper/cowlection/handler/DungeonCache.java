@@ -22,6 +22,7 @@ public class DungeonCache {
     private int elapsedMinutes;
     private int classMilestone;
     private long lastScoreboardCheck;
+    private String queuedFloor;
 
     public DungeonCache(Cowlection main) {
         this.main = main;
@@ -108,6 +109,10 @@ public class DungeonCache {
     }
 
     // setter/adder
+    public void setQueuedFloor(String floorNr) {
+        this.queuedFloor = floorNr;
+    }
+
     public void addDeath(String playerName) {
         int previousPlayerDeaths = deathCounter.getOrDefault(playerName, 0);
         deathCounter.put(playerName, previousPlayerDeaths + 1);
@@ -128,6 +133,10 @@ public class DungeonCache {
     }
 
     // getter
+    public String getQueuedFloor() {
+        return queuedFloor;
+    }
+
     public int getMaxSkillScore() {
         return 100 - getSkillScorePenalty();
     }
@@ -167,5 +176,6 @@ public class DungeonCache {
         destroyedCrypts.clear();
         elapsedMinutes = 0;
         classMilestone = 0;
+        queuedFloor = null;
     }
 }
