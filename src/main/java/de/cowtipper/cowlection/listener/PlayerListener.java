@@ -8,9 +8,12 @@ import de.cowtipper.cowlection.listener.skyblock.SkyBlockListener;
 import de.cowtipper.cowlection.util.GsonUtils;
 import de.cowtipper.cowlection.util.TickDelay;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.gui.inventory.GuiInventory;
+import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -22,6 +25,7 @@ import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerSetSpawnEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 import org.lwjgl.input.Keyboard;
 
@@ -33,6 +37,18 @@ public class PlayerListener {
 
     public PlayerListener(Cowlection main) {
         this.main = main;
+    }
+
+    @SubscribeEvent
+    public void onKeybindingPressed(InputEvent.KeyInputEvent e) {
+        KeyBinding[] keyBindings = Cowlection.keyBindings;
+
+        if (keyBindings[0].isPressed()) {
+            Minecraft mc = Minecraft.getMinecraft();
+            if (mc.currentScreen == null && mc.gameSettings.chatVisibility != EntityPlayer.EnumChatVisibility.HIDDEN) {
+                mc.displayGuiScreen(new GuiChat("/moo "));
+            }
+        }
     }
 
     @SubscribeEvent

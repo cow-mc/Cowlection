@@ -33,8 +33,18 @@ public class TabCompletableCommand extends CommandBase {
 
     @Override
     public void processCommand(ICommandSender sender, String[] args) throws CommandException {
-        // send client-command to server
-        Minecraft.getMinecraft().thePlayer.sendChatMessage("/" + getCommandName() + " " + CommandBase.buildString(args, 0));
+        String prefix;
+        String arguments;
+        if (args.length >= 1 && args[0].equalsIgnoreCase("say")) {
+            // work-around so you can still say '[commandName]' in chat without triggering the server-side command
+            prefix = "";
+            arguments = CommandBase.buildString(args, 1);
+        } else {
+            // send client-command to server
+            prefix = "/";
+            arguments = CommandBase.buildString(args, 0);
+        }
+        Minecraft.getMinecraft().thePlayer.sendChatMessage(prefix + getCommandName() + (!arguments.isEmpty() ? " " + arguments : ""));
     }
 
     @Override

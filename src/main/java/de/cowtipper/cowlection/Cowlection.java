@@ -12,15 +12,18 @@ import de.cowtipper.cowlection.listener.ChatListener;
 import de.cowtipper.cowlection.listener.PlayerListener;
 import de.cowtipper.cowlection.util.ChatHelper;
 import de.cowtipper.cowlection.util.VersionChecker;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.input.Keyboard;
 
 import java.io.File;
 
@@ -33,6 +36,7 @@ public class Cowlection {
     public static final String VERSION = "@VERSION@";
     public static final String MODNAME = "@MODNAME@";
     public static final String GITURL = "@GITURL@";
+    public static KeyBinding[] keyBindings;
     private static Cowlection instance;
     private File configDir;
     private File modsDir;
@@ -70,6 +74,13 @@ public class Cowlection {
         ClientCommandHandler.instance.registerCommand(new ShrugCommand(this));
         for (String tabCompletableNamesCommand : MooConfig.tabCompletableNamesCommands) {
             ClientCommandHandler.instance.registerCommand(new TabCompletableCommand(this, tabCompletableNamesCommand));
+        }
+        // key bindings
+        keyBindings = new KeyBinding[1];
+        keyBindings[0] = new KeyBinding("key.cowlection.moo.desc", Keyboard.KEY_M, "key.cowlection.category");
+
+        for (KeyBinding keyBinding : keyBindings) {
+            ClientRegistry.registerKeyBinding(keyBinding);
         }
     }
 

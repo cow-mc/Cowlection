@@ -140,9 +140,18 @@ public class MooCommand extends CommandBase {
         else if (args[0].equalsIgnoreCase("help")) {
             sendCommandUsage(sender);
         }
+        // fix: run server-side command /m with optional arguments
+        else if (args[0].equalsIgnoreCase("cmd") || args[0].equalsIgnoreCase("command")) {
+            String cmdArgs = CommandBase.buildString(args, 1);
+            if (cmdArgs.length() > 0) {
+                cmdArgs = " " + cmdArgs;
+            }
+            Minecraft.getMinecraft().thePlayer.sendChatMessage("/m" + cmdArgs);
+        }
         // "catch-all" remaining sub-commands
         else {
-            main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Command " + EnumChatFormatting.DARK_RED + "/" + getCommandName() + " " + args[0] + EnumChatFormatting.RED + " doesn't exist. Use " + EnumChatFormatting.DARK_RED + "/" + getCommandName() + " help " + EnumChatFormatting.RED + "to show command usage.");
+            main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Command " + EnumChatFormatting.DARK_RED + "/" + getCommandName() + " " + args[0] + EnumChatFormatting.RED + " doesn't exist. Use " + EnumChatFormatting.DARK_RED + "/" + getCommandName() + " help " + EnumChatFormatting.RED + "to show command usage.\n"
+                    + EnumChatFormatting.RED + "Are you trying to use a server-side command " + EnumChatFormatting.DARK_RED + "/m" + EnumChatFormatting.RED + "? Use " + EnumChatFormatting.DARK_RED + "/m cmd [arguments] " + EnumChatFormatting.RED + "instead.");
         }
     }
 

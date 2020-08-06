@@ -27,3 +27,5 @@ cowlection.config.logsDirs.tooltip=List of directories containing Minecraft log 
 cowlection.config.defaultStartDate=Start date for log file search
 cowlection.config.defaultStartDate.tooltip=§eCan be either a §6number§e (e.g. "§63§e" means "§6start searching 3 months ago§e"),\n§eor alternatively a §6fixed date §e(§6yyyy-mm-dd§e)
 cowlection.commands.generic.exception=%s
+key.cowlection.category=Cowlection
+key.cowlection.moo.desc=Open Command
