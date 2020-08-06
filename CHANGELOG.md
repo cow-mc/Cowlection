@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [1.8.9-xxx] - unreleased
+## [1.8.9-0.10.1] - 06.08.2020
 ### Added
 - Dungeon performance tracker: added Class Milestones
 
@@ -184,7 +184,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 *Note:* The 'best friends' list is currently available via <kbd>ESC</kbd> > Mod Options > Cowlection > Config > bestFriends.
 
-[1.8.9-xxx]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.10.0...master
+[1.8.9-0.10.1]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.10.0...v1.8.9-0.10.1
 [1.8.9-0.10.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.9.0...v1.8.9-0.10.0
 [1.8.9-0.9.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.8.1...v1.8.9-0.9.0
 [1.8.9-0.8.1]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.8.0...v1.8.9-0.8.1
