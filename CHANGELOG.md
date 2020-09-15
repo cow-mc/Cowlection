@@ -3,13 +3,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [1.8.9-xxx] - unreleased
+## [1.8.9-0.10.2] - 15.09.2020
 ### Added
 - Added keybinding (default `M`) to open chat with `/moo ` pre-typed
 - New sub-command: `/m cmd [arguments]` to fix command conflicts with server-side commands with the same name `/m`
   - e.g. `/m cmd hello world` executes the server command `/m hello world`
 - Added `/<command with tab-completable username> say [optional text]`: You can e.g. say `f` again without triggering the server-side command `/f` by typing `/f say`
 - Dungeon party finder: Added a warning message if you enter a floor other than the one you have queued for 
+
+### Fixed
+- Fixed crash when entering a dungeon (caused by a small change in the scoreboard formatting)
 
 ## [1.8.9-0.10.1] - 06.08.2020
 ### Added
@@ -192,7 +195,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 *Note:* The 'best friends' list is currently available via <kbd>ESC</kbd> > Mod Options > Cowlection > Config > bestFriends.
 
-[1.8.9-xxx]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.10.1...master
+[1.8.9-0.10.2]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.10.1...v1.8.9-0.10.2
 [1.8.9-0.10.1]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.10.0...v1.8.9-0.10.1
 [1.8.9-0.10.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.9.0...v1.8.9-0.10.0
 [1.8.9-0.9.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.8.1...v1.8.9-0.9.0

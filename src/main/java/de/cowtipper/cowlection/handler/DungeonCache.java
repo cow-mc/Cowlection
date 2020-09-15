@@ -92,11 +92,15 @@ public class DungeonCache {
                     if (scorePlayerTeam != null) {
                         String lineWithoutFormatting = EnumChatFormatting.getTextWithoutFormattingCodes(scorePlayerTeam.getColorPrefix() + scorePlayerTeam.getColorSuffix());
 
-                        if (lineWithoutFormatting.startsWith("Time Elapsed:")) {
-                            // dungeon timer: 05m22s
-                            String timeString = lineWithoutFormatting.substring(lineWithoutFormatting.lastIndexOf(' ') + 1);
+                        String timeElapsed = "Time Elapsed: ";
+                        if (lineWithoutFormatting.startsWith(timeElapsed)) {
+                            // dungeon timer: 05m 22s
+                            String timeString = lineWithoutFormatting.substring(timeElapsed.length());
                             try {
-                                elapsedMinutes = (Integer.parseInt(timeString.substring(0, timeString.indexOf('m'))));
+                                int indexOfMinute = timeString.indexOf('m');
+                                if (indexOfMinute > -1) {
+                                    elapsedMinutes = (Integer.parseInt(timeString.substring(0, indexOfMinute)));
+                                }
                             } catch (NumberFormatException ex) {
                                 // couldn't parse dungeon time from scoreboard
                                 ex.printStackTrace();
