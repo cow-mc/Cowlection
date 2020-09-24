@@ -10,6 +10,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.SoundCategory;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.inventory.GuiChest;
+import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.init.Blocks;
@@ -36,6 +37,7 @@ import net.minecraftforge.event.entity.player.PlayerSetSpawnEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.input.Mouse;
@@ -492,7 +494,7 @@ public class DungeonsListener {
             IInventory inventory = guiChest.inventorySlots.getSlot(0).inventory;
             if (inventory.getName().equals("Party Finder")) {
                 // get dungeon floor nr when joining a dungeon party via party finder
-                Slot hoveredSlot = guiChest.getSlotUnderMouse();
+                Slot hoveredSlot = getSlotUnderMouse(guiChest);
                 if (hoveredSlot != null && hoveredSlot.getHasStack()) {
                     // clicked on an item
                     List<String> itemToolTip = hoveredSlot.getStack().getTooltip(Minecraft.getMinecraft().thePlayer, false);
@@ -515,7 +517,7 @@ public class DungeonsListener {
                 }
             } else if (inventory.getName().equals("Group Builder")) {
                 // get dungeon floor nr when creating a dungeon party for party finder
-                Slot hoveredSlot = guiChest.getSlotUnderMouse();
+                Slot hoveredSlot = getSlotUnderMouse(guiChest);
                 if (hoveredSlot != null && hoveredSlot.getHasStack() && hoveredSlot.getStack().hasDisplayName()) {
                     // clicked on an item
                     String clickedItemName = EnumChatFormatting.getTextWithoutFormattingCodes(hoveredSlot.getStack().getDisplayName());
@@ -544,6 +546,15 @@ public class DungeonsListener {
                     }
                 }
             }
+        }
+    }
+
+    private Slot getSlotUnderMouse(GuiChest guiChest) {
+        try {
+            return ReflectionHelper.getPrivateValue(GuiContainer.class, guiChest, "theSlot", "field_147006_u");
+        } catch (ReflectionHelper.UnableToAccessFieldException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 

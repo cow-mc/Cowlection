@@ -21,9 +21,9 @@ import net.minecraftforge.fml.client.config.GuiButtonExt;
 import net.minecraftforge.fml.client.config.GuiCheckBox;
 import net.minecraftforge.fml.client.config.GuiConfig;
 import net.minecraftforge.fml.client.config.IConfigElement;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
@@ -33,7 +33,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
@@ -471,14 +470,9 @@ public class GuiSearch extends GuiScreen {
         }
 
         private float getScrollDistance() {
-            Field scrollDistanceField = FieldUtils.getField(GuiScrollingList.class, "scrollDistance", true);
-            if (scrollDistanceField == null) {
-                // scrollDistance field not found in class GuiScrollingList
-                return Float.MIN_VALUE;
-            }
             try {
-                return (float) scrollDistanceField.get(this);
-            } catch (IllegalAccessException e) {
+                return ReflectionHelper.getPrivateValue(GuiScrollingList.class, this, "scrollDistance");
+            } catch (ReflectionHelper.UnableToAccessFieldException e) {
                 e.printStackTrace();
                 return Float.MIN_VALUE;
             }
