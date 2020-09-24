@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 public class DungeonCache {
     private final Cowlection main;
     private final Map<String, Integer> deathCounter;
+    private final Set<String> deadPlayers;
     private final Set<String> failedPuzzles;
     private final Set<UUID> destroyedCrypts;
 
@@ -22,11 +23,13 @@ public class DungeonCache {
     private int elapsedMinutes;
     private int classMilestone;
     private long lastScoreboardCheck;
+    private long nextPerformanceSend;
     private String queuedFloor;
 
     public DungeonCache(Cowlection main) {
         this.main = main;
         deathCounter = new HashMap<>();
+        deadPlayers = new HashSet<>();
         failedPuzzles = new HashSet<>();
         destroyedCrypts = new HashSet<>();
     }
@@ -58,6 +61,10 @@ public class DungeonCache {
     }
 
     public void sendDungeonPerformance() {
+        if (System.currentTimeMillis() < nextPerformanceSend) {
+            // already sent dungeon performance less than 260ms ago
+            return;
+        }
         String dungeonPerformance;
         boolean hasPointPenalty = false;
         if (deathCounter.isEmpty()) {
@@ -77,6 +84,7 @@ public class DungeonCache {
             dungeonPerformance += "\n" + EnumChatFormatting.LIGHT_PURPLE + "➜ " + EnumChatFormatting.RED + EnumChatFormatting.BOLD + "Skill " + EnumChatFormatting.RED + "score penalty: " + EnumChatFormatting.DARK_RED + getSkillScorePenalty() + " points";
         }
         main.getChatHelper().sendMessage(EnumChatFormatting.WHITE, dungeonPerformance);
+        nextPerformanceSend = System.currentTimeMillis() + 260;
     }
 
     public void updateElapsedMinutesFromScoreboard() {
@@ -117,11 +125,19 @@ public class DungeonCache {
         this.queuedFloor = floorNr;
     }
 
-    public void addDeath(String playerName) {
+    public void addDeath(String playerName, boolean ghostByDisconnecting) {
+        if (!deadPlayers.add(playerName) && ghostByDisconnecting) {
+            // dead player disconnected from the game; don't count again!
+            return;
+        }
         int previousPlayerDeaths = deathCounter.getOrDefault(playerName, 0);
         deathCounter.put(playerName, previousPlayerDeaths + 1);
 
         new TickDelay(this::sendDungeonPerformance, 1);
+    }
+
+    public void revivedPlayer(String playerName) {
+        deadPlayers.remove(playerName);
     }
 
     public void addFailedPuzzle(String text) {
@@ -176,10 +192,12 @@ public class DungeonCache {
     // resetter
     private void resetCounters() {
         deathCounter.clear();
+        deadPlayers.clear();
         failedPuzzles.clear();
         destroyedCrypts.clear();
         elapsedMinutes = 0;
         classMilestone = 0;
+        nextPerformanceSend = 0;
         queuedFloor = null;
     }
 }

@@ -134,7 +134,7 @@ public class SkyBlockListener {
                 String toolTipLineUnformatted = EnumChatFormatting.getTextWithoutFormattingCodes(toolTip.get(i));
                 if (toolTipLineUnformatted.startsWith("Top bid: ")
                         || toolTipLineUnformatted.startsWith("Starting bid: ")
-                        || toolTipLineUnformatted.startsWith("Create BIN Auction: ")
+                        || toolTipLineUnformatted.startsWith("Item price: ")
                         || toolTipLineUnformatted.startsWith("Buy it now: ")
                         || toolTipLineUnformatted.startsWith("Sold for: ")
                         || toolTipLineUnformatted.startsWith("New bid: ") /* special case: 'Submit Bid' item */) {
@@ -167,7 +167,8 @@ public class SkyBlockListener {
     }
 
     private boolean isSubmitBidItem(ItemStack itemStack) {
-        return (itemStack.getItem().equals(Items.gold_nugget) || itemStack.getItem().equals(Item.getItemFromBlock(Blocks.gold_block)))
-                && (itemStack.hasDisplayName() && (itemStack.getDisplayName().endsWith("Submit Bid") || itemStack.getDisplayName().endsWith("Collect Auction")));
+        return ((itemStack.getItem().equals(Items.gold_nugget) || itemStack.getItem().equals(Item.getItemFromBlock(Blocks.gold_block)))
+                && (itemStack.hasDisplayName() && (itemStack.getDisplayName().endsWith("Submit Bid") || itemStack.getDisplayName().endsWith("Collect Auction"))))
+                || (/* green hardened clay + */ itemStack.hasDisplayName() && (itemStack.getDisplayName().endsWith("Create BIN Auction") || itemStack.getDisplayName().endsWith("Create Auction")));
     }
 }

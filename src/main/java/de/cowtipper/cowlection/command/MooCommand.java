@@ -378,7 +378,7 @@ public class MooCommand extends CommandBase {
                     wealthHover.appendFreshSibling(new MooChatComponent.KeyValueTooltipComponent("Co-ops' purses sum", Utils.formatNumberWithAbbreviations(activeProfile.getCoopCoinPurses(stalkedPlayer.getUuid()))));
                 }
 
-                MooChatComponent sbStats = new MooChatComponent("SkyBlock stats of " + stalkedPlayer.getName() + " (" + activeProfile.getCuteName() + ")").gold().bold().setUrl("https://sky.lea.moe/stats/" + stalkedPlayer.getName() + "/" + activeProfile.getCuteName(), "Click to view SkyBlock stats on sky.lea.moe")
+                MooChatComponent sbStats = new MooChatComponent("SkyBlock stats of " + stalkedPlayer.getName() + " (" + activeProfile.getCuteName() + ")").gold().bold().setUrl("https://sky.shiiyu.moe/stats/" + stalkedPlayer.getName() + "/" + activeProfile.getCuteName(), "Click to view SkyBlock stats on sky.shiiyu.moe")
                         .appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Coins", coinsBankAndPurse).setHover(wealthHover));
                 // highest skill + skill average:
                 if (highestSkill != null) {

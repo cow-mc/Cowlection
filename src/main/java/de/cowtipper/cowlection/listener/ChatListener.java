@@ -11,6 +11,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.GuiControls;
 import net.minecraft.client.gui.GuiNewChat;
+import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.StringUtils;
@@ -73,8 +74,7 @@ public class ChatListener {
                     }
                     if (MooConfig.showBestFriendNotifications) {
                         // replace default (friend/guild) notification with best friend notification
-                        main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, "" + EnumChatFormatting.DARK_GREEN + EnumChatFormatting.BOLD + "Best friend" + EnumChatFormatting.DARK_GREEN + " > " + EnumChatFormatting.RESET + rank + playerName + joinLeaveSuffix);
-                        e.setCanceled(true);
+                        e.message = new ChatComponentText("" + EnumChatFormatting.DARK_GREEN + EnumChatFormatting.BOLD + "Best friend" + EnumChatFormatting.DARK_GREEN + " > " + EnumChatFormatting.RESET + rank + playerName + joinLeaveSuffix);
                         return;
                     }
                 }

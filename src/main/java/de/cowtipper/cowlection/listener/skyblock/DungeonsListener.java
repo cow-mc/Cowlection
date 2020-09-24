@@ -6,6 +6,7 @@ import de.cowtipper.cowlection.config.gui.MooConfigGui;
 import de.cowtipper.cowlection.data.DataHelper.DungeonClass;
 import de.cowtipper.cowlection.handler.DungeonCache;
 import de.cowtipper.cowlection.util.TickDelay;
+import de.cowtipper.cowlection.util.Utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.SoundCategory;
 import net.minecraft.client.gui.FontRenderer;
@@ -57,6 +58,11 @@ public class DungeonsListener {
      */
     private final Pattern DUNGEON_PARTY_FINDER_PLAYER = Pattern.compile("^ (?:\\w+): ([A-Za-z]+) \\((\\d+)\\)$");
     /**
+     * examples: "Floor: Entrance", "Floor: Floor 4", "Floor: Floor IV"
+     */
+    private final Pattern DUNGEON_PARTY_FINDER_FLOOR = Pattern.compile("^Floor: (Entrance)?(?:Floor ([IVX]+)?([0-9]+)?)?$");
+    private final Pattern DUNGEON_PARTY_FINDER_SELECTED_FLOOR = Pattern.compile("^Currently Selected: (Entrance)?(?:Floor ([IVX]+)?([0-9]+)?)?$");
+    /**
      * example: (Adventuring|Playing|Plundering|Looting|...) The Catacombs with 5/5 players on Floor II!
      */
     private final Pattern DUNGEON_ENTERED_DUNGEON = Pattern.compile("^[A-Za-z ]+ The Catacombs( Entrance)? with [0-9]+/[0-9]+ players(?: on Floor ([IVX]+))?!$");
@@ -92,7 +98,8 @@ public class DungeonsListener {
      * <li> ☠ You were killed by [mob] and became a ghost.</li>
      * </ul>
      */
-    private final Pattern DUNGEON_DEATH_PATTERN = Pattern.compile("^ ☠ (\\w+) (?:.*?) and became a ghost\\.$");
+    private final Pattern DUNGEON_DEATH_PATTERN = Pattern.compile("^ ☠ (\\w+) (.+) and became a ghost\\.$");
+    private final Pattern DUNGEON_REVIVED_PATTERN = Pattern.compile("^ ❣ (\\w+) was revived(?:.*?)$");
     /**
      * Class milestones:
      * <ul>
@@ -274,7 +281,7 @@ public class DungeonsListener {
             IInventory inventory = inventorySlots.getSlot(0).inventory;
             if (inventory.getName().equals("Catacombs Gate")) {
                 // update active selected class
-                ItemStack dungeonClassIndicator = inventory.getStackInSlot(47);
+                ItemStack dungeonClassIndicator = getStackInSlotOrByName(inventory, 47, "Dungeon Classes");
                 if (dungeonClassIndicator == null) {
                     // couldn't detect dungeon class indicator
                     return;
@@ -392,6 +399,21 @@ public class DungeonsListener {
         }
     }
 
+    private ItemStack getStackInSlotOrByName(IInventory inventory, int slot, String itemDisplayName) {
+        ItemStack item = inventory.getStackInSlot(slot);
+        if (item != null && item.hasDisplayName() && itemDisplayName.equals(EnumChatFormatting.getTextWithoutFormattingCodes(item.getDisplayName()))) {
+            return item;
+        }
+        // an update might have moved the item to another slot, search for it:
+        for (int checkedSlot = 0; checkedSlot < inventory.getSizeInventory(); checkedSlot++) {
+            item = inventory.getStackInSlot(slot);
+            if (item != null && item.hasDisplayName() && itemDisplayName.equals(EnumChatFormatting.getTextWithoutFormattingCodes(item.getDisplayName()))) {
+                return item;
+            }
+        }
+        return null;
+    }
+
     // Events inside dungeons
     @SubscribeEvent
     public void onDungeonsEnterOrLeave(PlayerSetSpawnEvent e) {
@@ -452,12 +474,15 @@ public class DungeonsListener {
             }
             // player is in dungeon:
             Matcher dungeonDeathMatcher = DUNGEON_DEATH_PATTERN.matcher(text);
+            Matcher dungeonRevivedMatcher = DUNGEON_REVIVED_PATTERN.matcher(text);
             if (dungeonDeathMatcher.matches()) {
                 String playerName = dungeonDeathMatcher.group(1);
                 if (playerName.equals("You")) {
                     playerName = Minecraft.getMinecraft().thePlayer.getName();
                 }
-                main.getDungeonCache().addDeath(playerName);
+                main.getDungeonCache().addDeath(playerName, dungeonDeathMatcher.group(2).contains("disconnected"));
+            } else if (dungeonRevivedMatcher.matches()) {
+                main.getDungeonCache().revivedPlayer(dungeonRevivedMatcher.group(1));
             } else if (text.trim().equals("> EXTRA STATS <")) {
                 // dungeon "end screen"
                 new TickDelay(() -> main.getDungeonCache().sendDungeonPerformance(), 5);
@@ -502,18 +527,7 @@ public class DungeonsListener {
                         // not a valid dungeon party tooltip
                         return;
                     }
-                    for (String toolTipLine : itemToolTip) {
-                        String line = EnumChatFormatting.getTextWithoutFormattingCodes(toolTipLine);
-                        if (line.startsWith("Floor: ")) {
-                            // extract floor number
-                            int lastSpace = line.lastIndexOf(' ');
-                            if (lastSpace > 5) {
-                                String floorNr = line.substring(lastSpace + 1);
-                                main.getDungeonCache().setQueuedFloor(floorNr);
-                            }
-                            break;
-                        }
-                    }
+                    extractQueuedFloorNr(itemToolTip, DUNGEON_PARTY_FINDER_FLOOR);
                 }
             } else if (inventory.getName().equals("Group Builder")) {
                 // get dungeon floor nr when creating a dungeon party for party finder
@@ -523,28 +537,41 @@ public class DungeonsListener {
                     String clickedItemName = EnumChatFormatting.getTextWithoutFormattingCodes(hoveredSlot.getStack().getDisplayName());
                     if (clickedItemName.equals("Confirm Group")) {
                         // created dungeon party group
-                        ItemStack selectedFloorItem = inventory.getStackInSlot(13);
-                        if (selectedFloorItem != null && selectedFloorItem.hasDisplayName() && EnumChatFormatting.getTextWithoutFormattingCodes(selectedFloorItem.getDisplayName()).equals("Select Floor")) {
+                        ItemStack selectedFloorItem = getStackInSlotOrByName(inventory, 12, "Select Floor");
+                        if (selectedFloorItem != null) {
                             List<String> itemToolTip = selectedFloorItem.getTooltip(Minecraft.getMinecraft().thePlayer, false);
                             if (itemToolTip.size() < 5) {
                                 // not a valid dungeon floor tooltip
                                 return;
                             }
-                            for (String toolTipLine : itemToolTip) {
-                                String line = EnumChatFormatting.getTextWithoutFormattingCodes(toolTipLine);
-                                if (line.startsWith("Currently Selected: ")) {
-                                    // extract floor number
-                                    int lastSpace = line.lastIndexOf(' ');
-                                    if (lastSpace > 18) {
-                                        String floorNr = line.substring(lastSpace + 1);
-                                        main.getDungeonCache().setQueuedFloor(floorNr);
-                                        break;
-                                    }
-                                }
-                            }
+                            extractQueuedFloorNr(itemToolTip, DUNGEON_PARTY_FINDER_SELECTED_FLOOR);
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private void extractQueuedFloorNr(List<String> itemToolTip, Pattern pattern) {
+        for (String toolTipLine : itemToolTip) {
+            String line = EnumChatFormatting.getTextWithoutFormattingCodes(toolTipLine);
+
+            Matcher floorMatcher = pattern.matcher(line);
+            if (floorMatcher.matches()) {
+                String floorNr = floorMatcher.group(1); // floor == Entrance
+                if (floorNr == null) {
+                    floorNr = floorMatcher.group(2); // floor == [IVX]+
+                }
+                if (floorNr == null) {
+                    try {
+                        int floorNrArabic = Integer.parseInt(floorMatcher.group(3));
+                        floorNr = Utils.convertArabicToRoman(floorNrArabic); // floor == [0-9]+
+                    } catch (NumberFormatException ex) {
+                        floorNr = null;
+                    }
+                }
+                main.getDungeonCache().setQueuedFloor(floorNr);
+                break;
             }
         }
     }
