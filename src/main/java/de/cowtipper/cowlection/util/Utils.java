@@ -250,4 +250,9 @@ public final class Utils {
         }
         return tierColor;
     }
+
+
+    public static String booleanToSymbol(boolean value) {
+        return value ? EnumChatFormatting.GREEN + "✔" : EnumChatFormatting.RED + "✘";
+    }
 }

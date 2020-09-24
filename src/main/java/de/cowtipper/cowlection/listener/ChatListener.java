@@ -87,9 +87,8 @@ public class ChatListener {
                 // Your new API key is 00000000-0000-0000-0000-000000000000
                 String moo = text.substring(20, 56);
                 if (Utils.isValidUuid(moo)) {
-                    MooConfig.moo = moo;
-                    main.getConfig().syncFromFields();
-                    main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Saved your API key in " + Cowlection.MODNAME + " config!");
+                    main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, "Verifying the new API key...");
+                    main.getMoo().setMooIfValid(moo, true);
                 }
             }
         }

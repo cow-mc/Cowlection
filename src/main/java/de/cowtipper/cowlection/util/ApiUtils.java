@@ -6,11 +6,8 @@ import com.google.gson.JsonSyntaxException;
 import com.mojang.util.UUIDTypeAdapter;
 import de.cowtipper.cowlection.Cowlection;
 import de.cowtipper.cowlection.command.exception.ThrowingConsumer;
-import de.cowtipper.cowlection.config.MooConfig;
-import de.cowtipper.cowlection.data.Friend;
-import de.cowtipper.cowlection.data.HyPlayerData;
-import de.cowtipper.cowlection.data.HySkyBlockStats;
-import de.cowtipper.cowlection.data.HyStalkingData;
+import de.cowtipper.cowlection.config.CredentialStorage;
+import de.cowtipper.cowlection.data.*;
 import de.cowtipper.cowlection.event.ApiErrorEvent;
 import net.minecraftforge.common.MinecraftForge;
 import org.apache.http.HttpStatus;
@@ -79,7 +76,7 @@ public class ApiUtils {
     }
 
     private static HyStalkingData stalkPlayer(Friend friend) {
-        try (BufferedReader reader = makeApiCall(String.format(ONLINE_STATUS_URL, MooConfig.moo, UUIDTypeAdapter.fromUUID(friend.getUuid())))) {
+        try (BufferedReader reader = makeApiCall(String.format(ONLINE_STATUS_URL, CredentialStorage.moo, UUIDTypeAdapter.fromUUID(friend.getUuid())))) {
             if (reader != null) {
                 return GsonUtils.fromJson(reader, HyStalkingData.class);
             }
@@ -94,7 +91,7 @@ public class ApiUtils {
     }
 
     private static HySkyBlockStats stalkSkyBlockStats(Friend friend) {
-        try (BufferedReader reader = makeApiCall(String.format(SKYBLOCK_STATS_URL, MooConfig.moo, UUIDTypeAdapter.fromUUID(friend.getUuid())))) {
+        try (BufferedReader reader = makeApiCall(String.format(SKYBLOCK_STATS_URL, CredentialStorage.moo, UUIDTypeAdapter.fromUUID(friend.getUuid())))) {
             if (reader != null) {
                 return GsonUtils.fromJson(reader, HySkyBlockStats.class);
             }
@@ -109,7 +106,7 @@ public class ApiUtils {
     }
 
     private static HyPlayerData stalkHyPlayer(Friend stalkedPlayer) {
-        try (BufferedReader reader = makeApiCall(String.format(PLAYER_URL, MooConfig.moo, UUIDTypeAdapter.fromUUID(stalkedPlayer.getUuid())))) {
+        try (BufferedReader reader = makeApiCall(String.format(PLAYER_URL, CredentialStorage.moo, UUIDTypeAdapter.fromUUID(stalkedPlayer.getUuid())))) {
             if (reader != null) {
                 return GsonUtils.fromJson(reader, HyPlayerData.class);
             }

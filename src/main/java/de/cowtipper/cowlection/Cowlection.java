@@ -4,6 +4,7 @@ import de.cowtipper.cowlection.command.MooCommand;
 import de.cowtipper.cowlection.command.ReplyCommand;
 import de.cowtipper.cowlection.command.ShrugCommand;
 import de.cowtipper.cowlection.command.TabCompletableCommand;
+import de.cowtipper.cowlection.config.CredentialStorage;
 import de.cowtipper.cowlection.config.MooConfig;
 import de.cowtipper.cowlection.handler.DungeonCache;
 import de.cowtipper.cowlection.handler.FriendsHandler;
@@ -40,6 +41,7 @@ public class Cowlection {
     private File configDir;
     private File modsDir;
     private MooConfig config;
+    private CredentialStorage moo;
     private FriendsHandler friendsHandler;
     private VersionChecker versionChecker;
     private ChatHelper chatHelper;
@@ -92,6 +94,10 @@ public class Cowlection {
 
     public MooConfig getConfig() {
         return config;
+    }
+
+    public CredentialStorage getMoo() {
+        return moo;
     }
 
     public FriendsHandler getFriendsHandler() {
