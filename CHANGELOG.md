@@ -3,6 +3,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.8.9-0.11.0] - unreleased
+### Changed
+- Completely re-done the config gui (`/moo config`)
+  - now separated into sections and sub-sections
+  - added moar configurable things
+  - some config settings have a live-preview next to them
+- Improved SkyBlock dungeon party finder
+  - more config options
+  - marks (non-)joinable parties even better than before
+- Improved SkyBlock dungeon performance overlay
+  - Overlay can be moved more precisely
+  - Dungeons can be "joined" and "left" manually (if the automatic detection fails): `/moo dungeon <enter/leave>`
+- Improved handling of invalid/missing Hypixel API key
+
 ## [1.8.9-0.10.2] - 15.09.2020
 ### Added
 - Added keybinding (default `M`) to open chat with `/moo ` pre-typed
@@ -195,6 +209,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 *Note:* The 'best friends' list is currently available via <kbd>ESC</kbd> > Mod Options > Cowlection > Config > bestFriends.
 
+[1.8.9-0.11.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.10.2...master
 [1.8.9-0.10.2]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.10.1...v1.8.9-0.10.2
 [1.8.9-0.10.1]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.10.0...v1.8.9-0.10.1
 [1.8.9-0.10.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.9.0...v1.8.9-0.10.0

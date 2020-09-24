@@ -6,13 +6,14 @@ It is a collection of different features mainly focused on Hypixel SkyBlock. üê
 
 ## Current features
 ‚ûú Use `/moo help` to see all available commands.
+‚ûú Use `/moo config` to adjust the features to your needs.
 
 | Feature                                                                 | Command/Usage                           |
 |-------------------------------------------------------------------------|-----------------------------------------|
 | 'Best friends' list to limit the amount of join and leave notifications (always up-to-date names even after player name changes). Also checks best friends' online status automatically | `/moo add/remove/list/online` |
 | Search through your Minecraft log files (click the `?` for more info)   | `/moo search`                           |
 | Stalk a player (check online status, current game, ...)                 | `/moo stalk`                            |
-| Toggle join/leave notifications for friends, guild members or best friends separately | `/moo toggle`             |
+| Toggle join/leave notifications for friends, guild members or best friends separately | `/moo config` &rarr; Notifications |
 | Copy chat component                                                     | <kbd>ALT</kbd> + <kbd>right click</kbd><br>Hold <kbd>shift</kbd> to copy full component |
 | Copy inventories to clipboard as JSON                                   | <kbd>CTRL</kbd> + <kbd>C</kbd>          |
 | Tab-completable usernames for several commands (e.g. `/party`, `/invite`, ...) | `/moo config` &rarr; `Commands with Tab-completable usernames` for full list of commands |
@@ -25,8 +26,8 @@ It is a collection of different features mainly focused on Hypixel SkyBlock. üê
 |-------------------------------------------------------------------------|-----------------------------------------|
 | Stalk SkyBlock stats of a player                                        | `/moo stalkskyblock`                    |
 | Analyze minions on a private island                                     | `/moo analyzeIsland`                    |
-| Dungeon interfaces enhancements (normalize dungeon item stats, improved party finder) | Hold <kbd>shift</kbd> while viewing a dungeon item tooltip |
-| Dungeon performance tracker: Skill score calculation, class milestone tracker, destroyed crypts tracker, and elapsed time indicator | automatically; or with `/moo dungeon`; Overlay can be edited with `/moo dungeonGui` |
+| Dungeon interfaces enhancements (normalize dungeon item stats, improved party finder) | Hold <kbd>shift</kbd> (configurable) while viewing a dungeon item tooltip |
+| Dungeon performance tracker and overlay: Skill score calculation, class milestone tracker, destroyed crypts tracker, and elapsed time indicator | automatically; or with `/moo dungeon` |
 
 ## Download
 You can download the compiled .jar files from the [release section](https://github.com/cow-mc/Cowlection/releases).

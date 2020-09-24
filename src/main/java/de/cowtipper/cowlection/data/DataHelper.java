@@ -91,6 +91,28 @@ public final class DataHelper {
         }
     }
 
+    public enum DungeonClass {
+        ARCHER('A'), BERSERK('B'), HEALER('H'), MAGE('M'), TANK('T'), UNKNOWN('U');
+        private final char shortName;
+
+        DungeonClass(char shortName) {
+            this.shortName = shortName;
+        }
+
+        public static DungeonClass get(String className) {
+            try {
+                return valueOf(className.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                // invalid class name
+                return UNKNOWN;
+            }
+        }
+
+        public char getShortName() {
+            return shortName;
+        }
+    }
+
     public static Map<String, String> getMinions() {
         // key = skin id, value = minion type and tier
         Map<String, String> minions = new HashMap<>();

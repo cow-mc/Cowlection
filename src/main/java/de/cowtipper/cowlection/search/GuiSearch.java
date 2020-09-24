@@ -5,6 +5,7 @@ import com.mojang.realmsclient.util.Pair;
 import de.cowtipper.cowlection.Cowlection;
 import de.cowtipper.cowlection.config.MooConfig;
 import de.cowtipper.cowlection.data.LogEntry;
+import de.cowtipper.cowlection.util.GuiHelper;
 import de.cowtipper.cowlection.util.Utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.*;
@@ -13,11 +14,13 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
-import net.minecraftforge.common.ForgeVersion;
+import net.minecraftforge.common.config.ConfigElement;
+import net.minecraftforge.common.config.Property;
 import net.minecraftforge.fml.client.GuiScrollingList;
 import net.minecraftforge.fml.client.config.GuiButtonExt;
 import net.minecraftforge.fml.client.config.GuiCheckBox;
-import net.minecraftforge.fml.client.config.GuiUtils;
+import net.minecraftforge.fml.client.config.GuiConfig;
+import net.minecraftforge.fml.client.config.IConfigElement;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -67,6 +70,7 @@ public class GuiSearch extends GuiScreen {
     private GuiButton buttonSearch;
     private GuiButton buttonClose;
     private GuiButton buttonHelp;
+    private GuiButton buttonSettings;
     private GuiCheckBox checkboxChatOnly;
     private GuiCheckBox checkboxMatchCase;
     private GuiCheckBox checkboxRemoveFormatting;
@@ -107,6 +111,9 @@ public class GuiSearch extends GuiScreen {
     public void initGui() {
         this.guiTooltips = new ArrayList<>();
 
+        // recalculate start date
+        this.dateStart = MooConfig.calculateStartDate();
+
         this.fieldSearchQuery = new GuiTextField(42, this.fontRendererObj, this.width / 2 - 100, 13, 200, 20);
         this.fieldSearchQuery.setMaxStringLength(255);
         this.fieldSearchQuery.setText(searchQuery);
@@ -131,8 +138,11 @@ public class GuiSearch extends GuiScreen {
         this.buttonList.add(this.buttonClose = new GuiButtonExt(0, this.width - 25, 3, 22, 20, EnumChatFormatting.RED + "X"));
         addTooltip(buttonClose, Arrays.asList(EnumChatFormatting.RED + "Close search interface", "" + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + "Hint:" + EnumChatFormatting.RESET + " alternatively press ESC"));
         // help
-        this.buttonList.add(this.buttonHelp = new GuiButtonExt(1, this.width - 25 - 25, 3, 22, 20, "?"));
+        this.buttonList.add(this.buttonHelp = new GuiButtonExt(1, this.width - 2 * 25, 3, 22, 20, "?"));
         addTooltip(buttonHelp, Collections.singletonList(EnumChatFormatting.YELLOW + "Show help"));
+        // settings
+        this.buttonList.add(this.buttonSettings = new GuiButtonExt(1, this.width - 3 * 25, 3, 22, 20, ""));
+        addTooltip(buttonSettings, Collections.singletonList(EnumChatFormatting.YELLOW + "Open Settings"));
 
         // chatOnly
         this.buttonList.add(this.checkboxChatOnly = new GuiCheckBox(21, this.width / 2 - 100, 35, " Chatbox only", chatOnly));
@@ -255,10 +265,11 @@ public class GuiSearch extends GuiScreen {
         this.guiSearchResults.drawScreen(mouseX, mouseY, partialTicks);
 
         super.drawScreen(mouseX, mouseY, partialTicks);
+        GuiHelper.drawSprite(this.width - 3 * 25 + 2, 3, 36, 18, 500);
 
         for (GuiTooltip guiTooltip : guiTooltips) {
             if (guiTooltip.checkHover(mouseX, mouseY)) {
-                drawHoveringText(guiTooltip.getText(), mouseX, mouseY, 300);
+                GuiHelper.drawHoveringText(guiTooltip.getText(), mouseX, mouseY, width, height, 300);
                 // only one tooltip can be displayed at a time: break!
                 break;
             }
@@ -310,10 +321,10 @@ public class GuiSearch extends GuiScreen {
         } else if (button == buttonHelp) {
             this.areEntriesSearchResults = false;
             this.searchResults.clear();
-            this.searchResults.add(new LogEntry("" + EnumChatFormatting.GOLD + EnumChatFormatting.BOLD + "Initial setup/Configuration " + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + "/moo config"));
+            this.searchResults.add(new LogEntry("" + EnumChatFormatting.GOLD + EnumChatFormatting.BOLD + "Initial setup/configuration " + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + "'Open Settings' (top right corner)"));
             this.searchResults.add(new LogEntry(EnumChatFormatting.GOLD + " 1) " + EnumChatFormatting.RESET + "Configure directories that should be scanned for log files (\"Directories with Minecraft log files\")"));
             this.searchResults.add(new LogEntry(EnumChatFormatting.GOLD + " 2) " + EnumChatFormatting.RESET + "Set default starting date (\"Start date for log file search\")"));
-            this.searchResults.add(new LogEntry("" + EnumChatFormatting.GOLD + EnumChatFormatting.BOLD + "Performing a search " + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + "/moo search"));
+            this.searchResults.add(new LogEntry("" + EnumChatFormatting.GOLD + EnumChatFormatting.BOLD + "Performing a search " + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + "/moo search [initial search term]"));
             this.searchResults.add(new LogEntry(EnumChatFormatting.GOLD + " 1) " + EnumChatFormatting.RESET + "Enter search term"));
             this.searchResults.add(new LogEntry(EnumChatFormatting.GOLD + " 2) " + EnumChatFormatting.RESET + "Adjust start and end date"));
             this.searchResults.add(new LogEntry(EnumChatFormatting.GOLD + " 3) " + EnumChatFormatting.RESET + "Select desired options (match case, ...)"));
@@ -324,6 +335,15 @@ public class GuiSearch extends GuiScreen {
             this.searchResults.add(new LogEntry(EnumChatFormatting.GOLD + " - " + EnumChatFormatting.YELLOW + "CTRL + A " + EnumChatFormatting.RESET + "to copy all search results"));
             this.searchResults.add(new LogEntry(EnumChatFormatting.GOLD + " - " + EnumChatFormatting.YELLOW + "Double click search result " + EnumChatFormatting.RESET + "to open corresponding log file in default text editor"));
             this.guiSearchResults.setResults(searchResults);
+        } else if (button == buttonSettings) {
+            List<IConfigElement> logSearchConfigElements = new ArrayList<>();
+            for (Property configEntry : Cowlection.getInstance().getConfig().getLogSearchProperties()) {
+                logSearchConfigElements.add(new ConfigElement(configEntry));
+            }
+            mc.displayGuiScreen(new GuiConfig(this,
+                    logSearchConfigElements,
+                    Cowlection.MODID, "cowlectionLogSearchConfig", false, false,
+                    EnumChatFormatting.GOLD + "Press Done to save changes."));
         }
     }
 
@@ -347,17 +367,6 @@ public class GuiSearch extends GuiScreen {
             analyzedFilesWithHits = null;
         } else {
             buttonSearch.displayString = "Search";
-        }
-    }
-
-    private void drawHoveringText(List<String> textLines, int mouseX, int mouseY, int maxTextWidth) {
-        if (ForgeVersion.getBuildVersion() < 1808) {
-            // we're running a forge version from before 24 March 2016 (http://files.minecraftforge.net/maven/net/minecraftforge/forge/index_1.8.9.html for reference)
-            // using mc built-in method
-            drawHoveringText(textLines, mouseX, mouseY, fontRendererObj);
-        } else {
-            // we're on a newer forge version, so we can use the improved tooltip rendering added in 1.8.9-11.15.1.1808 (released 03/24/16 09:25 PM) in this pull request: https://github.com/MinecraftForge/MinecraftForge/pull/2649
-            GuiUtils.drawHoveringText(textLines, mouseX, mouseY, width, height, maxTextWidth, fontRendererObj);
         }
     }
 
@@ -454,7 +463,7 @@ public class GuiSearch extends GuiScreen {
                     int left = width / 2 - stringWidth / 2 - margin;
                     int top = height / 2 - margin;
                     drawRect(left, top, left + stringWidth + 2 * margin, top + fontRendererObj.FONT_HEIGHT + 2 * margin, 0xff000000);
-                    drawCenteredString(fontRendererObj, errorText,/* 2, 30*/width / 2, height / 2, 0xffDD1111);
+                    drawCenteredString(fontRendererObj, errorText, width / 2, height / 2, 0xffDD1111);
                 } else {
                     errorMessage = null;
                 }

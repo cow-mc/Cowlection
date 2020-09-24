@@ -5,9 +5,9 @@ import de.cowtipper.cowlection.Cowlection;
 import de.cowtipper.cowlection.command.exception.ApiContactException;
 import de.cowtipper.cowlection.command.exception.InvalidPlayerNameException;
 import de.cowtipper.cowlection.command.exception.MooCommandException;
-import de.cowtipper.cowlection.config.DungeonOverlayGuiConfig;
+import de.cowtipper.cowlection.config.CredentialStorage;
 import de.cowtipper.cowlection.config.MooConfig;
-import de.cowtipper.cowlection.config.MooGuiConfig;
+import de.cowtipper.cowlection.config.gui.MooConfigGui;
 import de.cowtipper.cowlection.data.*;
 import de.cowtipper.cowlection.data.HySkyBlockStats.Profile.Pet;
 import de.cowtipper.cowlection.handler.DungeonCache;
@@ -15,6 +15,7 @@ import de.cowtipper.cowlection.search.GuiSearch;
 import de.cowtipper.cowlection.util.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.settings.GameSettings;
 import net.minecraft.command.*;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityArmorStand;
@@ -79,12 +80,7 @@ public class MooCommand extends CommandBase {
         } else if (args[0].equalsIgnoreCase("list")) {
             handleListBestFriends();
         } else if (args[0].equalsIgnoreCase("online")) {
-            if (main.getFriendsHandler().getBestFriends().size() > 0) {
-                main.getChatHelper().sendMessage(EnumChatFormatting.GRAY, "Checking online status of " + EnumChatFormatting.WHITE + main.getFriendsHandler().getBestFriends().size() + EnumChatFormatting.GRAY + " best friends. This may take a few seconds.");
-                main.getFriendsHandler().runBestFriendsOnlineCheck(true);
-            } else {
-                main.getChatHelper().sendMessage(EnumChatFormatting.RED, "You haven't added anyone to your best friends list yet. Do so with " + EnumChatFormatting.WHITE + "/moo add <playerName>");
-            }
+            handleBestFriendsOnlineCheck();
         } else if (args[0].equalsIgnoreCase("nameChangeCheck")) {
             handleNameChangeCheck(args);
         }
@@ -100,14 +96,11 @@ public class MooCommand extends CommandBase {
             handleAnalyzeIsland(sender);
         } else if (args[0].equalsIgnoreCase("dungeon") || args[0].equalsIgnoreCase("dung")) {
             handleDungeon(args);
-        } else if (args[0].equalsIgnoreCase("dungeonGui") || args[0].equalsIgnoreCase("guiDungeon")
-                || args[0].equalsIgnoreCase("guiDung") || args[0].equalsIgnoreCase("dungGui")) {
-            displayGuiScreen(new DungeonOverlayGuiConfig(main));
         }
         //endregion
         //region sub-commands: miscellaneous
-        else if (args[0].equalsIgnoreCase("config") || args[0].equalsIgnoreCase("toggle")) {
-            displayGuiScreen(new MooGuiConfig(null));
+        else if (args[0].equalsIgnoreCase("config")) {
+            displayGuiScreen(new MooConfigGui());
         } else if (args[0].equalsIgnoreCase("search")) {
             displayGuiScreen(new GuiSearch(main.getConfigDirectory(), CommandBase.buildString(args, 1)));
         } else if (args[0].equalsIgnoreCase("guiscale")) {
@@ -276,6 +269,18 @@ public class MooCommand extends CommandBase {
                 + ((bestFriends.isEmpty())
                 ? EnumChatFormatting.ITALIC + "none :c"
                 : EnumChatFormatting.DARK_GREEN + String.join(EnumChatFormatting.GREEN + ", " + EnumChatFormatting.DARK_GREEN, bestFriends)));
+    }
+
+    private void handleBestFriendsOnlineCheck() throws MooCommandException {
+        if (!CredentialStorage.isMooValid) {
+            throw new MooCommandException("You haven't set your Hypixel API key yet or the API key is invalid. Use " + EnumChatFormatting.DARK_RED + "/api new" + EnumChatFormatting.RED + " to request a new API key from Hypixel or use " + EnumChatFormatting.DARK_RED + "/" + this.getCommandName() + " apikey <key>" + EnumChatFormatting.RED + " to manually set your existing API key.");
+        }
+        if (main.getFriendsHandler().getBestFriends().size() > 0) {
+            main.getChatHelper().sendMessage(EnumChatFormatting.GRAY, "Checking online status of " + EnumChatFormatting.WHITE + main.getFriendsHandler().getBestFriends().size() + EnumChatFormatting.GRAY + " best friends. This may take a few seconds.");
+            main.getFriendsHandler().runBestFriendsOnlineCheck(true);
+        } else {
+            main.getChatHelper().sendMessage(EnumChatFormatting.RED, "You haven't added anyone to your best friends list yet. Do so with " + EnumChatFormatting.WHITE + "/moo add <playerName>");
+        }
     }
 
     private void handleNameChangeCheck(String[] args) throws CommandException {
@@ -562,20 +567,24 @@ public class MooCommand extends CommandBase {
 
     private void handleDungeon(String[] args) throws MooCommandException {
         DungeonCache dungeonCache = main.getDungeonCache();
-        if (args.length == 2 && args[1].equalsIgnoreCase("gui")) {
-            // edit dungeon gui
-            displayGuiScreen(new DungeonOverlayGuiConfig(main));
+        if (args.length == 2 && args[1].equalsIgnoreCase("enter")) {
+            // enter dungeon in case for some reason it wasn't detected automatically
+            dungeonCache.onDungeonEnterOrLeave(true);
+        } else if (args.length == 2 && args[1].equalsIgnoreCase("leave")) {
+            // leave dungeon in case for some reason it wasn't detected automatically
+            dungeonCache.onDungeonEnterOrLeave(false);
         } else if (dungeonCache.isInDungeon()) {
             dungeonCache.sendDungeonPerformance();
         } else {
-            throw new MooCommandException(EnumChatFormatting.DARK_RED + "Looks like you're not in a dungeon... However, you can edit the Dungeon Performance overlay with " + EnumChatFormatting.RED + "/" + getCommandName() + " dungeon gui");
+            throw new MooCommandException(EnumChatFormatting.DARK_RED + "Looks like you're not in a dungeon... However, you can manually enable the Dungeon Performance overlay with " + EnumChatFormatting.RED + "/" + getCommandName() + " dungeon enter" + EnumChatFormatting.DARK_RED + ". You can also force-leave a dungeon with " + EnumChatFormatting.RED + "/" + getCommandName() + " leave");
         }
     }
     //endregion
 
     //region sub-commands: miscellaneous
     private void handleGuiScale(String[] args) throws CommandException {
-        int currentGuiScale = (Minecraft.getMinecraft()).gameSettings.guiScale;
+        GameSettings gameSettings = Minecraft.getMinecraft().gameSettings;
+        int currentGuiScale = gameSettings.guiScale;
         if (args.length == 1) {
             main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u279C Current GUI scale: " + EnumChatFormatting.DARK_GREEN + currentGuiScale);
         } else {
@@ -583,7 +592,8 @@ public class MooCommand extends CommandBase {
             if (scale == -1 || scale > 10) {
                 throw new NumberInvalidException(EnumChatFormatting.DARK_RED + args[1] + EnumChatFormatting.RED + " is an invalid GUI scale value. Valid values are integers below 10");
             }
-            Minecraft.getMinecraft().gameSettings.guiScale = scale;
+            gameSettings.guiScale = scale;
+            gameSettings.saveOptions();
             main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u2714 New GUI scale: " + EnumChatFormatting.DARK_GREEN + scale + EnumChatFormatting.GREEN + " (previous: " + EnumChatFormatting.DARK_GREEN + currentGuiScale + EnumChatFormatting.GREEN + ")");
         }
     }
@@ -598,7 +608,7 @@ public class MooCommand extends CommandBase {
                 color = EnumChatFormatting.GREEN;
                 colorSecondary = EnumChatFormatting.DARK_GREEN;
             } else {
-                firstSentence = "You haven't set your Hypixel API key yet.";
+                firstSentence = "You haven't set your Hypixel API key yet or the API key is invalid.";
                 color = EnumChatFormatting.RED;
                 colorSecondary = EnumChatFormatting.DARK_RED;
             }
@@ -659,21 +669,20 @@ public class MooCommand extends CommandBase {
 
     private void sendCommandUsage(ICommandSender sender) {
         IChatComponent usage = new MooChatComponent("\u279C " + Cowlection.MODNAME + " commands:").gold().bold()
+                .appendSibling(createCmdHelpEntry("config", "Open mod's configuration"))
+                .appendSibling(new MooChatComponent("\n").reset().gray().appendText(EnumChatFormatting.DARK_GREEN + "  ❢" + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + " Commands marked with §d§l⚷" + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + " require a valid API key"))
                 .appendSibling(createCmdHelpSection(1, "Best friends, friends & other players"))
-                .appendSibling(createCmdHelpEntry("stalk", "Get info of player's status"))
+                .appendSibling(createCmdHelpEntry("stalk", "Get info of player's status §d§l⚷"))
                 .appendSibling(createCmdHelpEntry("add", "Add best friends"))
                 .appendSibling(createCmdHelpEntry("remove", "Remove best friends"))
                 .appendSibling(createCmdHelpEntry("list", "View list of best friends"))
-                .appendSibling(createCmdHelpEntry("online", "View list of best friends that are currently online"))
+                .appendSibling(createCmdHelpEntry("online", "View list of best friends that are currently online §d§l⚷"))
                 .appendSibling(createCmdHelpEntry("nameChangeCheck", "Force a scan for a changed name of a best friend (is done automatically as well)"))
-                .appendSibling(createCmdHelpEntry("toggle", "Toggle join/leave notifications"))
                 .appendSibling(createCmdHelpSection(2, "SkyBlock"))
-                .appendSibling(createCmdHelpEntry("stalkskyblock", "Get info of player's SkyBlock stats"))
+                .appendSibling(createCmdHelpEntry("stalkskyblock", "Get info of player's SkyBlock stats §d§l⚷"))
                 .appendSibling(createCmdHelpEntry("analyzeIsland", "Analyze a SkyBlock private island"))
                 .appendSibling(createCmdHelpEntry("dungeon", "SkyBlock Dungeons: display current dungeon performance"))
-                .appendSibling(createCmdHelpEntry("dungeonGui", "SkyBlock Dungeons: edit dungeon performance GUI"))
                 .appendSibling(createCmdHelpSection(3, "Miscellaneous"))
-                .appendSibling(createCmdHelpEntry("config", "Open mod's configuration"))
                 .appendSibling(createCmdHelpEntry("search", "Open Minecraft log search"))
                 .appendSibling(createCmdHelpEntry("guiScale", "Change GUI scale"))
                 .appendSibling(createCmdHelpEntry("rr", "Alias for /r without auto-replacement to /msg"))
@@ -706,8 +715,8 @@ public class MooCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args,
-                    /* Best friends, friends & other players */ "stalk", "add", "remove", "list", "online", "nameChangeCheck", "toggle",
-                    /* SkyBlock */ "stalkskyblock", "skyblockstalk", "analyzeIsland", "dungeon", "dungeonGui", "guiDungeon",
+                    /* Best friends, friends & other players */ "stalk", "add", "remove", "list", "online", "nameChangeCheck",
+                    /* SkyBlock */ "stalkskyblock", "skyblockstalk", "analyzeIsland", "dungeon",
                     /* miscellaneous */ "config", "search", "guiscale", "rr", "shrug", "apikey",
                     /* update mod */ "update", "updateHelp", "version", "directory",
                     /* help */ "help",

@@ -1,6 +1,7 @@
 package de.cowtipper.cowlection.listener;
 
 import de.cowtipper.cowlection.Cowlection;
+import de.cowtipper.cowlection.config.CredentialStorage;
 import de.cowtipper.cowlection.config.MooConfig;
 import de.cowtipper.cowlection.event.ApiErrorEvent;
 import de.cowtipper.cowlection.listener.skyblock.DungeonsListener;
@@ -31,8 +32,8 @@ import org.lwjgl.input.Keyboard;
 
 public class PlayerListener {
     private final Cowlection main;
-    private DungeonsListener dungeonsListener;
-    private SkyBlockListener skyBlockListener;
+    private static DungeonsListener dungeonsListener;
+    private static SkyBlockListener skyBlockListener;
     private boolean isOnSkyBlock;
 
     public PlayerListener(Cowlection main) {
@@ -90,7 +91,7 @@ public class PlayerListener {
     public void onServerJoin(FMLNetworkEvent.ClientConnectedToServerEvent e) {
         main.getVersionChecker().runUpdateCheck(false);
         new TickDelay(() -> main.getChatHelper().sendOfflineMessages(), 6 * 20);
-        if (MooConfig.doBestFriendsOnlineCheck && main.getFriendsHandler().getBestFriends().size() > 0) {
+        if (MooConfig.doBestFriendsOnlineCheck && CredentialStorage.isMooValid && main.getFriendsHandler().getBestFriends().size() > 0) {
             main.getFriendsHandler().runBestFriendsOnlineCheck(false);
         }
         isOnSkyBlock = false;
@@ -122,25 +123,23 @@ public class PlayerListener {
         }, 40); // 2 second delay, making sure scoreboard got sent
     }
 
-    private void registerSkyBlockListeners() {
-        if (dungeonsListener == null) {
-            MinecraftForge.EVENT_BUS.register(dungeonsListener = new DungeonsListener(main));
+    public static boolean registerSkyBlockListeners() {
+        if (dungeonsListener == null && skyBlockListener == null) {
+            MinecraftForge.EVENT_BUS.register(dungeonsListener = new DungeonsListener(Cowlection.getInstance()));
+            MinecraftForge.EVENT_BUS.register(skyBlockListener = new SkyBlockListener(Cowlection.getInstance()));
+            return true;
         }
-        if (skyBlockListener == null) {
-            MinecraftForge.EVENT_BUS.register(skyBlockListener = new SkyBlockListener(main));
-        }
+        return false;
     }
 
-    private void unregisterSkyBlockListeners() {
-        main.getDungeonCache().onDungeonLeft();
-        if (dungeonsListener != null) {
+    public static void unregisterSkyBlockListeners() {
+        Cowlection.getInstance().getDungeonCache().onDungeonLeft();
+        if (dungeonsListener != null && skyBlockListener != null) {
             MinecraftForge.EVENT_BUS.unregister(dungeonsListener);
             dungeonsListener = null;
-        }
-        if (skyBlockListener != null) {
             MinecraftForge.EVENT_BUS.unregister(skyBlockListener);
             skyBlockListener = null;
-            main.getLogger().info("Left SkyBlock");
+            Cowlection.getInstance().getLogger().info("Left SkyBlock");
         }
     }
 

@@ -111,7 +111,7 @@ public final class Utils {
 
     private static String formatNumberWithAbbreviations(double number, int iteration) {
         @SuppressWarnings("IntegerDivisionInFloatingPointContext") double d = ((long) number / 100) / 10.0;
-        boolean isRound = (d * 10) % 10 == 0; //true if the decimal part is equal to 0 (then it's trimmed anyway)
+        boolean isRound = (d * 10) % 10 == 0; // true if the decimal part is equal to 0 (then it's trimmed anyway)
         // this determines the class, i.e. 'k', 'm' etc
         // this decides whether to trim the decimals
         // (int) d * 10 / 10 drops the decimal

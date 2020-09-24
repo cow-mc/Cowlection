@@ -1,8 +1,9 @@
 package de.cowtipper.cowlection.listener.skyblock;
 
 import de.cowtipper.cowlection.Cowlection;
-import de.cowtipper.cowlection.config.DungeonOverlayGuiConfig;
 import de.cowtipper.cowlection.config.MooConfig;
+import de.cowtipper.cowlection.config.gui.MooConfigGui;
+import de.cowtipper.cowlection.data.DataHelper.DungeonClass;
 import de.cowtipper.cowlection.handler.DungeonCache;
 import de.cowtipper.cowlection.util.TickDelay;
 import net.minecraft.client.Minecraft;
@@ -10,9 +11,13 @@ import net.minecraft.client.audio.SoundCategory;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
+import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.ItemSkull;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -33,12 +38,12 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import org.apache.commons.lang3.StringUtils;
-import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 import java.awt.*;
 import java.util.List;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -95,11 +100,11 @@ public class DungeonsListener {
      */
     private final Pattern DUNGEON_CLASS_MILESTONE_PATTERN = Pattern.compile("^[A-Za-z]+ Milestone (.): ");
 
-    private String activeDungeonClass;
+    private DungeonClass activeDungeonClass;
 
     public DungeonsListener(Cowlection main) {
         this.main = main;
-        activeDungeonClass = "unknown";
+        activeDungeonClass = DungeonClass.UNKNOWN;
     }
 
     @SubscribeEvent(priority = EventPriority.HIGH)
@@ -107,7 +112,7 @@ public class DungeonsListener {
         if (e.itemStack == null || e.toolTip == null) {
             return;
         }
-        if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) && isDungeonItem(e.toolTip)) {
+        if (MooConfig.isDungeonItemTooltipToggleKeyBindingPressed() && isDungeonItem(e.toolTip)) {
             // simplify dungeon armor stats
             String originalItemName = e.itemStack.getDisplayName();
             NBTTagCompound extraAttributes = e.itemStack.getSubCompound("ExtraAttributes", false);
@@ -275,8 +280,9 @@ public class DungeonsListener {
                 for (String toolTipLine : dungeonClassIndicator.getTooltip(Minecraft.getMinecraft().thePlayer, false)) {
                     String line = EnumChatFormatting.getTextWithoutFormattingCodes(toolTipLine);
                     if (line.startsWith("Currently Selected: ")) {
-                        String selectedClass = line.substring(line.lastIndexOf(' ') + 1);
-                        if (!selectedClass.equals(activeDungeonClass)) {
+                        String selectedClassName = line.substring(line.lastIndexOf(' ') + 1);
+                        DungeonClass selectedClass = DungeonClass.get(selectedClassName);
+                        if (!selectedClass.equals(activeDungeonClass) || selectedClass == DungeonClass.UNKNOWN) {
                             activeDungeonClass = selectedClass;
                         }
                     }
@@ -289,11 +295,7 @@ public class DungeonsListener {
                 int inventoryRows = inventory.getSizeInventory() / 9;
                 int ySize = 222 - 108 + inventoryRows * 18;
                 int guiTop = (guiChest.height - ySize) / 2;
-                GlStateManager.pushMatrix();
 
-                GlStateManager.translate(0, 0, 280);
-                float scaleFactor = 0.8f;
-                GlStateManager.scale(scaleFactor, scaleFactor, 0);
                 for (Slot inventorySlot : inventorySlots.inventorySlots) {
                     if (inventorySlot.getHasStack()) {
                         int slotRow = inventorySlot.slotNumber / 9;
@@ -301,13 +303,12 @@ public class DungeonsListener {
                         // check if slot is one of the middle slots with parties
                         int maxRow = inventoryRows - 2;
                         if (slotRow > 0 && slotRow < maxRow && slotColumn > 0 && slotColumn < 8) {
-                            int slotX = (int) ((guiLeft + inventorySlot.xDisplayPosition) / scaleFactor);
-                            int slotY = (int) ((guiTop + inventorySlot.yDisplayPosition) / scaleFactor);
+                            int slotX = guiLeft + inventorySlot.xDisplayPosition;
+                            int slotY = guiTop + inventorySlot.yDisplayPosition;
                             renderPartyStatus(inventorySlot.getStack(), slotX, slotY);
                         }
                     }
                 }
-                GlStateManager.popMatrix();
             }
         }
     }
@@ -317,51 +318,76 @@ public class DungeonsListener {
             // not a player skull, don't draw party status indicator
             return;
         }
-        String status = "⬛"; // ok
-        Color color = new Color(20, 200, 20, 255);
+        ItemStack indicatorItem = null;
 
         List<String> itemTooltip = item.getTooltip(Minecraft.getMinecraft().thePlayer, false);
         if (itemTooltip.size() < 5) {
             // not a valid dungeon party tooltip
             return;
         }
-        if (itemTooltip.get(itemTooltip.size() - 1).endsWith("Complete previous floor first!")) {
+        String lastToolTipLine = EnumChatFormatting.getTextWithoutFormattingCodes(itemTooltip.get(itemTooltip.size() - 1));
+        if (lastToolTipLine.endsWith("Complete previous floor first!")
+                || lastToolTipLine.startsWith("Requires a Class at Level")
+                || lastToolTipLine.startsWith("Requires Catacombs Level")) {
             // cannot enter dungeon
-            status = "✗";
-            color = new Color(220, 20, 20, 255);
-        } else if (itemTooltip.get(itemTooltip.size() - 1).endsWith("You are in this party!")) {
-            status = EnumChatFormatting.OBFUSCATED + "#";
+            indicatorItem = new ItemStack(Blocks.carpet, 1, EnumDyeColor.RED.getMetadata());
+        } else if (lastToolTipLine.endsWith("You are in this party!")) {
+            indicatorItem = new ItemStack(Items.leather, 1);
         } else {
-            int dungClassMin = MooConfig.dungClassRange[0];
-            int dungClassMax = MooConfig.dungClassRange[1];
-            Set<String> dungClassesInParty = new HashSet<>();
-            dungClassesInParty.add(activeDungeonClass); // add our own class
+            Map<DungeonClass, AtomicInteger> dungClassesInParty = new LinkedHashMap<>();
+            AtomicInteger classCounter = new AtomicInteger();
+            classCounter.incrementAndGet();
+            dungClassesInParty.put(activeDungeonClass, classCounter); // add our own class
+
+            boolean memberTooLowLevel = false;
 
             for (String toolTipLine : itemTooltip) {
                 Matcher playerDetailMatcher = DUNGEON_PARTY_FINDER_PLAYER.matcher(EnumChatFormatting.getTextWithoutFormattingCodes(toolTipLine));
                 if (playerDetailMatcher.matches()) {
-                    String clazz = playerDetailMatcher.group(1);
-                    int classLevel = MathHelper.parseIntWithDefault(playerDetailMatcher.group(2), -1);
-                    if (MooConfig.dungFilterPartiesWithDupes && !dungClassesInParty.add(clazz)) {
-                        // duped class!
-                        status = "²⁺"; // 2+
-                        color = new Color(220, 120, 20, 255);
-                        break;
-                    } else if (dungClassMin > -1 && classLevel < dungClassMin) {
-                        // party member too low level
-                        status = EnumChatFormatting.BOLD + "ᐯ";
-                        color = new Color(200, 20, 20, 255);
-                        break;
-                    } else if (dungClassMax > -1 && classLevel > dungClassMax) {
-                        // party member too high level
-                        status = EnumChatFormatting.BOLD + "ᐱ";
-                        color = new Color(20, 120, 230, 255);
-                        break;
+                    String className = playerDetailMatcher.group(1);
+                    DungeonClass clazz = DungeonClass.get(className);
+                    dungClassesInParty.putIfAbsent(clazz, new AtomicInteger(0));
+                    dungClassesInParty.get(clazz).incrementAndGet();
+
+                    int classLevel = MathHelper.parseIntWithDefault(playerDetailMatcher.group(2), 100);
+                    if (classLevel < MooConfig.dungClassMin) {
+                        memberTooLowLevel = true;
                     }
                 }
             }
+            if (memberTooLowLevel) {
+                GlStateManager.pushMatrix();
+                GlStateManager.translate(0, 0, 280);
+                Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(EnumChatFormatting.BOLD + "ᐯ", x + 1, y + 8, new Color(220, 20, 20, 255).getRGB());
+                GlStateManager.popMatrix();
+            }
+            StringBuilder dupedClasses = new StringBuilder();
+            for (Map.Entry<DungeonClass, AtomicInteger> partyClassInfo : dungClassesInParty.entrySet()) {
+                if (partyClassInfo.getValue().get() > 1 && MooConfig.filterDungPartiesWithDupes(partyClassInfo.getKey())) {
+                    dupedClasses.append(partyClassInfo.getKey().getShortName());
+                }
+            }
+            if (dupedClasses.length() > 0) {
+                dupedClasses.insert(0, EnumChatFormatting.RED).insert(0, "²⁺");
+
+                GlStateManager.pushMatrix();
+                GlStateManager.translate(0, 0, 280);
+                double scaleFactor = 0.8;
+                GlStateManager.scale(scaleFactor, scaleFactor, 0);
+                Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(dupedClasses.toString(), (float) (x / scaleFactor), (float) (y / scaleFactor), new Color(255, 170, 0, 255).getRGB());
+                GlStateManager.popMatrix();
+            } else if (!memberTooLowLevel) {
+                // party matches our criteria!
+                indicatorItem = new ItemStack(Blocks.carpet, 1, EnumDyeColor.LIME.getMetadata());
+            }
         }
-        Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(status, x, y, color.getRGB());
+        if (indicatorItem != null) {
+            GlStateManager.enableRescaleNormal();
+            RenderHelper.enableGUIStandardItemLighting();
+            Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(indicatorItem, x, y);
+            RenderHelper.disableStandardItemLighting();
+            GlStateManager.disableRescaleNormal();
+        }
     }
 
     // Events inside dungeons
@@ -543,8 +569,8 @@ public class DungeonsListener {
                 dungeonCache.updateElapsedMinutesFromScoreboard();
             }
 
-            boolean isConfigGui = Minecraft.getMinecraft().currentScreen instanceof DungeonOverlayGuiConfig;
-            if (MooConfig.dungOverlayEnabled && dungeonCache.isInDungeon() || isConfigGui) {
+            boolean isEditingDungeonOverlaySettings = MooConfigGui.showDungeonPerformanceOverlay();
+            if (MooConfig.dungOverlayEnabled && dungeonCache.isInDungeon() || isEditingDungeonOverlaySettings) {
                 ArrayList<String> dungeonPerformanceEntries = new ArrayList<>();
                 int maxSkillScore = dungeonCache.getMaxSkillScore();
                 int totalDeaths = dungeonCache.getTotalDeaths();
@@ -554,10 +580,10 @@ public class DungeonsListener {
                 int elapsedMinutes = dungeonCache.getElapsedMinutes();
 
                 dungeonPerformanceEntries.add("Max Skill score: " + (maxSkillScore == 100 ? EnumChatFormatting.GREEN : EnumChatFormatting.YELLOW) + maxSkillScore + " / 100");
-                if (totalDeaths > 0 || isConfigGui) {
+                if (totalDeaths > 0 || isEditingDungeonOverlaySettings) {
                     dungeonPerformanceEntries.add("  Deaths: " + EnumChatFormatting.RED + totalDeaths);
                 }
-                if (failedPuzzles > 0 || isConfigGui) {
+                if (failedPuzzles > 0 || isEditingDungeonOverlaySettings) {
                     dungeonPerformanceEntries.add("  Failed Puzzles: " + EnumChatFormatting.RED + failedPuzzles);
                 }
                 dungeonPerformanceEntries.add("Class Milestone: " + (classMilestone < 3 ? EnumChatFormatting.RED : EnumChatFormatting.GREEN) + classMilestone);
@@ -579,12 +605,18 @@ public class DungeonsListener {
 
                 FontRenderer fontRenderer = Minecraft.getMinecraft().fontRendererObj;
                 GlStateManager.pushMatrix();
+
                 float scaleFactor = MooConfig.dungOverlayGuiScale / 100f;
                 GlStateManager.scale(scaleFactor, scaleFactor, 0);
                 for (int line = 0; line < dungeonPerformanceEntries.size(); line++) {
                     String dungeonPerformanceEntry = dungeonPerformanceEntries.get(line);
-                    int yPos = MooConfig.dungOverlayPositionY + fontRenderer.FONT_HEIGHT * line + 2;
-                    fontRenderer.drawString(dungeonPerformanceEntry, MooConfig.dungOverlayPositionX, yPos, 0xffFFAA00);
+                    int xPos = (int) ((e.resolution.getScaledWidth() * (MooConfig.dungOverlayPositionX / 1000d)) / scaleFactor);
+                    int yPos = (int) ((e.resolution.getScaledHeight() * (MooConfig.dungOverlayPositionY / 1000d) + 2) / scaleFactor + fontRenderer.FONT_HEIGHT * line + 2);
+                    if (MooConfig.dungOverlayTextShadow) {
+                        fontRenderer.drawStringWithShadow(dungeonPerformanceEntry, xPos, yPos, 0xffFFAA00);
+                    } else {
+                        fontRenderer.drawString(dungeonPerformanceEntry, xPos, yPos, 0xffFFAA00);
+                    }
                 }
                 GlStateManager.popMatrix();
             }

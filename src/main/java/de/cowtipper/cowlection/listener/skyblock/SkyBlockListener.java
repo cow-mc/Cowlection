@@ -18,7 +18,6 @@ import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.apache.commons.lang3.StringUtils;
-import org.lwjgl.input.Keyboard;
 
 import java.text.NumberFormat;
 import java.text.ParseException;
@@ -73,12 +72,13 @@ public class SkyBlockListener {
             }
         }
 
-        if (!MooConfig.showAdvancedTooltips && !Keyboard.isKeyDown(Keyboard.KEY_LMENU)) {
-            return;
-        }
+        MooConfig.Setting tooltipItemAgeDisplay = MooConfig.getTooltipItemAgeDisplay();
+        MooConfig.Setting tooltipItemTimestampDisplay = MooConfig.getTooltipItemTimestampDisplay();
+
         // add item age to tooltip
         NBTTagCompound extraAttributes = e.itemStack.getSubCompound("ExtraAttributes", false);
-        if (extraAttributes != null && extraAttributes.hasKey("timestamp")) {
+        if (extraAttributes != null && extraAttributes.hasKey("timestamp")
+                && (tooltipItemAgeDisplay != MooConfig.Setting.DISABLED || tooltipItemTimestampDisplay != MooConfig.Setting.DISABLED)) {
             String rawTimestamp = extraAttributes.getString("timestamp");
             Matcher sbTimestampMatcher = SB_TIMESTAMP_PATTERN.matcher(rawTimestamp);
             if (sbTimestampMatcher.matches()) {
@@ -88,19 +88,29 @@ public class SkyBlockListener {
 
                 int index = Math.max(0, e.toolTip.size() - (e.showAdvancedItemTooltips ? /* item name & nbt info */ 2 : 0));
 
-                if (Keyboard.isKeyDown(Keyboard.KEY_LMENU)) {
-                    // full tooltip
-                    e.toolTip.add(index, "Timestamp: " + EnumChatFormatting.DARK_GRAY + dateTimeFormatted);
-                    e.toolTip.add(index, "Item age: " + EnumChatFormatting.DARK_GRAY + Utils.getDurationAsWords(dateTime.toEpochSecond() * 1000).first());
-                } else {
-                    // abbreviated tooltip
-                    e.toolTip.add(index, "Item age: " + EnumChatFormatting.DARK_GRAY + Utils.getDurationAsWord(dateTime.toEpochSecond() * 1000));
+                switch (tooltipItemTimestampDisplay) {
+                    case SPECIAL:
+                        if (!MooConfig.isTooltipToggleKeyBindingPressed()) {
+                            break;
+                        }
+                    case ALWAYS:
+                        e.toolTip.add(index, "Timestamp: " + EnumChatFormatting.DARK_GRAY + dateTimeFormatted);
+                }
+                switch (tooltipItemAgeDisplay) {
+                    case SPECIAL:
+                        if (!MooConfig.isTooltipToggleKeyBindingPressed()) {
+                            break;
+                        }
+                    case ALWAYS:
+                        e.toolTip.add(index, "Item age: " + EnumChatFormatting.DARK_GRAY + ((MooConfig.tooltipItemAgeShortened) ? Utils.getDurationAsWord(dateTime.toEpochSecond() * 1000) : Utils.getDurationAsWords(dateTime.toEpochSecond() * 1000).first()));
                 }
             }
         }
 
         // for auction house: show price for each item if multiple items are sold at once
-        if (e.entityPlayer != null && e.entityPlayer.openContainer instanceof ContainerChest) {
+        MooConfig.Setting tooltipAuctionHousePriceEachDisplay = MooConfig.getTooltipAuctionHousePriceEachDisplay();
+        if ((tooltipAuctionHousePriceEachDisplay == MooConfig.Setting.ALWAYS || tooltipAuctionHousePriceEachDisplay == MooConfig.Setting.SPECIAL && MooConfig.isTooltipToggleKeyBindingPressed())
+                && e.entityPlayer != null && e.entityPlayer.openContainer instanceof ContainerChest) {
             int stackSize = e.itemStack.stackSize;
             if ((stackSize == 1 && !isSubmitBidItem(e.itemStack)) || e.toolTip.size() < 4) {
                 // only 1 item or irrelevant tooltip - nothing to do here, abort!
@@ -110,11 +120,11 @@ public class SkyBlockListener {
             if (isSubmitBidItem(e.itemStack)) {
                 // special case: "place bid on an item" interface ("Auction View")
                 ItemStack auctionedItem = e.entityPlayer.openContainer.getInventory().get(13);
-                stackSize = auctionedItem.stackSize;
-                if (stackSize == 1) {
+                if (auctionedItem == null || auctionedItem.stackSize == 1) {
                     // still only 1 item, abort!
                     return;
                 }
+                stackSize = auctionedItem.stackSize;
             }
 
             List<String> toolTip = e.toolTip;
@@ -124,6 +134,7 @@ public class SkyBlockListener {
                 String toolTipLineUnformatted = EnumChatFormatting.getTextWithoutFormattingCodes(toolTip.get(i));
                 if (toolTipLineUnformatted.startsWith("Top bid: ")
                         || toolTipLineUnformatted.startsWith("Starting bid: ")
+                        || toolTipLineUnformatted.startsWith("Create BIN Auction: ")
                         || toolTipLineUnformatted.startsWith("Buy it now: ")
                         || toolTipLineUnformatted.startsWith("Sold for: ")
                         || toolTipLineUnformatted.startsWith("New bid: ") /* special case: 'Submit Bid' item */) {

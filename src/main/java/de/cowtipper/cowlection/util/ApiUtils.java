@@ -31,6 +31,7 @@ public class ApiUtils {
     private static final String ONLINE_STATUS_URL = "https://api.hypixel.net/status?key=%s&uuid=%s";
     private static final String SKYBLOCK_STATS_URL = "https://api.hypixel.net/skyblock/profiles?key=%s&uuid=%s";
     private static final String PLAYER_URL = "https://api.hypixel.net/player?key=%s&uuid=%s";
+    private static final String API_KEY_URL = "https://api.hypixel.net/key?key=%s";
     private static final ExecutorService pool = Executors.newCachedThreadPool();
 
     private ApiUtils() {
@@ -116,6 +117,21 @@ public class ApiUtils {
             e.printStackTrace();
             ApiErrorEvent event = new ApiErrorEvent(stalkedPlayer.getName());
             MinecraftForge.EVENT_BUS.post(event);
+        }
+        return null;
+    }
+
+    public static void fetchApiKeyInfo(String moo, ThrowingConsumer<HyApiKey> action) {
+        pool.execute(() -> action.accept(getApiKeyInfo(moo)));
+    }
+
+    private static HyApiKey getApiKeyInfo(String moo) {
+        try (BufferedReader reader = makeApiCall(String.format(API_KEY_URL, moo))) {
+            if (reader != null) {
+                return GsonUtils.fromJson(reader, HyApiKey.class);
+            }
+        } catch (IOException | JsonSyntaxException e) {
+            e.printStackTrace();
         }
         return null;
     }

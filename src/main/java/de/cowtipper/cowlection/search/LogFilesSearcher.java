@@ -48,7 +48,7 @@ class LogFilesSearcher {
         }
 
         if (files.isEmpty()) {
-            throw new FileNotFoundException(EnumChatFormatting.DARK_RED + "ERROR: Couldn't find any Minecraft log files. Please check if the log file directories are set correctly (/moo config).");
+            throw new FileNotFoundException(EnumChatFormatting.DARK_RED + "ERROR: Couldn't find any Minecraft log files. Please check if the log file directories are set correctly (Log Search \u27A1 Settings).");
         } else {
             List<LogEntry> searchResults = analyzeFiles(files, searchQuery, chatOnly, matchCase, removeFormatting)
                     .stream().sorted(Comparator.comparing(LogEntry::getTime)).collect(Collectors.toList());
@@ -65,7 +65,7 @@ class LogFilesSearcher {
                     : new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(path.toFile())))))) { // ....log.gz
                 String fileName = path.getFileName().toString(); // 2020-04-20-3.log.gz
                 String date = fileName.equals("latest.log")
-                        ? LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
+                        ? DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(Files.getLastModifiedTime(path).toInstant())
                         : fileName.substring(0, fileName.lastIndexOf('-'));
                 String content;
                 LogEntry logEntry = null;

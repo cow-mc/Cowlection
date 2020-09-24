@@ -118,7 +118,7 @@ public class FriendsHandler {
                 if (!bestFriend.equals(Friend.FRIEND_NOT_FOUND)) {
                     bestFriend.setLastChecked(System.currentTimeMillis());
                     if (isCommandTriggered) {
-                        throw new MooCommandException(friend.getName() + " hasn't changed his name");
+                        throw new MooCommandException(friend.getName() + " hasn't changed their name");
                     }
                 }
             } else {
@@ -202,8 +202,8 @@ public class FriendsHandler {
                 });
             }
         } else {
-            new TickDelay(() -> main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Couldn't check best friends online status because it has not been long enough since the last check. Next check via " + EnumChatFormatting.WHITE + "/moo online" + EnumChatFormatting.RED + " available in " + DurationFormatUtils.formatDurationWords(nextBestFriendOnlineCheck - System.currentTimeMillis(), true, true))
-                    , isCommandTriggered ? 1 : 100);
+            new TickDelay(() -> main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Couldn't check best friends online status because it has not been long enough since the last check. Next check via " + EnumChatFormatting.WHITE + "/moo online" + EnumChatFormatting.RED + " available in " + DurationFormatUtils.formatDurationWords(nextBestFriendOnlineCheck - System.currentTimeMillis(), true, true)),
+                    isCommandTriggered ? 1 : 100);
         }
     }
 

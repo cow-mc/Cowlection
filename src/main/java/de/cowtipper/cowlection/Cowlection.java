@@ -29,7 +29,6 @@ import java.io.File;
 
 @Mod(modid = Cowlection.MODID, name = Cowlection.MODNAME, version = Cowlection.VERSION,
         clientSideOnly = true,
-        guiFactory = "@PACKAGE@.config.MooGuiFactory",
         updateJSON = "https://raw.githubusercontent.com/cow-mc/Cowlection/master/update.json")
 public class Cowlection {
     public static final String MODID = "@MODID@";
@@ -54,15 +53,16 @@ public class Cowlection {
         logger = e.getModLog();
         modsDir = e.getSourceFile().getParentFile();
 
+        chatHelper = new ChatHelper();
+
         this.configDir = new File(e.getModConfigurationDirectory(), MODID + File.separatorChar);
         if (!configDir.exists()) {
             configDir.mkdirs();
         }
 
         friendsHandler = new FriendsHandler(this, new File(configDir, "friends.json"));
-        config = new MooConfig(this, new Configuration(new File(configDir, MODID + ".cfg")));
-
-        chatHelper = new ChatHelper();
+        moo = new CredentialStorage(new Configuration(new File(configDir, "do-not-share-me-with-other-players.cfg")));
+        config = new MooConfig(this, new Configuration(new File(configDir, MODID + ".cfg"), "1"));
     }
 
     @EventHandler
@@ -77,7 +77,7 @@ public class Cowlection {
         }
         // key bindings
         keyBindings = new KeyBinding[1];
-        keyBindings[0] = new KeyBinding("key.cowlection.moo.desc", Keyboard.KEY_M, "key.cowlection.category");
+        keyBindings[0] = new KeyBinding("key.cowlection.moo", Keyboard.KEY_M, "key.cowlection.category");
 
         for (KeyBinding keyBinding : keyBindings) {
             ClientRegistry.registerKeyBinding(keyBinding);
