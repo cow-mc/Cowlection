@@ -16,7 +16,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Overlay can be moved more precisely
   - Dungeons can be "joined" and "left" manually (if the automatic detection fails): `/moo dungeon <enter/leave>`
 - Improved handling of invalid/missing Hypixel API key
-- `/moo stalkskyblock` Switched from sky.lea.moe (discontinued) to sky.shiiyu.moe
+- `/moo stalkskyblock`:
+   - Switched from sky.lea.moe (discontinued) to sky.shiiyu.moe
+   - Added dungeons stats
 
 ### Fixed
 - Fixed crash caused by another, outdated and buggy mod which sadly too many people still use

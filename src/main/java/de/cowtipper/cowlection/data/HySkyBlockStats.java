@@ -3,6 +3,7 @@ package de.cowtipper.cowlection.data;
 import com.google.common.collect.ComparisonChain;
 import com.mojang.realmsclient.util.Pair;
 import com.mojang.util.UUIDTypeAdapter;
+import de.cowtipper.cowlection.config.MooConfig;
 import de.cowtipper.cowlection.util.Utils;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
@@ -124,6 +125,7 @@ public class HySkyBlockStats {
             private double experience_skill_taming = -1;
             private Map<String, SlayerBossDetails> slayer_bosses;
             private List<Pet> pets;
+            private Dungeons dungeons;
 
             /**
              * No-args constructor for GSON
@@ -186,6 +188,10 @@ public class HySkyBlockStats {
                     slayerLevels.put(slayerBoss, slayerLevel);
                 }
                 return slayerLevels;
+            }
+
+            public Dungeons getDungeons() {
+                return dungeons;
             }
 
             public List<Pet> getPets() {
@@ -251,6 +257,96 @@ public class HySkyBlockStats {
 
             private int getLevel() {
                 return XpTables.Pet.getLevel(tier, exp);
+            }
+        }
+
+        public static class Dungeons {
+            private Map<String, Type> dungeon_types;
+            private Map<DataHelper.DungeonClass, ClassDetails> player_classes;
+            private DataHelper.DungeonClass selected_dungeon_class;
+
+            public Map<String, Type> getDungeonTypes() {
+                return dungeon_types;
+            }
+
+            public Map<DataHelper.DungeonClass, Integer> getClassLevels() {
+                Map<DataHelper.DungeonClass, Integer> classLevels = new TreeMap<>();
+                for (Map.Entry<DataHelper.DungeonClass, ClassDetails> classEntry : player_classes.entrySet()) {
+                    classLevels.put(classEntry.getKey(), classEntry.getValue().getLevel());
+                }
+                return classLevels;
+            }
+
+            public DataHelper.DungeonClass getSelectedClass() {
+                return selected_dungeon_class;
+            }
+
+            public boolean hasPlayed() {
+                if (dungeon_types != null) {
+                    for (Type dungeonType : dungeon_types.values()) {
+                        if (dungeonType != null && dungeonType.hasPlayed()) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            public int getSelectedClassLevel() {
+                return player_classes.get(selected_dungeon_class).getLevel();
+            }
+
+            public static class Type {
+                private Map<String, Integer> times_played;
+                private Map<String, Integer> tier_completions;
+                private Map<String, Integer> best_score;
+                private int highest_tier_completed;
+                private double experience;
+
+                public Map<String, Integer> getTimesPlayed() {
+                    return times_played;
+                }
+
+                public Map<String, Integer> getTierCompletions() {
+                    return tier_completions;
+                }
+
+                public Map<String, Integer> getBestScore() {
+                    return best_score;
+                }
+
+                public int getLevel() {
+                    return XpTables.Dungeoneering.DUNGEON.getLevel(experience);
+                }
+
+                public boolean hasPlayed() {
+                    return experience > 0;
+                }
+
+                /**
+                 * Level [lvl] ([amount]x Floor [highest])
+                 *
+                 * @return summary text
+                 */
+                public String getSummary() {
+                    String floorCompletion;
+                    if (tier_completions != null) {
+                        int highestTierCompletions = tier_completions.get(String.valueOf(highest_tier_completed));
+                        floorCompletion = "" + highestTierCompletions + EnumChatFormatting.GRAY + "x " + EnumChatFormatting.YELLOW + "Floor " + (MooConfig.useRomanNumerals() ? Utils.convertArabicToRoman(highest_tier_completed) : highest_tier_completed);
+                    } else {
+                        // played dungeons but never completed a floor
+                        floorCompletion = "not a single floor...";
+                    }
+                    return "Level " + getLevel() + EnumChatFormatting.GRAY + " (beaten " + EnumChatFormatting.YELLOW + floorCompletion + EnumChatFormatting.GRAY + ")";
+                }
+            }
+
+            private static class ClassDetails {
+                private double experience;
+
+                public int getLevel() {
+                    return XpTables.Dungeoneering.CLASS.getLevel(experience);
+                }
             }
         }
 

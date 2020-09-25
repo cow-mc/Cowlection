@@ -415,6 +415,85 @@ public class MooCommand extends CommandBase {
                 slayerLevelsComponent.setHover(slayerLevelsTooltipComponent.appendFreshSibling(new MooChatComponent(slayerLevelsTooltip.toString()).white()));
                 sbStats.appendFreshSibling(slayerLevelsComponent);
 
+                // dungeons:
+                MooChatComponent dungeonsComponent = null;
+                HySkyBlockStats.Profile.Dungeons dungeons = member.getDungeons();
+                boolean hasPlayedDungeons = dungeons != null && dungeons.hasPlayed();
+                if (hasPlayedDungeons) {
+                    DataHelper.DungeonClass selectedClass = dungeons.getSelectedClass();
+
+                    MooChatComponent dungeonHover = new MooChatComponent("Dungeoneering").gold().bold();
+                    int selectedClassLevel = dungeons.getSelectedClassLevel();
+                    dungeonsComponent = new MooChatComponent.KeyValueChatComponent("Dungeoneering", selectedClass.getName() + " " + (MooConfig.useRomanNumerals() ? Utils.convertArabicToRoman(selectedClassLevel) : selectedClassLevel))
+                            .setHover(dungeonHover);
+
+
+                    // for each class (Archer, Berserk, ...)
+                    Map<DataHelper.DungeonClass, Integer> classLevels = dungeons.getClassLevels();
+                    if (classLevels != null && !classLevels.isEmpty()) {
+                        dungeonHover.appendFreshSibling(new MooChatComponent("Classes:").gold());
+                        for (Map.Entry<DataHelper.DungeonClass, Integer> classEntry : classLevels.entrySet()) {
+                            String classLevel = (MooConfig.useRomanNumerals() ? Utils.convertArabicToRoman(classEntry.getValue()) : String.valueOf(classEntry.getValue()));
+                            dungeonHover.appendFreshSibling(new MooChatComponent.KeyValueChatComponent((classEntry.getKey() == selectedClass ? "\u279C " : "   ") + classEntry.getKey().getName(), classLevel));
+                        }
+                    }
+
+                    // for each dungeon type (Catacombs, ...)
+                    Map<String, HySkyBlockStats.Profile.Dungeons.Type> dungeonTypes = dungeons.getDungeonTypes();
+                    if (dungeonTypes != null && !dungeonTypes.isEmpty()) {
+                        // for each dungeon type: catacombs, ...
+                        for (Map.Entry<String, HySkyBlockStats.Profile.Dungeons.Type> dungeonTypeEntry : dungeonTypes.entrySet()) {
+                            // dungeon type entry for chat
+                            HySkyBlockStats.Profile.Dungeons.Type dungeonType = dungeonTypeEntry.getValue();
+                            String dungeonTypeName = Utils.fancyCase(dungeonTypeEntry.getKey());
+                            dungeonsComponent.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("   " + dungeonTypeName, dungeonType.getSummary()))
+                                    .setHover(dungeonHover);
+                            // dungeon type entry for tooltip
+                            int dungeonTypeLevel = dungeonTypeEntry.getValue().getLevel();
+                            dungeonHover.appendFreshSibling(new MooChatComponent.KeyValueChatComponent(dungeonTypeName, "Level " + (MooConfig.useRomanNumerals() ? Utils.convertArabicToRoman(dungeonTypeLevel) : dungeonTypeLevel)));
+
+                            // for each floor
+                            Map<String, StringBuilder> floorStats = new LinkedHashMap<>();
+                            // ... add completed floors:
+                            if (dungeonType.getTierCompletions() != null) {
+                                for (Map.Entry<String, Integer> floorCompletions : dungeonType.getTierCompletions().entrySet()) {
+                                    StringBuilder floorSummary = new StringBuilder();
+                                    floorStats.put(floorCompletions.getKey(), floorSummary);
+                                    // completed floor count:
+                                    floorSummary.append(floorCompletions.getValue());
+                                }
+                            }
+                            // ... add played floors
+                            for (Map.Entry<String, Integer> floorPlayed : dungeonType.getTimesPlayed().entrySet()) {
+                                StringBuilder floorSummary = floorStats.get(floorPlayed.getKey());
+                                if (floorSummary == null) {
+                                    // hasn't beaten this floor, but already attempted it
+                                    floorSummary = new StringBuilder("0");
+                                    floorStats.put(floorPlayed.getKey(), floorSummary);
+                                }
+                                // played floor count:
+                                floorSummary.append(EnumChatFormatting.DARK_GRAY).append(" / ").append(EnumChatFormatting.YELLOW).append(floorPlayed.getValue());
+                            }
+                            // ... add best scores
+                            for (Map.Entry<String, Integer> bestScores : dungeonType.getBestScore().entrySet()) {
+                                StringBuilder floorSummary = floorStats.getOrDefault(bestScores.getKey(), new StringBuilder());
+                                // best floor score:
+                                floorSummary.append(EnumChatFormatting.DARK_GRAY).append(" (").append(EnumChatFormatting.WHITE).append(bestScores.getValue()).append(EnumChatFormatting.DARK_GRAY).append(")");
+                            }
+
+                            // add floor stats to dungeon type:
+                            for (Map.Entry<String, StringBuilder> floorInfo : floorStats.entrySet()) {
+                                dungeonHover.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("   Floor " + floorInfo.getKey(), floorInfo.getValue().toString()));
+                            }
+                        }
+                        dungeonHover.appendFreshSibling(new MooChatComponent(" Floor nr: completed / total floors (best score)").gray().italic());
+                    }
+                }
+                if (!hasPlayedDungeons) {
+                    dungeonsComponent = new MooChatComponent.KeyValueChatComponent("Dungeons", EnumChatFormatting.ITALIC + "never played");
+                }
+                sbStats.appendFreshSibling(dungeonsComponent);
+
                 // pets:
                 Pet activePet = null;
                 Pet bestPet = null;

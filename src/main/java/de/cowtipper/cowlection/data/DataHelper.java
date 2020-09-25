@@ -1,5 +1,6 @@
 package de.cowtipper.cowlection.data;
 
+import com.google.gson.annotations.SerializedName;
 import de.cowtipper.cowlection.util.Utils;
 import net.minecraft.util.EnumChatFormatting;
 
@@ -92,7 +93,12 @@ public final class DataHelper {
     }
 
     public enum DungeonClass {
-        ARCHER('A'), BERSERK('B'), HEALER('H'), MAGE('M'), TANK('T'), UNKNOWN('U');
+        @SerializedName("archer") ARCHER('A'),
+        @SerializedName("berserk") BERSERK('B'),
+        @SerializedName("healer") HEALER('H'),
+        @SerializedName("mage") MAGE('M'),
+        @SerializedName("tank") TANK('T'),
+        @SerializedName("") UNKNOWN('U');
         private final char shortName;
 
         DungeonClass(char shortName) {
@@ -110,6 +116,10 @@ public final class DataHelper {
 
         public char getShortName() {
             return shortName;
+        }
+
+        public String getName() {
+            return Utils.fancyCase(name());
         }
     }
 

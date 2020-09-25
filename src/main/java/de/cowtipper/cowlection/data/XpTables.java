@@ -250,4 +250,69 @@ public class XpTables {
             }
         }
     }
+
+    public enum Dungeoneering {
+        CLASS, // classes: Archer, Berserk, Healer, Mage, Tank
+        DUNGEON; // dungeon types: Catacombs, ...
+
+        private static final TreeMap<Integer, Integer> XP_TO_LEVEL = new TreeMap<>();
+
+        static {
+            XP_TO_LEVEL.put(0, 0);
+            XP_TO_LEVEL.put(50, 1);
+            XP_TO_LEVEL.put(125, 2);
+            XP_TO_LEVEL.put(235, 3);
+            XP_TO_LEVEL.put(395, 4);
+            XP_TO_LEVEL.put(625, 5);
+            XP_TO_LEVEL.put(955, 6);
+            XP_TO_LEVEL.put(1425, 7);
+            XP_TO_LEVEL.put(2095, 8);
+            XP_TO_LEVEL.put(3045, 9);
+            XP_TO_LEVEL.put(4385, 10);
+            XP_TO_LEVEL.put(6275, 11);
+            XP_TO_LEVEL.put(8940, 12);
+            XP_TO_LEVEL.put(12700, 13);
+            XP_TO_LEVEL.put(17960, 14);
+            XP_TO_LEVEL.put(25340, 15);
+            XP_TO_LEVEL.put(35640, 16);
+            XP_TO_LEVEL.put(50040, 17);
+            XP_TO_LEVEL.put(70040, 18);
+            XP_TO_LEVEL.put(97640, 19);
+            XP_TO_LEVEL.put(135640, 20);
+            XP_TO_LEVEL.put(188140, 21);
+            XP_TO_LEVEL.put(259640, 22);
+            XP_TO_LEVEL.put(356640, 23);
+            XP_TO_LEVEL.put(488640, 24);
+            XP_TO_LEVEL.put(668640, 25);
+            XP_TO_LEVEL.put(911640, 26);
+            XP_TO_LEVEL.put(1239640, 27);
+            XP_TO_LEVEL.put(1684640, 28);
+            XP_TO_LEVEL.put(2284640, 29);
+            XP_TO_LEVEL.put(3084640, 30);
+            XP_TO_LEVEL.put(4149640, 31);
+            XP_TO_LEVEL.put(5559640, 32);
+            XP_TO_LEVEL.put(7459640, 33);
+            XP_TO_LEVEL.put(9959640, 34);
+            XP_TO_LEVEL.put(13259640, 35);
+            XP_TO_LEVEL.put(17559640, 36);
+            XP_TO_LEVEL.put(23159640, 37);
+            XP_TO_LEVEL.put(30359640, 38);
+            XP_TO_LEVEL.put(39559640, 39);
+            XP_TO_LEVEL.put(51559640, 40);
+            XP_TO_LEVEL.put(66559640, 41);
+            XP_TO_LEVEL.put(85559640, 42);
+            XP_TO_LEVEL.put(109559640, 43);
+            XP_TO_LEVEL.put(139559640, 44);
+            XP_TO_LEVEL.put(177559640, 45);
+            XP_TO_LEVEL.put(225559640, 46);
+            XP_TO_LEVEL.put(285559640, 47);
+            XP_TO_LEVEL.put(360559640, 48);
+            XP_TO_LEVEL.put(453559640, 49);
+            XP_TO_LEVEL.put(569809640, 50);
+        }
+
+        public int getLevel(double exp) {
+            return XP_TO_LEVEL.floorEntry((int) exp).getValue();
+        }
+    }
 }
