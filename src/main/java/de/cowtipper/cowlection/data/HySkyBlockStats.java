@@ -302,13 +302,17 @@ public class HySkyBlockStats {
 
                 Map<String, Type> latestDungeonType = Utils.getLastNMapEntries(dungeon_types, 1);
                 for (Map.Entry<String, Type> dungeonTypeEntry : latestDungeonType.entrySet()) {
-                    output.append(spacer);
+                    if (!indent) {
+                        output.append(spacer);
+                    }
                     if (dungeonTypeEntry != null) {
                         Map<String, Integer> highestFloorCompletions = Utils.getLastNMapEntries(dungeonTypeEntry.getValue().getTierCompletions(), nHighestFloors);
                         String latestDungeonTypeName = Utils.fancyCase(dungeonTypeEntry.getKey());
                         if (highestFloorCompletions != null) {
                             // top n highest floor completions:
-                            output.append(spacer).append(EnumChatFormatting.BOLD).append(highestFloorCompletions.size()).append(" highest ").append(latestDungeonTypeName).append(" floors:");
+                            String highest = highestFloorCompletions.size() > 1 ? highestFloorCompletions.size() + " highest " : "Highest ";
+                            String pluralS = highestFloorCompletions.size() > 1 ? "s" : "";
+                            output.append(spacer).append(EnumChatFormatting.BOLD).append(highest).append(latestDungeonTypeName).append(" floor").append(pluralS).append(":");
 
                             for (Map.Entry<String, Integer> highestFloorEntry : highestFloorCompletions.entrySet()) {
                                 int highestFloorHighestScore = dungeonTypeEntry.getValue().getBestScore().get(highestFloorEntry.getKey());
@@ -317,7 +321,7 @@ public class HySkyBlockStats {
                             }
                         } else {
                             // no floor completions yet
-                            output.append(EnumChatFormatting.ITALIC).append("No ").append(latestDungeonTypeName).append(" floor completions yet");
+                            output.append(spacer).append(EnumChatFormatting.ITALIC).append("No ").append(latestDungeonTypeName).append(" floor completions yet");
                         }
                     }
                 }
