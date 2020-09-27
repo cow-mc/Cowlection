@@ -194,12 +194,23 @@ public class ChatListener {
                         MooConfig.Setting dungPartyFinderArmorLookupDisplay = MooConfig.getDungPartyFinderArmorLookupDisplay();
                         String delimiter = "\n" + (dungPartyFinderArmorLookupDisplay == MooConfig.Setting.TEXT ? "     " : "");
                         String armorLookupResult = EnumChatFormatting.LIGHT_PURPLE + " ➜ " + EnumChatFormatting.GRAY + dungeonClass + delimiter + String.join(delimiter, member.getArmor());
+
+                        HySkyBlockStats.Profile.Dungeons dungeons = member.getDungeons();
+                        String highestFloorCompletions = "\n" + EnumChatFormatting.GRAY + "Completed no dungeons yet";
                         if (dungPartyFinderArmorLookupDisplay == MooConfig.Setting.TEXT) {
-                            armorLookupComponent = new MooChatComponent(armorLookupPrefix + armorLookupResult).green();
+                            // highest floor completions:
+                            if (dungeons != null && dungeons.hasPlayed()) {
+                                highestFloorCompletions = dungeons.getHighestFloorCompletions(1, true).toString();
+                            }
+                            armorLookupComponent = new MooChatComponent(armorLookupPrefix + armorLookupResult + highestFloorCompletions).green();
                         } else {
                             // as a tooltip: == MooConfig.Setting.TOOLTIP
-                            armorLookupComponent = new MooChatComponent(armorLookupPrefix + EnumChatFormatting.GREEN + (playerName.endsWith("s") ? "" : "'s") + " armor (hover me)").green()
-                                    .setHover(new MooChatComponent(EnumChatFormatting.BOLD + playerName + armorLookupResult));
+                            if (dungeons != null && dungeons.hasPlayed()) {
+                                // highest floor completions:
+                                highestFloorCompletions = dungeons.getHighestFloorCompletions(3, false).toString();
+                            }
+                            armorLookupComponent = new MooChatComponent(armorLookupPrefix + EnumChatFormatting.GREEN + (playerName.endsWith("s") ? "'" : "'s") + " dungeons info (hover me)").green()
+                                    .setHover(new MooChatComponent(EnumChatFormatting.BOLD + playerName + armorLookupResult + highestFloorCompletions));
                         }
                         main.getChatHelper().sendMessage(armorLookupComponent.setSuggestCommand("/p kick " + playerName, dungPartyFinderArmorLookupDisplay == MooConfig.Setting.TEXT));
                     }

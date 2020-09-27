@@ -11,6 +11,7 @@ import de.cowtipper.cowlection.config.gui.MooConfigGui;
 import de.cowtipper.cowlection.data.*;
 import de.cowtipper.cowlection.data.HySkyBlockStats.Profile.Pet;
 import de.cowtipper.cowlection.handler.DungeonCache;
+import de.cowtipper.cowlection.listener.skyblock.DungeonsPartyListener;
 import de.cowtipper.cowlection.search.GuiSearch;
 import de.cowtipper.cowlection.util.*;
 import net.minecraft.client.Minecraft;
@@ -37,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 
 public class MooCommand extends CommandBase {
     private final Cowlection main;
+    private DungeonsPartyListener dungeonsPartyListener;
 
     public MooCommand(Cowlection main) {
         this.main = main;
@@ -94,7 +96,8 @@ public class MooCommand extends CommandBase {
             handleStalkingSkyBlock(args);
         } else if (args[0].equalsIgnoreCase("analyzeIsland")) {
             handleAnalyzeIsland(sender);
-        } else if (args[0].equalsIgnoreCase("dungeon") || args[0].equalsIgnoreCase("dung")) {
+        } else if (args[0].equalsIgnoreCase("dungeon") || args[0].equalsIgnoreCase("dung")
+                || /* dungeon party: */ args[0].equalsIgnoreCase("dp")) {
             handleDungeon(args);
         }
         //endregion
@@ -656,10 +659,28 @@ public class MooCommand extends CommandBase {
         } else if (args.length == 2 && args[1].equalsIgnoreCase("leave")) {
             // leave dungeon in case for some reason it wasn't detected automatically
             dungeonCache.onDungeonEnterOrLeave(false);
+        } else if ((args.length == 2 && (args[1].equalsIgnoreCase("party") || args[1].equalsIgnoreCase("p")))
+                || args.length == 1 && args[0].equalsIgnoreCase("dp")) {
+            if (!CredentialStorage.isMooValid) {
+                throw new MooCommandException("You haven't set your Hypixel API key yet or the API key is invalid. Use " + EnumChatFormatting.DARK_RED + "/api new" + EnumChatFormatting.RED + " to request a new API key from Hypixel or use " + EnumChatFormatting.DARK_RED + "/" + this.getCommandName() + " apikey <key>" + EnumChatFormatting.RED + " to manually set your existing API key.");
+            } else if (dungeonsPartyListener != null) {
+                throw new MooCommandException("Please wait a few seconds before using this command again.");
+            }
+            main.getChatHelper().sendServerCommand("/party list");
+            new TickDelay(() -> {
+                // abort after 10 seconds
+                if (dungeonsPartyListener.isStillRunning()) {
+                    dungeonsPartyListener.shutdown();
+                    main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Dungeon party analysis timed out. Probably the recognition of the party members failed.");
+                }
+                dungeonsPartyListener = null;
+            }, 10 * 20);
+            // register dungeon listener
+            dungeonsPartyListener = new DungeonsPartyListener(main);
         } else if (dungeonCache.isInDungeon()) {
             dungeonCache.sendDungeonPerformance();
         } else {
-            throw new MooCommandException(EnumChatFormatting.DARK_RED + "Looks like you're not in a dungeon... However, you can manually enable the Dungeon Performance overlay with " + EnumChatFormatting.RED + "/" + getCommandName() + " dungeon enter" + EnumChatFormatting.DARK_RED + ". You can also force-leave a dungeon with " + EnumChatFormatting.RED + "/" + getCommandName() + " leave");
+            throw new MooCommandException(EnumChatFormatting.DARK_RED + "Looks like you're not in a dungeon... However, you can manually enable the Dungeon Performance overlay with " + EnumChatFormatting.RED + "/" + getCommandName() + " dungeon enter" + EnumChatFormatting.DARK_RED + ". You can also force-leave a dungeon with " + EnumChatFormatting.RED + "/" + getCommandName() + " dungeon leave.\n" + EnumChatFormatting.GRAY + "Want to inspect your current party members? Use " + EnumChatFormatting.WHITE + "/" + getCommandName() + " dungeon party");
         }
     }
     //endregion
@@ -764,6 +785,7 @@ public class MooCommand extends CommandBase {
                 .appendSibling(createCmdHelpEntry("stalkskyblock", "Get info of player's SkyBlock stats §d§l⚷"))
                 .appendSibling(createCmdHelpEntry("analyzeIsland", "Analyze a SkyBlock private island"))
                 .appendSibling(createCmdHelpEntry("dungeon", "SkyBlock Dungeons: display current dungeon performance"))
+                .appendSibling(createCmdHelpEntry("dungeon party", "SkyBlock Dungeons: Shows armor and dungeon info about current party members " + EnumChatFormatting.GRAY + "(alias: " + EnumChatFormatting.WHITE + "/" + getCommandName() + " dp" + EnumChatFormatting.GRAY + ") §d§l⚷"))
                 .appendSibling(createCmdHelpSection(3, "Miscellaneous"))
                 .appendSibling(createCmdHelpEntry("search", "Open Minecraft log search"))
                 .appendSibling(createCmdHelpEntry("guiScale", "Change GUI scale"))
@@ -805,6 +827,8 @@ public class MooCommand extends CommandBase {
                     /* rarely used aliases */ "askPolitelyWhereTheyAre", "askPolitelyAboutTheirSkyBlockProgress");
         } else if (args.length == 2 && args[0].equalsIgnoreCase("remove")) {
             return getListOfStringsMatchingLastWord(args, main.getFriendsHandler().getBestFriends());
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("dungeon")) {
+            return getListOfStringsMatchingLastWord(args, "party", "enter", "leave");
         }
         String commandArg = args[0].toLowerCase();
         if (args.length == 2 && (commandArg.equals("s") || commandArg.equals("ss") || commandArg.equals("namechangecheck") || commandArg.contains("stalk") || commandArg.contains("askpolitely"))) { // stalk & stalkskyblock + namechangecheck

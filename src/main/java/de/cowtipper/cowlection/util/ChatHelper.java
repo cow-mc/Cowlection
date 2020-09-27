@@ -1,6 +1,7 @@
 package de.cowtipper.cowlection.util;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatStyle;
 import net.minecraft.util.EnumChatFormatting;
@@ -78,5 +79,12 @@ public class ChatHelper {
             chatMsg = String.join(" ", args) + " " + chatMsg;
         }
         Minecraft.getMinecraft().thePlayer.sendChatMessage(chatMsg);
+    }
+
+    public void sendServerCommand(String command) {
+        EntityPlayerSP thePlayer = Minecraft.getMinecraft().thePlayer;
+        if (thePlayer != null) {
+            thePlayer.sendChatMessage(command);
+        }
     }
 }

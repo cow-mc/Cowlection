@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [1.8.9-0.11.0] - unreleased
+### Added
+- SkyBlock Dungeons Party: new command `/moo dungeon party`
+    - short alias: `/m dp`):
+    - displays current `/party` members' armor and dungeons floor completions
+
 ### Changed
 - Completely re-done the config gui (`/moo config`)
   - now separated into sections and sub-sections
@@ -12,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Improved SkyBlock dungeon party finder
   - more config options
   - marks (non-)joinable parties even better than before
+  - When a new player joins the party, it shows not only armor, but also completed dungeons stats
 - Improved SkyBlock dungeon performance overlay
   - Overlay can be moved more precisely
   - Dungeons can be "joined" and "left" manually (if the automatic detection fails): `/moo dungeon <enter/leave>`

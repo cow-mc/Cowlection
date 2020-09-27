@@ -296,6 +296,34 @@ public class HySkyBlockStats {
                 return player_classes.get(selected_dungeon_class).getLevel();
             }
 
+            public StringBuilder getHighestFloorCompletions(int nHighestFloors, boolean indent) {
+                StringBuilder output = new StringBuilder();
+                String spacer = indent ? "\n  " : "\n";
+
+                Map<String, Type> latestDungeonType = Utils.getLastNMapEntries(dungeon_types, 1);
+                for (Map.Entry<String, Type> dungeonTypeEntry : latestDungeonType.entrySet()) {
+                    output.append(spacer);
+                    if (dungeonTypeEntry != null) {
+                        Map<String, Integer> highestFloorCompletions = Utils.getLastNMapEntries(dungeonTypeEntry.getValue().getTierCompletions(), nHighestFloors);
+                        String latestDungeonTypeName = Utils.fancyCase(dungeonTypeEntry.getKey());
+                        if (highestFloorCompletions != null) {
+                            // top n highest floor completions:
+                            output.append(spacer).append(EnumChatFormatting.BOLD).append(highestFloorCompletions.size()).append(" highest ").append(latestDungeonTypeName).append(" floors:");
+
+                            for (Map.Entry<String, Integer> highestFloorEntry : highestFloorCompletions.entrySet()) {
+                                int highestFloorHighestScore = dungeonTypeEntry.getValue().getBestScore().get(highestFloorEntry.getKey());
+                                output.append(spacer).append(EnumChatFormatting.GRAY).append("  Floor ").append(EnumChatFormatting.YELLOW).append(highestFloorEntry.getKey()).append(EnumChatFormatting.GRAY).append(": ")
+                                        .append(EnumChatFormatting.GOLD).append(highestFloorEntry.getValue()).append(EnumChatFormatting.GRAY).append(" completions (best score: ").append(EnumChatFormatting.LIGHT_PURPLE).append(highestFloorHighestScore).append(EnumChatFormatting.GRAY).append(")");
+                            }
+                        } else {
+                            // no floor completions yet
+                            output.append(EnumChatFormatting.ITALIC).append("No ").append(latestDungeonTypeName).append(" floor completions yet");
+                        }
+                    }
+                }
+                return output;
+            }
+
             public static class Type {
                 private Map<String, Integer> times_played;
                 private Map<String, Integer> tier_completions;

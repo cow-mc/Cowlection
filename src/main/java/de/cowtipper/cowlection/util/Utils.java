@@ -10,8 +10,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public final class Utils {
     public static final Pattern VALID_UUID_PATTERN = Pattern.compile("^(\\w{8})-(\\w{4})-(\\w{4})-(\\w{4})-(\\w{12})$");
@@ -254,5 +258,18 @@ public final class Utils {
 
     public static String booleanToSymbol(boolean value) {
         return value ? EnumChatFormatting.GREEN + "✔" : EnumChatFormatting.RED + "✘";
+    }
+
+    public static <V> Map<String, V> getLastNMapEntries(Map<String, V> map, int numberOfElements) {
+        if (map == null || map.isEmpty()) {
+            return null;
+        }
+        if (map.size() <= numberOfElements) {
+            return map;
+        }
+        return map.entrySet().stream().sorted(Map.Entry.comparingByKey(Comparator.reverseOrder()))
+                .limit(numberOfElements)
+                .sorted(Map.Entry.comparingByKey())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a, LinkedHashMap::new));
     }
 }
