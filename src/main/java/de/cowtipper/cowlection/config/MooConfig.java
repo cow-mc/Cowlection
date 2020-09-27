@@ -64,8 +64,9 @@ public class MooConfig {
     private static String tooltipItemTimestamp;
     private static String numeralSystem;
     // Category: SkyBlock Dungeons
-    public static int dungItemToolTipToggleKeyBinding;
+    private static String showItemQualityAndFloor;
     private static String dungItemQualityPos;
+    public static int dungItemToolTipToggleKeyBinding;
     public static boolean dungOverlayEnabled;
     public static int dungOverlayPositionX;
     public static int dungOverlayPositionY;
@@ -77,7 +78,7 @@ public class MooConfig {
     public static boolean dungFilterPartiesWithHealerDupes;
     public static boolean dungFilterPartiesWithMageDupes;
     public static boolean dungFilterPartiesWithTankDupes;
-    private static String dungPartyFinderArmorLookup;
+    private static String dungPartyFinderPlayerLookup;
 
     private static Configuration cfg = null;
     private static final List<MooConfigCategory> configCategories = new ArrayList<>();
@@ -304,22 +305,27 @@ public class MooConfig {
 
         // Sub-Category: Tooltip enhancements
         subCat = configCat.addSubCategory("Dungeon item tooltip enhancements");
-        subCat.addExplanations("Hold left " + EnumChatFormatting.YELLOW + "SHIFT " + EnumChatFormatting.RESET + "while hovering over a dungeon item.",
-                "Shows " + EnumChatFormatting.YELLOW + "item quality " + EnumChatFormatting.RESET + "and " + EnumChatFormatting.YELLOW + "dungeon floor" + EnumChatFormatting.RESET + ", also remove stats from reforges and essences (✪)",
+        subCat.addExplanations("Shows " + EnumChatFormatting.YELLOW + "item quality " + EnumChatFormatting.RESET + "and " + EnumChatFormatting.YELLOW + "dungeon floor" + EnumChatFormatting.RESET + " (if enabled)",
+                "",
+                "Hold left " + EnumChatFormatting.YELLOW + "SHIFT " + EnumChatFormatting.RESET + "while hovering over a dungeon item,",
+                "to remove stats from reforges and essences (✪)",
                 "which normally makes the comparison of dungeon items difficult.",
                 "Instead, the tooltip shows...",
                 "  ‣ base/default stats " + EnumChatFormatting.GRAY + "(outside dungeons; 1st value - usually red or green)",
                 "  ‣ stats inside dungeons " + EnumChatFormatting.GRAY + "(including dungeon level stat boost, but without essences [₀ₓ✪])",
                 "  ‣ stats inside dungeons with 5x essence upgrades " + EnumChatFormatting.GRAY + "(₅ₓ✪)");
 
-        Property propDungItemToolTipToggleKeyBinding = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungItemToolTipToggleKeyBinding", Keyboard.KEY_LSHIFT, "Key to toggle dungeon item tooltip"));
+        Property propShowItemQualityAndFloor = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "showItemQualityAndFloor", "always", "show item quality + obtained floor?", new String[]{"always", "key press", "never"}));
 
         Property propDungItemQualityPos = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "dungItemQualityPos", "top", "Position of item quality in tooltip", new String[]{"top", "bottom"}),
                 new MooConfigPreview(
                         MooConfigPreview.createDungeonItem("light", "7/17/20 7:22 PM", "§7Gear Score: §d336 §8(526)", "§7Crit Chance: §c+5% §9(Light +2%)", "§7Crit Damage: §c+30% §9(Light +4%) §8(+48.9%)", "§7Bonus Attack Speed: §c+4% §9(Light +4%)", "", "§7Health: §a+126 HP §9(Light +15 HP) §8(+205.38 HP)", "§7Defense: §a+76 §9(Light +4) §8(+123.88)", "§7Speed: §a+4 §9(Light +4) §8(+6.52)", "", "§9Growth V, §9Protection V", "§9Thorns III", "", "§7Increase the damage you deal", "§7with arrows by §c5%§7.", "", "§6Full Set Bonus: Skeleton Soldier", "§7Increase the damage you deal", "§7with arrows by an extra §c25%§7.", "", "§aPerfect 52500 / 52500", "§5§lEPIC DUNGEON LEGGINGS"),
                         MooConfigPreview.createDungeonItem("clean", "7/11/20 12:27 PM", "§7Gear Score: §d359 §8(561)", "§7Crit Chance: §c+11% §9(Clean +8%)", "§7Crit Damage: §c+26% §8(+42.38%)", "", "§7Health: §a+126 HP §9(Clean +15 HP) §8(+205.38 HP)", "§7Defense: §a+87 §9(Clean +15) §8(+141.81)", "", "§9Growth V, §9Protection V", "§9Thorns III", "", "§7Increase the damage you deal", "§7with arrows by §c5%§7.", "", "§6Full Set Bonus: Skeleton Soldier", "§7Increase the damage you deal", "§7with arrows by an extra §c25%§7.", "", "§aPerfect 52500 / 52500", "§5§lEPIC DUNGEON LEGGINGS")));
+
+        Property propDungItemToolTipToggleKeyBinding = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "dungItemToolTipToggleKeyBinding", Keyboard.KEY_LSHIFT, "Key to toggle dungeon item tooltip"));
 
         // Sub-Category: Performance Overlay
         subCat = configCat.addSubCategory("Performance Overlay");
@@ -395,8 +401,8 @@ public class MooConfig {
                 "dungFilterPartiesWithTankDupes", false, "Mark parties with duplicated Tank class?"),
                 new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.GOLD + "²⁺T").gray()));
 
-        Property propDungPartyFinderArmorLookup = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungPartyFinderArmorLookup", "as a tooltip", "Show armor of player joining via party finder as a tooltip or in chat?", new String[]{"as a tooltip", "in chat", "disabled"}));
+        Property propDungPartyFinderPlayerLookup = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "dungPartyFinderPlayerLookup", "as a tooltip", "Show armor + dungeons stats of player joining via party finder as a tooltip or in chat?", new String[]{"as a tooltip", "in chat", "disabled"}));
 
         boolean modifiedTabCompletableCommandsList = false;
         String[] tabCompletableCommandsPreChange = tabCompletableNamesCommands != null ? tabCompletableNamesCommands.clone() : null;
@@ -420,8 +426,9 @@ public class MooConfig {
             tooltipItemTimestamp = propTooltipItemTimestamp.getString();
             numeralSystem = propNumeralSystem.getString();
             // Category: SkyBlock Dungeons
-            dungItemToolTipToggleKeyBinding = propDungItemToolTipToggleKeyBinding.getInt();
+            showItemQualityAndFloor = propShowItemQualityAndFloor.getString();
             dungItemQualityPos = propDungItemQualityPos.getString();
+            dungItemToolTipToggleKeyBinding = propDungItemToolTipToggleKeyBinding.getInt();
             dungOverlayEnabled = propDungOverlayEnabled.getBoolean();
             dungOverlayPositionX = propDungOverlayPositionX.getInt();
             dungOverlayPositionY = propDungOverlayPositionY.getInt();
@@ -433,7 +440,7 @@ public class MooConfig {
             dungFilterPartiesWithHealerDupes = propDungFilterPartiesWithHealerDupes.getBoolean();
             dungFilterPartiesWithMageDupes = propDungFilterPartiesWithMageDupes.getBoolean();
             dungFilterPartiesWithTankDupes = propDungFilterPartiesWithTankDupes.getBoolean();
-            dungPartyFinderArmorLookup = propDungPartyFinderArmorLookup.getString();
+            dungPartyFinderPlayerLookup = propDungPartyFinderPlayerLookup.getString();
 
 
             if (!Arrays.equals(tabCompletableCommandsPreChange, tabCompletableNamesCommands)) {
@@ -460,8 +467,9 @@ public class MooConfig {
         propTooltipItemTimestamp.set(tooltipItemTimestamp);
         propNumeralSystem.set(numeralSystem);
         // Category: SkyBlock Dungeons
-        propDungItemToolTipToggleKeyBinding.set(dungItemToolTipToggleKeyBinding);
+        propShowItemQualityAndFloor.set(showItemQualityAndFloor);
         propDungItemQualityPos.set(dungItemQualityPos);
+        propDungItemToolTipToggleKeyBinding.set(dungItemToolTipToggleKeyBinding);
         propDungOverlayEnabled.set(dungOverlayEnabled);
         propDungOverlayPositionX.set(dungOverlayPositionX);
         propDungOverlayPositionY.set(dungOverlayPositionY);
@@ -473,7 +481,7 @@ public class MooConfig {
         propDungFilterPartiesWithHealerDupes.set(dungFilterPartiesWithHealerDupes);
         propDungFilterPartiesWithMageDupes.set(dungFilterPartiesWithMageDupes);
         propDungFilterPartiesWithTankDupes.set(dungFilterPartiesWithTankDupes);
-        propDungPartyFinderArmorLookup.set(dungPartyFinderArmorLookup);
+        propDungPartyFinderPlayerLookup.set(dungPartyFinderPlayerLookup);
 
         if (saveToFile && cfg.hasChanged()) {
             boolean isPlayerIngame = Minecraft.getMinecraft().thePlayer != null;
@@ -578,12 +586,16 @@ public class MooConfig {
     }
 
     // Category: SkyBlock Dungeons
+    public static Setting getShowItemQualityAndFloorDisplay() {
+        return Setting.get(showItemQualityAndFloor);
+    }
+
     public static boolean isDungItemQualityAtTop() {
         return dungItemQualityPos.equals("top");
     }
 
-    public static Setting getDungPartyFinderArmorLookupDisplay() {
-        return Setting.get(dungPartyFinderArmorLookup);
+    public static Setting getDungPartyFinderPlayerLookupDisplay() {
+        return Setting.get(dungPartyFinderPlayerLookup);
     }
 
     public static boolean filterDungPartiesWithDupes(DataHelper.DungeonClass dungeonClass) {

@@ -22,6 +22,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Overlay can be moved more precisely
   - Dungeons can be "joined" and "left" manually (if the automatic detection fails): `/moo dungeon <enter/leave>`
 - Improved handling of invalid/missing Hypixel API key
+- Dungeon item quality:
+   - Show item quality + obtained floor by default (can be changed in config)
 - `/moo stalkskyblock`:
    - Switched from sky.lea.moe (discontinued) to sky.shiiyu.moe
    - Added dungeons stats

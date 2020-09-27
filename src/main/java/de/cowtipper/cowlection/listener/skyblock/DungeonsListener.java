@@ -121,13 +121,22 @@ public class DungeonsListener {
         if (e.itemStack == null || e.toolTip == null) {
             return;
         }
-        if (MooConfig.isDungeonItemTooltipToggleKeyBindingPressed() && isDungeonItem(e.toolTip)) {
-            // simplify dungeon armor stats
-            String originalItemName = e.itemStack.getDisplayName();
+        boolean toggleKeyBindingPressed = MooConfig.isDungeonItemTooltipToggleKeyBindingPressed();
+        MooConfig.Setting showItemQualityAndFloorDisplay = MooConfig.getShowItemQualityAndFloorDisplay();
+        boolean showItemQualityAndFloor = showItemQualityAndFloorDisplay == MooConfig.Setting.ALWAYS
+                || (showItemQualityAndFloorDisplay == MooConfig.Setting.SPECIAL && toggleKeyBindingPressed);
+        if ((showItemQualityAndFloor || toggleKeyBindingPressed)
+                && isDungeonItem(e.toolTip)) {
             NBTTagCompound extraAttributes = e.itemStack.getSubCompound("ExtraAttributes", false);
-            if (extraAttributes != null) {
+            if (extraAttributes == null) {
+                // no extra attributes? no SkyBlock item!
+                return;
+            }
+            String reforge = "";
+            if (toggleKeyBindingPressed) {
+                // simplify dungeon armor stats
+                String originalItemName = e.itemStack.getDisplayName();
                 StringBuilder modifiedItemName = new StringBuilder(originalItemName);
-                String reforge = "";
                 String grayedOutFormatting = "" + EnumChatFormatting.GRAY + EnumChatFormatting.STRIKETHROUGH;
 
                 if (extraAttributes.hasKey("modifier")) {
@@ -178,43 +187,45 @@ public class DungeonsListener {
                     essenceModifier = modifiedItemName.indexOf(essenceUpgradeIndicator);
                 }
                 e.toolTip.set(0, modifiedItemName.toString()); // replace item name
+            }
+            // add item quality/floor and (if key bind is pressed: subtract stat boosts from reforge and update stats for dungeons)
+            ListIterator<String> tooltipIterator = e.toolTip.listIterator();
 
-                // subtract stat boosts from reforge and update stats for dungeons
-                ListIterator<String> tooltipIterator = e.toolTip.listIterator();
-
-                String itemQualityBottom = null;
-                while (tooltipIterator.hasNext()) {
-                    String line = tooltipIterator.next();
-                    Matcher lineMatcher = TOOLTIP_LINE_PATTERN.matcher(line);
-                    String lineWithoutFormatting = EnumChatFormatting.getTextWithoutFormattingCodes(line);
-                    if (lineMatcher.matches()) {
-                        if (EnumChatFormatting.getTextWithoutFormattingCodes(lineMatcher.group("prefix")).equals("Gear Score: ")) {
-                            // replace meaningless gear score with item quality (gear score includes reforges etc)
-                            StringBuilder customGearScore = new StringBuilder(EnumChatFormatting.GRAY.toString()).append("Item Quality: ");
-                            boolean hasCustomGearScore = false;
-                            if (extraAttributes.hasKey("baseStatBoostPercentage")) {
-                                int itemQuality = extraAttributes.getInteger("baseStatBoostPercentage") * 2; // value between 0 and 50 => *2 == in %
-                                customGearScore.append(EnumChatFormatting.LIGHT_PURPLE).append(itemQuality).append("%");
-                                hasCustomGearScore = true;
-                            }
-                            if (extraAttributes.hasKey("item_tier", Constants.NBT.TAG_INT)) {
-                                int obtainedFromFloor = extraAttributes.getInteger("item_tier");
-                                customGearScore.append(EnumChatFormatting.GRAY).append(" (Floor ").append(EnumChatFormatting.LIGHT_PURPLE).append(obtainedFromFloor).append(EnumChatFormatting.GRAY).append(")");
-                                hasCustomGearScore = true;
-                            }
-                            if (!hasCustomGearScore) {
-                                customGearScore.append("―");
-                            }
+            String itemQualityBottom = null;
+            while (tooltipIterator.hasNext()) {
+                String line = tooltipIterator.next();
+                Matcher lineMatcher = TOOLTIP_LINE_PATTERN.matcher(line);
+                String lineWithoutFormatting = EnumChatFormatting.getTextWithoutFormattingCodes(line);
+                if (lineMatcher.matches()) {
+                    if (EnumChatFormatting.getTextWithoutFormattingCodes(lineMatcher.group("prefix")).equals("Gear Score: ")) {
+                        // replace meaningless gear score with item quality (gear score includes reforges etc)
+                        StringBuilder customGearScore = new StringBuilder(EnumChatFormatting.GRAY.toString()).append("Item Quality: ");
+                        boolean hasCustomGearScore = false;
+                        if (extraAttributes.hasKey("baseStatBoostPercentage")) {
+                            int itemQuality = extraAttributes.getInteger("baseStatBoostPercentage") * 2; // value between 0 and 50 => *2 == in %
+                            customGearScore.append(EnumChatFormatting.LIGHT_PURPLE).append(itemQuality).append("%");
+                            hasCustomGearScore = true;
+                        }
+                        if (extraAttributes.hasKey("item_tier", Constants.NBT.TAG_INT)) {
+                            int obtainedFromFloor = extraAttributes.getInteger("item_tier");
+                            customGearScore.append(EnumChatFormatting.GRAY).append(" (Floor ").append(EnumChatFormatting.LIGHT_PURPLE).append(obtainedFromFloor).append(EnumChatFormatting.GRAY).append(")");
+                            hasCustomGearScore = true;
+                        }
+                        if (!hasCustomGearScore) {
+                            customGearScore.append("―");
+                        }
+                        if (showItemQualityAndFloor) {
                             if (MooConfig.isDungItemQualityAtTop()) {
-                                // replace 'Gear Score' line
+                                // replace gear score with item quality + obtained floor to top of tooltip
                                 tooltipIterator.set(customGearScore.toString());
                             } else {
-                                // delete 'Gear Score' line and add item quality to bottom
-                                tooltipIterator.remove();
+                                // add item quality + obtained floor to bottom
                                 itemQualityBottom = customGearScore.toString();
                             }
-                            continue;
                         }
+                        continue;
+                    }
+                    if (toggleKeyBindingPressed) {
                         try {
                             int statNonDungeon = Integer.parseInt(lineMatcher.group("statNonDungeon"));
 
@@ -249,15 +260,15 @@ public class DungeonsListener {
                             tooltipIterator.set(newToolTipLine);
                         } catch (NumberFormatException ignored) {
                         }
-                    } else if (lineWithoutFormatting.startsWith("Item Ability: ") || lineWithoutFormatting.startsWith("Full Set Bonus: ")) {
-                        // stop replacing tooltip entries once we reach item ability or full set bonus
-                        break;
                     }
+                } else if (lineWithoutFormatting.startsWith("Item Ability: ") || lineWithoutFormatting.startsWith("Full Set Bonus: ")) {
+                    // stop replacing tooltip entries once we reach item ability or full set bonus
+                    break;
                 }
-                if (itemQualityBottom != null) {
-                    int index = Math.max(0, e.toolTip.size() - (e.showAdvancedItemTooltips ? /* item name & nbt info */ 2 : 0));
-                    e.toolTip.add(index, itemQualityBottom);
-                }
+            }
+            if (itemQualityBottom != null) {
+                int index = Math.max(0, e.toolTip.size() - (e.showAdvancedItemTooltips ? /* item name & nbt info */ 2 : 0));
+                e.toolTip.add(index, itemQualityBottom);
             }
         }
     }
