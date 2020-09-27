@@ -369,7 +369,7 @@ public class MooCommand extends CommandBase {
                 // output inspired by /profiles hover
 
                 // coins:
-                String coinsBankAndPurse = (activeProfile.getCoinBank() >= 0) ? Utils.formatNumberWithAbbreviations(activeProfile.getCoinBank() + member.getCoinPurse()) : "API access disabled";
+                String coinsBankAndPurse = (activeProfile.getCoinBank() >= 0) ? Utils.formatNumberWithAbbreviations(activeProfile.getCoinBank() + member.getCoinPurse()) : Utils.formatNumberWithAbbreviations(member.getCoinPurse()) + " - purse only, bank API access disabled";
                 Pair<String, String> fancyFirstJoined = member.getFancyFirstJoined();
 
                 MooChatComponent wealthHover = new MooChatComponent("Accessible coins:").gold()
