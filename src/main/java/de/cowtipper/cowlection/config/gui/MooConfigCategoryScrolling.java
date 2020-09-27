@@ -81,9 +81,7 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
             // add control buttons to navigate to other guis
             if ("Other settings".equals(subCategory.getDisplayName())) {
                 this.listEntries.add(new GuiSwitchEntry("gotoKeyBindings", "Controls", () -> mc.displayGuiScreen(new GuiControls(MooConfigCategoryScrolling.this.parent, mc.gameSettings))));
-                this.listEntries.add(new GuiSwitchEntry("gotoLogSearchConfig", "Log Search", () -> {
-                    mc.displayGuiScreen(new GuiSearch(Cowlection.getInstance().getConfigDirectory(), ""));
-                }));
+                this.listEntries.add(new GuiSwitchEntry("gotoLogSearchConfig", "Log Search", () -> mc.displayGuiScreen(new GuiSearch(Cowlection.getInstance().getConfigDirectory(), ""))));
                 continue; // don't add properties to main config gui
             }
 
@@ -298,6 +296,7 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
                 if (hoveredEntry instanceof BaseConfigEntry) {
                     // draw tooltip
                     ((BaseConfigEntry) hoveredEntry).checkHover(mouseX, mouseY);
+                    ((BaseConfigEntry) hoveredEntry).drawTooltip();
 
                     MooConfigPreview.drawPreviewHover(mouseX, mouseY);
                 }
@@ -452,6 +451,8 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
          * The localized key description for this ConfigEntry
          */
         private final List<String> tooltip;
+        private int x;
+        private int y;
 
         private BaseConfigEntry(Property property) {
             this.property = property;
@@ -466,6 +467,8 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
         }
 
         public void drawEntry(int slotIndex, int x, int y, int listWidth, int slotHeight, int mouseX, int mouseY, boolean isSelected) {
+            this.x = x;
+            this.y = y;
             MooConfigCategoryScrolling.this.mc.fontRendererObj.drawString(this.name, x, y + slotHeight / 2 - MooConfigCategoryScrolling.this.mc.fontRendererObj.FONT_HEIGHT / 2 + 2, 16777215);
 
             this.btnUndoChanges.xPosition = x + MooConfigCategoryScrolling.this.maxListLabelWidth + 88;
@@ -477,12 +480,6 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
             this.btnDefault.yPosition = y + 1;
             this.btnDefault.enabled = !isDefault();
             this.btnDefault.drawButton(MooConfigCategoryScrolling.this.mc, mouseX, mouseY);
-
-            if (mouseX >= x && mouseX < x + maxListLabelWidth && mouseY >= y && mouseY < y + slotHeight) {
-                // mouse is over entry
-                GuiHelper.drawHoveringText(Lists.newArrayList(tooltip), mouseX, mouseY, width, height, 300);
-                GlStateManager.disableLighting();
-            }
         }
 
         public void checkHover(int mouseX, int mouseY) {
@@ -538,6 +535,16 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
         }
 
         public abstract void undoChanges();
+
+        public void drawTooltip() {
+            int mouseX = MooConfigCategoryScrolling.this.mouseX;
+            int mouseY = MooConfigCategoryScrolling.this.mouseY;
+            if (mouseX >= x && MooConfigCategoryScrolling.this.mouseX < x + maxListLabelWidth && mouseY >= y && mouseY < y + slotHeight) {
+                // mouse is over entry
+                GuiHelper.drawHoveringText(Lists.newArrayList(tooltip), mouseX, mouseY, width, height, 300);
+                GlStateManager.disableLighting();
+            }
+        }
     }
 
     public abstract class ButtonConfigEntry extends BaseConfigEntry {
