@@ -516,7 +516,7 @@ public final class DataHelper {
         minions.put("488b4089a835e276838bba45c79d1146f0c2341971170a6163e6493890fd1b83", "Creeper III");
         minions.put("ac2d5f8dcfc9f35897f8b0a42ff0c19e483bdc745e7e64bf0aaf1054a6e67dd", "Creeper IV");
         minions.put("654bde9a26e35094e3438540c225cffa7690c1d4456251da30cc990ff921cc36", "Creeper V");
-        minions.put("654bde9a26e35094e3438540c225cffa7690c1d4456251da30cc990ff921cc36", "Creeper VI");
+        minions.put("b5f07bbd87cffad76aeb5337e74726e7fcbd96c2bd0dcb083f5fca5aec2e12a", "Creeper VI");
         minions.put("f6f95998dd76a3bd9ffe949e7a4fe993b4baa2e981f49bf7113417f51003b193", "Creeper VII");
         minions.put("8c0abba2be5c9a93362a7da3231aeea824c5c590bfaaaec78888f1b3d9d32adc", "Creeper VIII");
         minions.put("21abd529c1898f6ec7e01d9943419c6358de93e0d6cdd2d90c8d63e7036db60d", "Creeper IX");

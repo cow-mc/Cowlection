@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - SkyBlock Dungeons Party: new command `/moo dungeon party`
     - short alias: `/m dp`):
-    - displays current `/party` members' armor and dungeons floor completions
+    - displays current `/party` members' selected class, armor and dungeons floor completions
 
 ### Changed
 - Completely re-done the config gui (`/moo config`)

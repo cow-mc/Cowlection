@@ -114,6 +114,9 @@ public class MooCommand extends CommandBase {
             main.getChatHelper().sendShrug(buildString(args, 1));
         } else if (args[0].equalsIgnoreCase("apikey")) {
             handleApiKey(args);
+        } else if (args[0].equalsIgnoreCase("whatyearisit") || args[0].equalsIgnoreCase("year")) {
+            long year = ((System.currentTimeMillis() - 1560275700000L) / (TimeUnit.HOURS.toMillis(124))) + 1;
+            main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, "It is SkyBlock year " + EnumChatFormatting.GOLD + year + EnumChatFormatting.YELLOW + ".");
         }
         //endregion
         //region sub-commands: update mod
@@ -824,7 +827,7 @@ public class MooCommand extends CommandBase {
                     /* miscellaneous */ "config", "search", "guiscale", "rr", "shrug", "apikey",
                     /* update mod */ "update", "updateHelp", "version", "directory",
                     /* help */ "help",
-                    /* rarely used aliases */ "askPolitelyWhereTheyAre", "askPolitelyAboutTheirSkyBlockProgress");
+                    /* rarely used aliases */ "askPolitelyWhereTheyAre", "askPolitelyAboutTheirSkyBlockProgress", "year", "whatyearisit");
         } else if (args.length == 2 && args[0].equalsIgnoreCase("remove")) {
             return getListOfStringsMatchingLastWord(args, main.getFriendsHandler().getBestFriends());
         } else if (args.length == 2 && args[0].equalsIgnoreCase("dungeon")) {
