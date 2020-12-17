@@ -1,7 +1,6 @@
 package de.cowtipper.cowlection.handler;
 
 import com.google.common.collect.EvictingQueue;
-import de.cowtipper.cowlection.Cowlection;
 
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -10,10 +9,8 @@ import java.util.TreeSet;
 public class PlayerCache {
     private final EvictingQueue<String> nameCache = EvictingQueue.create(50);
     private final EvictingQueue<String> bestFriendCache = EvictingQueue.create(100);
-    private final Cowlection main;
 
-    public PlayerCache(Cowlection main) {
-        this.main = main;
+    public PlayerCache() {
     }
 
     public void add(String name) {

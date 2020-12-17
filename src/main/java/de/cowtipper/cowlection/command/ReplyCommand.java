@@ -1,16 +1,13 @@
 package de.cowtipper.cowlection.command;
 
-import de.cowtipper.cowlection.Cowlection;
 import net.minecraft.client.Minecraft;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 
 public class ReplyCommand extends CommandBase {
-    private final Cowlection main;
 
-    public ReplyCommand(Cowlection main) {
-        this.main = main;
+    public ReplyCommand() {
     }
 
     @Override

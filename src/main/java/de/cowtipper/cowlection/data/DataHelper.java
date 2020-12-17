@@ -38,6 +38,7 @@ public final class DataHelper {
     }
 
     // TODO replace with api request: https://github.com/HypixelDev/PublicAPI/blob/master/Documentation/misc/GameType.md
+    @SuppressWarnings("unused")
     public enum GameType {
         QUAKECRAFT("Quakecraft"),
         WALLS("Walls"),
@@ -126,7 +127,7 @@ public final class DataHelper {
     public static Map<String, String> getMinions() {
         // key = skin id, value = minion type and tier
         Map<String, String> minions = new HashMap<>();
-        // TODO currently Fishing VI + VII and Creeper V + VI each use the same skull texture (server-side) - thus can't be distinguished
+        // TODO currently Fishing VI + VII use the same skull texture (server-side) - thus can't be distinguished
         minions.put("2f93289a82bd2a06cbbe61b733cfdc1f1bd93c4340f7a90abd9bdda774109071", "Cobblestone I");
         minions.put("3fd87486dc94cb8cd04a3d7d06f191f027f38dad7b4ed34c6681fb4d08834c06", "Cobblestone II");
         minions.put("cc088ed6bb8763af4eb7d006e00fda7dc11d7681e97c983b7011c3e872f6aab9", "Cobblestone III");

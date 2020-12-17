@@ -74,7 +74,7 @@ public class ChatHelper {
     }
 
     public void sendShrug(String... args) {
-        String chatMsg = "\u00AF\\_(\u30C4)_/\u00AF"; // ¯\\_(ツ)_/¯"
+        String chatMsg = "¯\\_(ツ)_/¯";
         if (args.length > 0) {
             chatMsg = String.join(" ", args) + " " + chatMsg;
         }

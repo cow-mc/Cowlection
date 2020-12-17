@@ -131,7 +131,7 @@ public class MooCommand extends CommandBase {
                 Desktop.getDesktop().open(main.getModsDirectory());
             } catch (IOException e) {
                 e.printStackTrace();
-                throw new MooCommandException("\u2716 An error occurred trying to open the mod's directory. I guess you have to open it manually \u00af\\_(\u30c4)_/\u00af");
+                throw new MooCommandException("✖ An error occurred trying to open the mod's directory. I guess you have to open it manually ¯\\_(ツ)_/¯");
             }
         }
         //endregion
@@ -161,7 +161,7 @@ public class MooCommand extends CommandBase {
         }
         if (args.length != 2) {
             throw new WrongUsageException("/" + getCommandName() + " stalk <playerName>");
-        } else if (!Utils.isValidMcName(args[1])) {
+        } else if (Utils.isInvalidMcName(args[1])) {
             throw new InvalidPlayerNameException(args[1]);
         } else {
             String playerName = args[1];
@@ -238,7 +238,7 @@ public class MooCommand extends CommandBase {
     private void handleBestFriendAdd(String[] args) throws CommandException {
         if (args.length != 2) {
             throw new WrongUsageException("/" + getCommandName() + " add <playerName>");
-        } else if (!Utils.isValidMcName(args[1])) {
+        } else if (Utils.isInvalidMcName(args[1])) {
             throw new InvalidPlayerNameException(args[1]);
         } else if (main.getFriendsHandler().isBestFriend(args[1], true)) {
             throw new MooCommandException(EnumChatFormatting.DARK_RED + args[1] + EnumChatFormatting.RED + " is a best friend already.");
@@ -254,7 +254,7 @@ public class MooCommand extends CommandBase {
     private void handleBestFriendRemove(String[] args) throws CommandException {
         if (args.length != 2) {
             throw new WrongUsageException("/" + getCommandName() + " remove <playerName>");
-        } else if (!Utils.isValidMcName(args[1])) {
+        } else if (Utils.isInvalidMcName(args[1])) {
             throw new InvalidPlayerNameException(args[1]);
         }
         String username = args[1];
@@ -270,7 +270,7 @@ public class MooCommand extends CommandBase {
         Set<String> bestFriends = main.getFriendsHandler().getBestFriends();
 
         // TODO show fancy gui with list of best friends; maybe with buttons to delete them
-        main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u279C Best friends"
+        main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "➜ Best friends"
                 + (bestFriends.isEmpty() ? "" : " (" + EnumChatFormatting.DARK_GREEN + bestFriends.size() + EnumChatFormatting.GREEN + ")") + ": "
                 + ((bestFriends.isEmpty())
                 ? EnumChatFormatting.ITALIC + "none :c"
@@ -292,7 +292,7 @@ public class MooCommand extends CommandBase {
     private void handleNameChangeCheck(String[] args) throws CommandException {
         if (args.length != 2) {
             throw new WrongUsageException("/" + getCommandName() + " nameChangeCheck <playerName>");
-        } else if (!Utils.isValidMcName(args[1])) {
+        } else if (Utils.isInvalidMcName(args[1])) {
             throw new InvalidPlayerNameException(args[1]);
         }
         Friend bestFriend = main.getFriendsHandler().getBestFriend(args[1]);
@@ -313,7 +313,7 @@ public class MooCommand extends CommandBase {
         }
         if (args.length != 2) {
             throw new WrongUsageException("/" + getCommandName() + " skyblockstalk <playerName>");
-        } else if (!Utils.isValidMcName(args[1])) {
+        } else if (Utils.isInvalidMcName(args[1])) {
             throw new InvalidPlayerNameException(args[1]);
         } else {
             String playerName = args[1];
@@ -440,7 +440,7 @@ public class MooCommand extends CommandBase {
                         dungeonHover.appendFreshSibling(new MooChatComponent("Classes:").gold());
                         for (Map.Entry<DataHelper.DungeonClass, Integer> classEntry : classLevels.entrySet()) {
                             String classLevel = (MooConfig.useRomanNumerals() ? Utils.convertArabicToRoman(classEntry.getValue()) : String.valueOf(classEntry.getValue()));
-                            dungeonHover.appendFreshSibling(new MooChatComponent.KeyValueChatComponent((classEntry.getKey() == selectedClass ? "\u279C " : "   ") + classEntry.getKey().getName(), classLevel));
+                            dungeonHover.appendFreshSibling(new MooChatComponent.KeyValueChatComponent((classEntry.getKey() == selectedClass ? "➜ " : "   ") + classEntry.getKey().getName(), classLevel));
                         }
                     }
 
@@ -693,7 +693,7 @@ public class MooCommand extends CommandBase {
         GameSettings gameSettings = Minecraft.getMinecraft().gameSettings;
         int currentGuiScale = gameSettings.guiScale;
         if (args.length == 1) {
-            main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u279C Current GUI scale: " + EnumChatFormatting.DARK_GREEN + currentGuiScale);
+            main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "➜ Current GUI scale: " + EnumChatFormatting.DARK_GREEN + currentGuiScale);
         } else {
             int scale = MathHelper.parseIntWithDefault(args[1], -1);
             if (scale == -1 || scale > 10) {
@@ -701,7 +701,7 @@ public class MooCommand extends CommandBase {
             }
             gameSettings.guiScale = scale;
             gameSettings.saveOptions();
-            main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u2714 New GUI scale: " + EnumChatFormatting.DARK_GREEN + scale + EnumChatFormatting.GREEN + " (previous: " + EnumChatFormatting.DARK_GREEN + currentGuiScale + EnumChatFormatting.GREEN + ")");
+            main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "✔ New GUI scale: " + EnumChatFormatting.DARK_GREEN + scale + EnumChatFormatting.GREEN + " (previous: " + EnumChatFormatting.DARK_GREEN + currentGuiScale + EnumChatFormatting.GREEN + ")");
         }
     }
 
@@ -741,29 +741,29 @@ public class MooCommand extends CommandBase {
         boolean updateCheckStarted = main.getVersionChecker().runUpdateCheck(true);
 
         if (updateCheckStarted) {
-            main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "\u279C Checking for a newer mod version...");
+            main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "➜ Checking for a newer mod version...");
             // VersionChecker#handleVersionStatus will run with a 5 seconds delay
         } else {
             long nextUpdate = main.getVersionChecker().getNextCheck();
             String waitingTime = String.format("%02d:%02d",
                     TimeUnit.MILLISECONDS.toMinutes(nextUpdate),
                     TimeUnit.MILLISECONDS.toSeconds(nextUpdate) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(nextUpdate)));
-            throw new MooCommandException("\u26A0 Update checker is on cooldown. Please wait " + EnumChatFormatting.GOLD + EnumChatFormatting.BOLD + waitingTime + EnumChatFormatting.RESET + EnumChatFormatting.RED + " more minutes before checking again.");
+            throw new MooCommandException("⚠ Update checker is on cooldown. Please wait " + EnumChatFormatting.GOLD + EnumChatFormatting.BOLD + waitingTime + EnumChatFormatting.RESET + EnumChatFormatting.RED + " more minutes before checking again.");
         }
     }
 
     private void handleUpdateHelp() {
-        main.getChatHelper().sendMessage(new ChatComponentText("\u279C Update instructions:").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(true))
-                .appendSibling(new ChatComponentText("\n\u278A" + EnumChatFormatting.YELLOW + " download latest mod version").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(false)
+        main.getChatHelper().sendMessage(new ChatComponentText("➜ Update instructions:").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(true))
+                .appendSibling(new ChatComponentText("\n➊" + EnumChatFormatting.YELLOW + " download latest mod version").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(false)
                         .setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, main.getVersionChecker().getDownloadUrl()))
-                        .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.YELLOW + "Download the latest version of " + Cowlection.MODNAME + "\n\u279C Click to download latest mod file")))))
-                .appendSibling(new ChatComponentText("\n\u278B" + EnumChatFormatting.YELLOW + " exit Minecraft").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(false)
-                        .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.GOLD + "\u278B" + EnumChatFormatting.YELLOW + " Without closing Minecraft first,\n" + EnumChatFormatting.YELLOW + "you can't delete the old .jar file!")))))
-                .appendSibling(new ChatComponentText("\n\u278C" + EnumChatFormatting.YELLOW + " copy " + EnumChatFormatting.GOLD + Cowlection.MODNAME.replace(" ", "") + "-" + main.getVersionChecker().getNewVersion() + ".jar" + EnumChatFormatting.YELLOW + " into mods directory").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(false)
+                        .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.YELLOW + "Download the latest version of " + Cowlection.MODNAME + "\n➜ Click to download latest mod file")))))
+                .appendSibling(new ChatComponentText("\n➋" + EnumChatFormatting.YELLOW + " exit Minecraft").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(false)
+                        .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.GOLD + "➋" + EnumChatFormatting.YELLOW + " Without closing Minecraft first,\n" + EnumChatFormatting.YELLOW + "you can't delete the old .jar file!")))))
+                .appendSibling(new ChatComponentText("\n➌" + EnumChatFormatting.YELLOW + " copy " + EnumChatFormatting.GOLD + Cowlection.MODNAME.replace(" ", "") + "-" + main.getVersionChecker().getNewVersion() + ".jar" + EnumChatFormatting.YELLOW + " into mods directory").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(false)
                         .setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/moo directory"))
-                        .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.YELLOW + "Open mods directory with command " + EnumChatFormatting.GOLD + "/moo directory\n\u279C Click to open mods directory")))))
-                .appendSibling(new ChatComponentText("\n\u278D" + EnumChatFormatting.YELLOW + " delete old mod file " + EnumChatFormatting.GOLD + Cowlection.MODNAME.replace(" ", "") + "-" + Cowlection.VERSION + ".jar ").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(false)))
-                .appendSibling(new ChatComponentText("\n\u278E" + EnumChatFormatting.YELLOW + " start Minecraft again").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(false))));
+                        .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.YELLOW + "Open mods directory with command " + EnumChatFormatting.GOLD + "/moo directory\n➜ Click to open mods directory")))))
+                .appendSibling(new ChatComponentText("\n➍" + EnumChatFormatting.YELLOW + " delete old mod file " + EnumChatFormatting.GOLD + Cowlection.MODNAME.replace(" ", "") + "-" + Cowlection.VERSION + ".jar ").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(false)))
+                .appendSibling(new ChatComponentText("\n➎" + EnumChatFormatting.YELLOW + " start Minecraft again").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GOLD).setBold(false))));
     }
     //endregion
 
@@ -774,7 +774,7 @@ public class MooCommand extends CommandBase {
     }
 
     private void sendCommandUsage(ICommandSender sender) {
-        IChatComponent usage = new MooChatComponent("\u279C " + Cowlection.MODNAME + " commands:").gold().bold()
+        IChatComponent usage = new MooChatComponent("➜ " + Cowlection.MODNAME + " commands:").gold().bold()
                 .appendSibling(createCmdHelpEntry("config", "Open mod's configuration"))
                 .appendSibling(new MooChatComponent("\n").reset().gray().appendText(EnumChatFormatting.DARK_GREEN + "  ❢" + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + " Commands marked with §d§l⚷" + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + " require a valid API key"))
                 .appendSibling(createCmdHelpSection(1, "Best friends, friends & other players"))
@@ -793,7 +793,7 @@ public class MooCommand extends CommandBase {
                 .appendSibling(createCmdHelpEntry("search", "Open Minecraft log search"))
                 .appendSibling(createCmdHelpEntry("guiScale", "Change GUI scale"))
                 .appendSibling(createCmdHelpEntry("rr", "Alias for /r without auto-replacement to /msg"))
-                .appendSibling(createCmdHelpEntry("shrug", "\u00AF\\_(\u30C4)_/\u00AF")) // ¯\_(ツ)_/¯
+                .appendSibling(createCmdHelpEntry("shrug", "¯\\_(ツ)_/¯"))
                 .appendSibling(createCmdHelpSection(4, "Update mod"))
                 .appendSibling(createCmdHelpEntry("update", "Check for new mod updates"))
                 .appendSibling(createCmdHelpEntry("updateHelp", "Show mod update instructions"))
@@ -810,7 +810,7 @@ public class MooCommand extends CommandBase {
     private IChatComponent createCmdHelpEntry(String cmd, String usage) {
         String command = "/" + this.getCommandName() + " " + cmd;
 
-        return new MooChatComponent("\n").reset().appendSibling(new MooChatComponent.KeyValueChatComponent(command, usage, " \u27A1 ").setSuggestCommand(command));
+        return new MooChatComponent("\n").reset().appendSibling(new MooChatComponent.KeyValueChatComponent(command, usage, " ➡ ").setSuggestCommand(command));
     }
 
     @Override

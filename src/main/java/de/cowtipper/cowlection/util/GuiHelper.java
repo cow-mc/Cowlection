@@ -164,7 +164,6 @@ public final class GuiHelper extends GuiScreen {
                 tooltipY = screenHeight - tooltipHeight - 6;
             }
 
-            final int zLevel = 300;
             final int backgroundColor = 0xF0100010;
             Gui.drawRect(tooltipX - 3, tooltipY - 4, tooltipX + tooltipTextWidth + 3, tooltipY - 3, backgroundColor);
             Gui.drawRect(tooltipX - 3, tooltipY + tooltipHeight + 3, tooltipX + tooltipTextWidth + 3, tooltipY + tooltipHeight + 4, backgroundColor);

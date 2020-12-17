@@ -63,8 +63,4 @@ public class MooConfigMenuList extends GuiScrollingList {
     protected int getRight() {
         return this.right;
     }
-
-    public int getLeft() {
-        return this.left;
-    }
 }

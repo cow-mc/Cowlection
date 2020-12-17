@@ -45,6 +45,10 @@ public class MooConfigPreview {
                 break;
             case CHAT:
                 drawChatPreview(x, y, mouseX, mouseY, enablePreview);
+                break;
+            default:
+                // do nothing
+                break;
         }
     }
 

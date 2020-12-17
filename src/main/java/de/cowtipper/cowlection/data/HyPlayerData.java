@@ -2,6 +2,7 @@ package de.cowtipper.cowlection.data;
 
 import net.minecraft.util.EnumChatFormatting;
 
+@SuppressWarnings("unused")
 public class HyPlayerData {
     private String displayname;
     private String rank;
@@ -74,6 +75,9 @@ public class HyPlayerData {
                     return EnumChatFormatting.RED + "[ADMIN]";
                 case "YOUTUBER":
                     return EnumChatFormatting.RED + "[" + EnumChatFormatting.WHITE + "YOUTUBE" + EnumChatFormatting.RED + "]";
+                default:
+                    // unknown rank, fall-through
+                    break;
             }
         }
         if (rankPlusColor == null) {

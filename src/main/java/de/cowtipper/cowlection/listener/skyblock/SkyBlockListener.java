@@ -1,6 +1,5 @@
 package de.cowtipper.cowlection.listener.skyblock;
 
-import de.cowtipper.cowlection.Cowlection;
 import de.cowtipper.cowlection.config.MooConfig;
 import de.cowtipper.cowlection.util.Utils;
 import net.minecraft.client.Minecraft;
@@ -31,15 +30,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SkyBlockListener {
-    private final Cowlection main;
     /**
      * timestamp example: 4/20/20 4:20 AM
      */
     private final Pattern SB_TIMESTAMP_PATTERN = Pattern.compile("^(\\d{1,2})/(\\d{1,2})/(\\d{2}) (\\d{1,2}):(\\d{2}) (AM|PM)$");
     private final NumberFormat numberFormatter;
 
-    public SkyBlockListener(Cowlection main) {
-        this.main = main;
+    public SkyBlockListener() {
         numberFormatter = NumberFormat.getNumberInstance(Locale.US);
         numberFormatter.setMaximumFractionDigits(0);
     }
@@ -95,6 +92,10 @@ public class SkyBlockListener {
                         }
                     case ALWAYS:
                         e.toolTip.add(index, "Timestamp: " + EnumChatFormatting.DARK_GRAY + dateTimeFormatted);
+                        break;
+                    default:
+                        // do nothing
+                        break;
                 }
                 switch (tooltipItemAgeDisplay) {
                     case SPECIAL:
@@ -103,6 +104,10 @@ public class SkyBlockListener {
                         }
                     case ALWAYS:
                         e.toolTip.add(index, "Item age: " + EnumChatFormatting.DARK_GRAY + ((MooConfig.tooltipItemAgeShortened) ? Utils.getDurationAsWord(dateTime.toEpochSecond() * 1000) : Utils.getDurationAsWords(dateTime.toEpochSecond() * 1000).first()));
+                        break;
+                    default:
+                        // do nothing
+                        break;
                 }
             }
         }

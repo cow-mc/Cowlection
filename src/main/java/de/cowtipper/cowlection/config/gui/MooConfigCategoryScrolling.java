@@ -41,7 +41,6 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
     private final List<IGuiListEntry> listEntries;
     private final Map<Integer, List<String>> explanations;
     private final MooConfigGui parent;
-    private final int marginLeft;
     private int maxListLabelWidth = 0;
     private KeyBindingConfigEntry currentKeyBindingConfigEntry = null;
     /**
@@ -52,7 +51,6 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
     public MooConfigCategoryScrolling(MooConfigGui parent, Minecraft mc, MooConfigCategory currentConfigCategory, int marginLeft) {
         super(mc, parent.width - marginLeft, parent.height, 32, parent.height - 5, 20);
         this.parent = parent;
-        this.marginLeft = marginLeft;
         setSlotXBoundsFromLeft(marginLeft);
         this.mc = mc;
         listEntriesPreviews = new TreeMap<>();

@@ -69,21 +69,21 @@ public class VersionChecker {
         if (isCommandTriggered) {
             if (versionResult.status == ForgeVersion.Status.UP_TO_DATE) {
                 // up to date
-                statusMsg = new ChatComponentText("\u2714 You're running the latest version (" + Cowlection.VERSION + ").").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GREEN));
+                statusMsg = new ChatComponentText("✔ You're running the latest version (" + Cowlection.VERSION + ").").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GREEN));
             } else if (versionResult.status == ForgeVersion.Status.PENDING) {
                 // pending
-                statusMsg = new ChatComponentText("\u279C " + "Version check either failed or is still running.").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.YELLOW))
-                        .appendSibling(new ChatComponentText("\n \u278A Check for results again in a few seconds with " + EnumChatFormatting.GOLD + "/moo version").setChatStyle(new ChatStyle()
+                statusMsg = new ChatComponentText("➜ " + "Version check either failed or is still running.").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.YELLOW))
+                        .appendSibling(new ChatComponentText("\n ➊ Check for results again in a few seconds with " + EnumChatFormatting.GOLD + "/moo version").setChatStyle(new ChatStyle()
                                 .setColor(EnumChatFormatting.YELLOW)
                                 .setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/moo version"))
                                 .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.YELLOW + "Run " + EnumChatFormatting.GOLD + "/moo version")))))
-                        .appendSibling(new ChatComponentText("\n \u278B Re-run update check with " + EnumChatFormatting.GOLD + "/moo update").setChatStyle(new ChatStyle()
+                        .appendSibling(new ChatComponentText("\n ➋ Re-run update check with " + EnumChatFormatting.GOLD + "/moo update").setChatStyle(new ChatStyle()
                                 .setColor(EnumChatFormatting.YELLOW)
                                 .setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/moo update"))
                                 .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.YELLOW + "Run " + EnumChatFormatting.GOLD + "/moo update")))));
             } else if (versionResult.status == ForgeVersion.Status.FAILED) {
                 // check failed
-                statusMsg = new ChatComponentText("\u2716 Version check failed for an unknown reason. Check again in a few seconds with ").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.RED))
+                statusMsg = new ChatComponentText("✖ Version check failed for an unknown reason. Check again in a few seconds with ").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.RED))
                         .appendSibling(new ChatComponentText("/moo update").setChatStyle(new ChatStyle()
                                 .setColor(EnumChatFormatting.GOLD)
                                 .setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/moo update"))
@@ -94,7 +94,7 @@ public class VersionChecker {
             // outdated
             IChatComponent spacer = new ChatComponentText(" ").setChatStyle(new ChatStyle().setParentStyle(null));
 
-            IChatComponent text = new ChatComponentText("\u279C New version of " + EnumChatFormatting.DARK_GREEN + Cowlection.MODNAME + " " + EnumChatFormatting.GREEN + "available (" + Cowlection.VERSION + " \u27A1 " + newVersion + ")\n").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GREEN));
+            IChatComponent text = new ChatComponentText("➜ New version of " + EnumChatFormatting.DARK_GREEN + Cowlection.MODNAME + " " + EnumChatFormatting.GREEN + "available (" + Cowlection.VERSION + " ➡ " + newVersion + ")\n").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GREEN));
 
             IChatComponent download = new ChatComponentText("[Download]").setChatStyle(new ChatStyle()
                     .setColor(EnumChatFormatting.DARK_GREEN).setBold(true)
@@ -114,7 +114,7 @@ public class VersionChecker {
             IChatComponent openModsDirectory = new ChatComponentText("\n[Open Mods directory]").setChatStyle(new ChatStyle()
                     .setColor(EnumChatFormatting.GREEN).setBold(true)
                     .setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/moo directory"))
-                    .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.YELLOW + "Open mods directory with command " + EnumChatFormatting.GOLD + "/moo directory\n\u279C Click to open mods directory"))));
+                    .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.YELLOW + "Open mods directory with command " + EnumChatFormatting.GOLD + "/moo directory\n➜ Click to open mods directory"))));
 
             statusMsg = text.appendSibling(download).appendSibling(spacer).appendSibling(changelog).appendSibling(spacer).appendSibling(updateInstructions).appendSibling(spacer).appendSibling(openModsDirectory);
         }

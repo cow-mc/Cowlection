@@ -91,7 +91,7 @@ public class DungeonsPartyListener {
                         nextStep = Step.API_REQUESTS;
                         break;
                     }
-                    // fallthrough:
+                    // fall-through:
                 case MODERATORS_OR_MEMBERS:
                     matcher = PARTY_MEMBERS_OR_MODERATORS_PATTERN.matcher(text);
                     boolean isPartyMods = text.startsWith("Party Moderators: ");
@@ -102,6 +102,9 @@ public class DungeonsPartyListener {
                         }
                         nextStep = isPartyMods ? Step.MEMBERS_OR_END : Step.API_REQUESTS;
                     }
+                    break;
+                default:
+                    // do nothing
                     break;
             }
 

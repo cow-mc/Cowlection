@@ -29,8 +29,8 @@ public final class Utils {
         return VALID_UUID_PATTERN.matcher(uuid).matches();
     }
 
-    public static boolean isValidMcName(String username) {
-        return VALID_USERNAME.matcher(username).matches();
+    public static boolean isInvalidMcName(String username) {
+        return !VALID_USERNAME.matcher(username).matches();
     }
 
     public static String fancyCase(String string) {
@@ -215,8 +215,9 @@ public final class Utils {
                 return five + one + one + one;
             case 9:
                 return one + ten;
+            default:
+                return "";
         }
-        return "";
     }
 
     /**

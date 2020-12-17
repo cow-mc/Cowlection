@@ -3,6 +3,7 @@ package de.cowtipper.cowlection.data;
 import de.cowtipper.cowlection.util.Utils;
 import org.apache.commons.lang3.StringUtils;
 
+@SuppressWarnings("unused")
 public class HyStalkingData {
     private boolean success;
     private String cause;
@@ -108,6 +109,9 @@ public class HyStalkingData {
                         return "Gold Mine";
                     case "mining_2":
                         return "Deep Caverns";
+                    default:
+                        // fall-through
+                        break;
                 }
             }
             return Utils.fancyCase(mode);

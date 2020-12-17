@@ -621,7 +621,7 @@ public class MooConfig {
             // date format: yyyy-mm-dd
             return LocalDate.parse(defaultStartDate);
         } catch (DateTimeParseException e) {
-            // fallthrough
+            // fall-through
         }
         try {
             int months = Integer.parseInt(defaultStartDate);

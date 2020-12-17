@@ -5,7 +5,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 public class TickDelay {
-    private Runnable task;
+    private final Runnable task;
     private int waitingTicks;
 
     public TickDelay(Runnable task, int ticks) {

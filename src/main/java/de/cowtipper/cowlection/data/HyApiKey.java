@@ -1,7 +1,9 @@
 package de.cowtipper.cowlection.data;
 
 public class HyApiKey {
+    @SuppressWarnings("unused")
     private boolean success;
+    @SuppressWarnings("unused")
     private String cause;
 
     /**

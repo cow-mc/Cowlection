@@ -16,6 +16,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.*;
 
+@SuppressWarnings({"FieldCanBeLocal", "FieldMayBeFinal", "unused", "MismatchedQueryAndUpdateOfCollection"})
 public class HySkyBlockStats {
     private boolean success;
     private String cause;

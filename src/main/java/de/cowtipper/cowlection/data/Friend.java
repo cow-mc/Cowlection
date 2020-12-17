@@ -5,6 +5,7 @@ import java.util.UUID;
 
 public class Friend {
     public static final Friend FRIEND_NOT_FOUND = new Friend();
+    @SuppressWarnings("unused")
     private UUID id;
     private String name;
     private long lastChecked;

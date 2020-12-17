@@ -48,7 +48,7 @@ class LogFilesSearcher {
         }
 
         if (files.isEmpty()) {
-            throw new FileNotFoundException(EnumChatFormatting.DARK_RED + "ERROR: Couldn't find any Minecraft log files. Please check if the log file directories are set correctly (Log Search \u27A1 Settings).");
+            throw new FileNotFoundException(EnumChatFormatting.DARK_RED + "ERROR: Couldn't find any Minecraft log files. Please check if the log file directories are set correctly (Log Search ➡ Settings).");
         } else {
             List<LogEntry> searchResults = analyzeFiles(files, searchQuery, chatOnly, matchCase, removeFormatting)
                     .stream().sorted(Comparator.comparing(LogEntry::getTime)).collect(Collectors.toList());

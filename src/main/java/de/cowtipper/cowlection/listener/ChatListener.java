@@ -71,6 +71,9 @@ public class ChatListener {
                         case "left":
                             main.getPlayerCache().removeBestFriend(playerName);
                             break;
+                        default:
+                            // player neither left nor joined?!
+                            return;
                     }
                     if (MooConfig.showBestFriendNotifications) {
                         // replace default (friend/guild) notification with best friend notification
@@ -115,7 +118,7 @@ public class ChatListener {
                         }
                     }
                     GuiControls.setClipboardString(chatData);
-                    main.getChatHelper().sendAboveChatMessage(EnumChatFormatting.YELLOW + "Copied chat component to clipboard:", "" + EnumChatFormatting.BOLD + EnumChatFormatting.GOLD + "\u276E" + EnumChatFormatting.RESET + (copyWithFormatting ? chatComponent.getUnformattedText() : chatData) + EnumChatFormatting.BOLD + EnumChatFormatting.GOLD + "\u276F");
+                    main.getChatHelper().sendAboveChatMessage(EnumChatFormatting.YELLOW + "Copied chat component to clipboard:", "" + EnumChatFormatting.BOLD + EnumChatFormatting.GOLD + "❮" + EnumChatFormatting.RESET + (copyWithFormatting ? chatComponent.getUnformattedText() : chatData) + EnumChatFormatting.BOLD + EnumChatFormatting.GOLD + "❯");
                 }
             }
         }

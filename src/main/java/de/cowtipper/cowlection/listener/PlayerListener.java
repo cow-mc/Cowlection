@@ -126,7 +126,7 @@ public class PlayerListener {
     public static boolean registerSkyBlockListeners() {
         if (dungeonsListener == null && skyBlockListener == null) {
             MinecraftForge.EVENT_BUS.register(dungeonsListener = new DungeonsListener(Cowlection.getInstance()));
-            MinecraftForge.EVENT_BUS.register(skyBlockListener = new SkyBlockListener(Cowlection.getInstance()));
+            MinecraftForge.EVENT_BUS.register(skyBlockListener = new SkyBlockListener());
             return true;
         }
         return false;

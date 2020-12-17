@@ -72,7 +72,7 @@ public class Cowlection {
         MinecraftForge.EVENT_BUS.register(new ChatListener(this));
         MinecraftForge.EVENT_BUS.register(new PlayerListener(this));
         ClientCommandHandler.instance.registerCommand(new MooCommand(this));
-        ClientCommandHandler.instance.registerCommand(new ReplyCommand(this));
+        ClientCommandHandler.instance.registerCommand(new ReplyCommand());
         ClientCommandHandler.instance.registerCommand(new ShrugCommand(this));
         for (String tabCompletableNamesCommand : MooConfig.tabCompletableNamesCommands) {
             ClientCommandHandler.instance.registerCommand(new TabCompletableCommand(this, tabCompletableNamesCommand));
@@ -89,7 +89,7 @@ public class Cowlection {
     @EventHandler
     public void postInit(FMLPostInitializationEvent e) {
         versionChecker = new VersionChecker(this);
-        playerCache = new PlayerCache(this);
+        playerCache = new PlayerCache();
     }
 
     public MooConfig getConfig() {
