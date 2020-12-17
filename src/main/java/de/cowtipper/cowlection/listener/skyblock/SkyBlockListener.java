@@ -26,7 +26,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SkyBlockListener {
@@ -76,39 +75,36 @@ public class SkyBlockListener {
         NBTTagCompound extraAttributes = e.itemStack.getSubCompound("ExtraAttributes", false);
         if (extraAttributes != null && extraAttributes.hasKey("timestamp")
                 && (tooltipItemAgeDisplay != MooConfig.Setting.DISABLED || tooltipItemTimestampDisplay != MooConfig.Setting.DISABLED)) {
-            String rawTimestamp = extraAttributes.getString("timestamp");
-            Matcher sbTimestampMatcher = SB_TIMESTAMP_PATTERN.matcher(rawTimestamp);
-            if (sbTimestampMatcher.matches()) {
-                // Timezone = America/Toronto! headquarter is in Val-des-Monts, Quebec, Canada; timezone can also be confirmed by looking at the timestamps of New Year Cakes
-                ZonedDateTime dateTime = getDateTimeWithZone(sbTimestampMatcher, ZoneId.of("America/Toronto")); // EDT/EST
-                String dateTimeFormatted = dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm zzz"));
+            LocalDateTime skyBlockDateTime = LocalDateTime.parse(extraAttributes.getString("timestamp"), DateTimeFormatter.ofPattern("M/d/yy h:mm a", Locale.US));
 
-                int index = Math.max(0, e.toolTip.size() - (e.showAdvancedItemTooltips ? /* item name & nbt info */ 2 : 0));
+            // Timezone = America/Toronto! headquarter is in Val-des-Monts, Quebec, Canada; timezone can also be confirmed by looking at the timestamps of New Year Cakes
+            ZonedDateTime dateTime = ZonedDateTime.of(skyBlockDateTime, ZoneId.of("America/Toronto")); // EDT/EST
 
-                switch (tooltipItemTimestampDisplay) {
-                    case SPECIAL:
-                        if (!MooConfig.isTooltipToggleKeyBindingPressed()) {
-                            break;
-                        }
-                    case ALWAYS:
-                        e.toolTip.add(index, "Timestamp: " + EnumChatFormatting.DARK_GRAY + dateTimeFormatted);
+            int index = Math.max(0, e.toolTip.size() - (e.showAdvancedItemTooltips ? /* item name & nbt info */ 2 : 0));
+
+            switch (tooltipItemTimestampDisplay) {
+                case SPECIAL:
+                    if (!MooConfig.isTooltipToggleKeyBindingPressed()) {
                         break;
-                    default:
-                        // do nothing
+                    }
+                case ALWAYS:
+                    e.toolTip.add(index, "Timestamp: " + EnumChatFormatting.DARK_GRAY + dateTime.withZoneSameInstant(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm zzz")));
+                    break;
+                default:
+                    // do nothing
+                    break;
+            }
+            switch (tooltipItemAgeDisplay) {
+                case SPECIAL:
+                    if (!MooConfig.isTooltipToggleKeyBindingPressed()) {
                         break;
-                }
-                switch (tooltipItemAgeDisplay) {
-                    case SPECIAL:
-                        if (!MooConfig.isTooltipToggleKeyBindingPressed()) {
-                            break;
-                        }
-                    case ALWAYS:
-                        e.toolTip.add(index, "Item age: " + EnumChatFormatting.DARK_GRAY + ((MooConfig.tooltipItemAgeShortened) ? Utils.getDurationAsWord(dateTime.toEpochSecond() * 1000) : Utils.getDurationAsWords(dateTime.toEpochSecond() * 1000).first()));
-                        break;
-                    default:
-                        // do nothing
-                        break;
-                }
+                    }
+                case ALWAYS:
+                    e.toolTip.add(index, "Item age: " + EnumChatFormatting.DARK_GRAY + ((MooConfig.tooltipItemAgeShortened) ? Utils.getDurationAsWord(dateTime.toEpochSecond() * 1000) : Utils.getDurationAsWords(dateTime.toEpochSecond() * 1000).first()));
+                    break;
+                default:
+                    // do nothing
+                    break;
             }
         }
 
@@ -157,18 +153,6 @@ public class SkyBlockListener {
                 }
             }
         }
-    }
-
-    private ZonedDateTime getDateTimeWithZone(Matcher sbTimestampMatcher, ZoneId zoneId) {
-        int year = 2000 + Integer.parseInt(sbTimestampMatcher.group(3));
-        int month = Integer.parseInt(sbTimestampMatcher.group(1));
-        int day = Integer.parseInt(sbTimestampMatcher.group(2));
-        int hour = (Integer.parseInt(sbTimestampMatcher.group(4)) + (sbTimestampMatcher.group(6).equals("PM") ? 12 : 0)) % 24;
-        int minute = Integer.parseInt(sbTimestampMatcher.group(5));
-
-        LocalDateTime localDateTime = LocalDateTime.of(year, month, day, hour, minute);
-
-        return ZonedDateTime.of(localDateTime, zoneId);
     }
 
     private boolean isSubmitBidItem(ItemStack itemStack) {
