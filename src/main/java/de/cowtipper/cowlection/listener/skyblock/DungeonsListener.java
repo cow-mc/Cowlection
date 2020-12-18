@@ -453,7 +453,8 @@ public class DungeonsListener {
         }, 40); // 2 second delay, making sure scoreboard got sent
     }
 
-    @SubscribeEvent
+    // priority = highest to ignore other mods modifying the chat output
+    @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
     public void onMessageReceived(ClientChatReceivedEvent e) {
         if (e.type != 2) { // normal chat or system msg (not above action bar)
             String text = EnumChatFormatting.getTextWithoutFormattingCodes(e.message.getUnformattedText());

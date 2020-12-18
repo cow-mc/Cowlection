@@ -19,6 +19,7 @@ import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.apache.commons.lang3.CharUtils;
 import org.lwjgl.input.Keyboard;
@@ -149,7 +150,8 @@ public class ChatListener {
         }
     }
 
-    @SubscribeEvent
+    // priority = highest to ignore other mods modifying the chat output
+    @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
     public void onChatMsgReceive(ClientChatReceivedEvent e) {
         if (e.type != 2) {
             String messageSender = null;

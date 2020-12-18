@@ -11,6 +11,7 @@ import de.cowtipper.cowlection.util.Utils;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import java.util.Map;
@@ -42,7 +43,8 @@ public class DungeonsPartyListener {
         }
     }
 
-    @SubscribeEvent
+    // priority = highest to ignore other mods modifying the chat output
+    @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
     public void onMessageReceived(ClientChatReceivedEvent e) {
         if (e.type != 2 && listenForChatMsgs) { // normal chat or system msg (not above action bar), and not stopped
             if (msgCounter > 15) {
