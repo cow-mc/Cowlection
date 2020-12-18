@@ -8,9 +8,10 @@ import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,27 +31,43 @@ public class ChatHelper {
     }
 
     public void sendMessage(IChatComponent chatComponent) {
-        ClientChatReceivedEvent event = new ClientChatReceivedEvent((byte) 1, chatComponent);
-        MinecraftForge.EVENT_BUS.post(event);
-        if (!event.isCanceled()) {
-            if (Minecraft.getMinecraft().thePlayer == null) {
-                offlineMessages.add(event.message);
-            } else {
+        if (Minecraft.getMinecraft().thePlayer == null) {
+            putOfflineMessage(chatComponent);
+        } else {
+            ClientChatReceivedEvent event = new ClientChatReceivedEvent((byte) 1, chatComponent);
+            MinecraftForge.EVENT_BUS.post(event);
+            if (!event.isCanceled()) {
                 Minecraft.getMinecraft().thePlayer.addChatMessage(event.message);
             }
         }
     }
 
-    public void sendOfflineMessages() {
+    private void putOfflineMessage(IChatComponent chatComponent) {
+        if (offlineMessages.size() == 0) {
+            // had no offline messages before
+            MinecraftForge.EVENT_BUS.register(this);
+        }
+        offlineMessages.add(chatComponent);
+    }
+
+    @SubscribeEvent
+    public void onPlayerWorldJoin(EntityJoinWorldEvent e) {
+        if (e.entity == Minecraft.getMinecraft().thePlayer) {
+            new TickDelay(this::sendOfflineMessages, 6 * 20);
+        }
+    }
+
+    private void sendOfflineMessages() {
         if (Minecraft.getMinecraft().thePlayer != null) {
-            Iterator<IChatComponent> offlineMessages = this.offlineMessages.iterator();
-            if (offlineMessages.hasNext()) {
+            if (offlineMessages.size() > 0) {
                 Minecraft.getMinecraft().thePlayer.playSound("random.levelup", 0.4F, 0.8F);
             }
-            while (offlineMessages.hasNext()) {
-                Minecraft.getMinecraft().thePlayer.addChatMessage(offlineMessages.next());
-                offlineMessages.remove();
+
+            for (IChatComponent offlineMessage : offlineMessages) {
+                sendMessage(offlineMessage);
             }
+            offlineMessages.clear();
+            MinecraftForge.EVENT_BUS.unregister(this);
         }
     }
 

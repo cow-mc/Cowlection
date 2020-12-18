@@ -34,6 +34,7 @@ public class PlayerListener {
     private final Cowlection main;
     private static DungeonsListener dungeonsListener;
     private static SkyBlockListener skyBlockListener;
+    private boolean isPlayerJoiningServer;
     private boolean isOnSkyBlock;
 
     public PlayerListener(Cowlection main) {
@@ -89,13 +90,14 @@ public class PlayerListener {
 
     @SubscribeEvent
     public void onServerJoin(FMLNetworkEvent.ClientConnectedToServerEvent e) {
-        main.getVersionChecker().runUpdateCheck(false);
-        new TickDelay(() -> main.getChatHelper().sendOfflineMessages(), 6 * 20);
-        if (MooConfig.doBestFriendsOnlineCheck && CredentialStorage.isMooValid && main.getFriendsHandler().getBestFriends().size() > 0) {
-            main.getFriendsHandler().runBestFriendsOnlineCheck(false);
+        if (!isPlayerJoiningServer) {
+            isOnSkyBlock = false;
+            isPlayerJoiningServer = true;
+            main.getVersionChecker().runUpdateCheck(false);
+            if (MooConfig.doBestFriendsOnlineCheck && CredentialStorage.isMooValid && main.getFriendsHandler().getBestFriends().size() > 0) {
+                main.getFriendsHandler().runBestFriendsOnlineCheck(false);
+            }
         }
-        isOnSkyBlock = false;
-        main.getLogger().info("Joined the server");
     }
 
     @SubscribeEvent
@@ -105,6 +107,7 @@ public class PlayerListener {
 
     @SubscribeEvent
     public void onWorldEnter(PlayerSetSpawnEvent e) {
+        isPlayerJoiningServer = false;
         // check if player is on SkyBlock or on another gamemode
         new TickDelay(() -> {
             ScoreObjective scoreboardSidebar = e.entityPlayer.worldObj.getScoreboard().getObjectiveInDisplaySlot(1);
@@ -145,9 +148,11 @@ public class PlayerListener {
 
     @SubscribeEvent
     public void onServerLeave(FMLNetworkEvent.ClientDisconnectionFromServerEvent e) {
-        main.getFriendsHandler().saveBestFriends();
-        main.getPlayerCache().clearAllCaches();
-        unregisterSkyBlockListeners();
-        main.getLogger().info("Left the server");
+        // check if player actually was on the server
+        if (!isPlayerJoiningServer) {
+            main.getFriendsHandler().saveBestFriends();
+            main.getPlayerCache().clearAllCaches();
+            unregisterSkyBlockListeners();
+        }
     }
 }

@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Item age: show timestamp in the local timezone instead of "SkyBlock"-timezone (Eastern Time; also fixed the incorrect 12h ↔ 24h clock conversion)
 
+### Fixed
+- Fixed some possible problems with bad server connection
+  - Fixed sending 'offline' messages (new version notification and online best friends)
+  - Fixed rare occurrence of repeated triggering of server join and leave events
+
 ## [1.8.9-0.11.0] - 28.09.2020
 ### Added
 - SkyBlock Dungeons Party: new command `/moo dungeon party`

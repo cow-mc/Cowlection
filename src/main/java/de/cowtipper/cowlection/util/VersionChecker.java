@@ -124,8 +124,7 @@ public class VersionChecker {
                 main.getChatHelper().sendMessage(statusMsg);
             } else {
                 IChatComponent finalStatusMsg = statusMsg;
-                new TickDelay(() -> main.getChatHelper().sendMessage(finalStatusMsg)
-                        , 6 * 20);
+                new TickDelay(() -> main.getChatHelper().sendMessage(finalStatusMsg), 6 * 20);
             }
         }
     }
