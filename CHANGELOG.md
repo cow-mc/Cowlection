@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [1.8.9-0.12.0] - unreleased
 ### Changed
 - Item age: show timestamp in the local timezone instead of "SkyBlock"-timezone (Eastern Time; also fixed the incorrect 12h ↔ 24h clock conversion)
+- Improved 'being on SkyBlock' detection
+  - gave scoreboard more time to get detected
+  - also added config option to always (or never) enable SkyBlock event listeners
 
 ### Fixed
 - Fixed some possible problems with bad server connection

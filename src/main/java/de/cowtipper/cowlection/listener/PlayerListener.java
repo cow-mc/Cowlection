@@ -6,6 +6,7 @@ import de.cowtipper.cowlection.config.MooConfig;
 import de.cowtipper.cowlection.event.ApiErrorEvent;
 import de.cowtipper.cowlection.listener.skyblock.DungeonsListener;
 import de.cowtipper.cowlection.listener.skyblock.SkyBlockListener;
+import de.cowtipper.cowlection.util.AbortableRunnable;
 import de.cowtipper.cowlection.util.GsonUtils;
 import de.cowtipper.cowlection.util.TickDelay;
 import net.minecraft.client.Minecraft;
@@ -27,6 +28,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerSetSpawnEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 import org.lwjgl.input.Keyboard;
 
@@ -36,6 +38,7 @@ public class PlayerListener {
     private static SkyBlockListener skyBlockListener;
     private boolean isPlayerJoiningServer;
     private boolean isOnSkyBlock;
+    private AbortableRunnable checkScoreboard;
 
     public PlayerListener(Cowlection main) {
         this.main = main;
@@ -108,22 +111,80 @@ public class PlayerListener {
     @SubscribeEvent
     public void onWorldEnter(PlayerSetSpawnEvent e) {
         isPlayerJoiningServer = false;
-        // check if player is on SkyBlock or on another gamemode
-        new TickDelay(() -> {
-            ScoreObjective scoreboardSidebar = e.entityPlayer.worldObj.getScoreboard().getObjectiveInDisplaySlot(1);
-            boolean wasOnSkyBlock = isOnSkyBlock;
-            isOnSkyBlock = (scoreboardSidebar != null && EnumChatFormatting.getTextWithoutFormattingCodes(scoreboardSidebar.getDisplayName()).startsWith("SKYBLOCK"));
 
-            if (!wasOnSkyBlock && isOnSkyBlock) {
-                // player wasn't on SkyBlock before but now is on SkyBlock
-                main.getLogger().info("Entered SkyBlock! Registering SkyBlock listeners");
-                registerSkyBlockListeners();
-            } else if (wasOnSkyBlock && !isOnSkyBlock) {
-                // player was on SkyBlock before and is now in another gamemode
-                unregisterSkyBlockListeners();
-                main.getLogger().info("Leaving SkyBlock! Un-registering SkyBlock listeners");
-            }
-        }, 40); // 2 second delay, making sure scoreboard got sent
+        if (MooConfig.getEnableSkyBlockOnlyFeatures() == MooConfig.Setting.ALWAYS) {
+            main.getLogger().info("Registering SkyBlock listeners");
+            isOnSkyBlock = true;
+            registerSkyBlockListeners();
+        } else if (MooConfig.getEnableSkyBlockOnlyFeatures() == MooConfig.Setting.SPECIAL) { // only on SkyBlock
+            stopScoreboardChecker();
+
+            // check if player is on SkyBlock or on another gamemode
+            checkScoreboard = new AbortableRunnable() {
+                private int retries = 20 * 20; // retry for up to 20 seconds
+
+                @SubscribeEvent
+                public void onTickCheckScoreboard(TickEvent.ClientTickEvent e) {
+                    if (!stopped && e.phase == TickEvent.Phase.END) {
+                        if (Minecraft.getMinecraft().theWorld == null || retries <= 0) {
+                            // already stopped; or world gone, probably disconnected; or no retries left (took too long [20 seconds not enough?] or is not on SkyBlock): stop!
+                            stop();
+                            return;
+                        }
+                        retries--;
+                        ScoreObjective scoreboardSidebar = Minecraft.getMinecraft().theWorld.getScoreboard().getObjectiveInDisplaySlot(1);
+                        if (scoreboardSidebar == null && retries >= 0) {
+                            // scoreboard hasn't loaded yet, retry next tick
+                            return;
+                        }
+
+                        // ... either scoreboard has loaded now or no more retries left
+
+                        boolean wasOnSkyBlock = isOnSkyBlock;
+                        isOnSkyBlock = (scoreboardSidebar != null && EnumChatFormatting.getTextWithoutFormattingCodes(scoreboardSidebar.getDisplayName()).startsWith("SKYBLOCK"));
+
+                        if (!wasOnSkyBlock && isOnSkyBlock) {
+                            // player wasn't on SkyBlock before but now is on SkyBlock
+                            main.getLogger().info("Entered SkyBlock! Registering SkyBlock listeners");
+                            registerSkyBlockListeners();
+                        } else if (wasOnSkyBlock && !isOnSkyBlock) {
+                            // player was on SkyBlock before and is now in another gamemode
+                            unregisterSkyBlockListeners();
+                            main.getLogger().info("Leaving SkyBlock! Un-registering SkyBlock listeners");
+                        }
+                        stop();
+                    }
+                }
+
+                @Override
+                public void stop() {
+                    if (!stopped) {
+                        stopped = true;
+                        retries = -1;
+                        MinecraftForge.EVENT_BUS.unregister(this);
+                        stopScoreboardChecker();
+                    }
+                }
+
+                @Override
+                public void run() {
+                    MinecraftForge.EVENT_BUS.register(this);
+                }
+            };
+
+            new TickDelay(checkScoreboard, 40); // 2 second delay + retrying for 20 seconds, making sure scoreboard got sent
+        } else if (MooConfig.getEnableSkyBlockOnlyFeatures() == MooConfig.Setting.DISABLED) {
+            isOnSkyBlock = false;
+            unregisterSkyBlockListeners();
+        }
+    }
+
+    private void stopScoreboardChecker() {
+        if (checkScoreboard != null) {
+            // there is still a scoreboard-checker running, stop it
+            checkScoreboard.stop();
+            checkScoreboard = null;
+        }
     }
 
     public static boolean registerSkyBlockListeners() {
@@ -142,7 +203,6 @@ public class PlayerListener {
             dungeonsListener = null;
             MinecraftForge.EVENT_BUS.unregister(skyBlockListener);
             skyBlockListener = null;
-            Cowlection.getInstance().getLogger().info("Left SkyBlock");
         }
     }
 

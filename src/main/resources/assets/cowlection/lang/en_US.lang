@@ -22,6 +22,8 @@ cowlection.config.showGuildNotifications=Show guild notifications
 cowlection.config.showGuildNotifications.tooltip=Set to true to receive guild members' login/logout messages, set to false hide them.
 cowlection.config.doBestFriendsOnlineCheck=Do best friends online check §d§l⚷
 cowlection.config.doBestFriendsOnlineCheck.tooltip=Set to true to check best friends' online status when joining a server, set to false to disable.\n§fDoes §dnot §fwork for staff members and players hiding their online status.\n§d§l⚷ §eRequires a valid API key!
+cowlection.config.enableSkyBlockOnlyFeatures=Enable SkyBlock-only features
+cowlection.config.enableSkyBlockOnlyFeatures.tooltip=§6When should SkyBlock-only features be active?\n§7§o(relog or change worlds after changing this option)\n §d➊ §fonly while being on SkyBlock §e(= disabled on other servers and in other gamemodes\n §d➋ §falways §e(= including other servers and gamemodes)\n §d➌ §fnever §e(§cNone §eof the SkyBlock-only features will work!)
 cowlection.config.tooltipToggleKeyBinding=Key binding: toggle tooltip
 cowlection.config.tooltipToggleKeyBinding.tooltip=Hold down this key to toggle tooltip if one of the following settings is set to 'key press'
 cowlection.config.tooltipAuctionHousePriceEach=Auction house: price per item

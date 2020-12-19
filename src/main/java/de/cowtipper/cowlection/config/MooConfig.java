@@ -57,6 +57,7 @@ public class MooConfig {
     public static boolean showGuildNotifications;
     public static boolean doBestFriendsOnlineCheck;
     // Category: SkyBlock
+    private static String enableSkyBlockOnlyFeatures;
     public static int tooltipToggleKeyBinding;
     private static String tooltipAuctionHousePriceEach;
     private static String tooltipItemAge;
@@ -267,6 +268,11 @@ public class MooConfig {
         configCat = new MooConfigCategory("SkyBlock", "skyblock");
         configCategories.add(configCat);
 
+        // Sub-Category: SkyBlock-only features
+        subCat = configCat.addSubCategory("SkyBlock-only features");
+        Property propEnableSkyBlockOnlyFeatures = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "enableSkyBlockOnlyFeatures", "on SkyBlock", "Enable SkyBlock-only features?", new String[]{"on SkyBlock", "always", "never"}));
+
         // Sub-Category: Tooltip enhancements
         subCat = configCat.addSubCategory("Tooltip enhancements");
 
@@ -419,6 +425,7 @@ public class MooConfig {
             showGuildNotifications = propShowGuildNotifications.getBoolean();
             doBestFriendsOnlineCheck = propDoBestFriendsOnlineCheck.getBoolean();
             // Category: SkyBlock
+            enableSkyBlockOnlyFeatures = propEnableSkyBlockOnlyFeatures.getString();
             tooltipToggleKeyBinding = propTooltipToggleKeyBinding.getInt();
             tooltipAuctionHousePriceEach = propTooltipAuctionHousePriceEach.getString();
             tooltipItemAge = propTooltipItemAge.getString();
@@ -460,6 +467,7 @@ public class MooConfig {
         propShowGuildNotifications.set(showGuildNotifications);
         propDoBestFriendsOnlineCheck.set(doBestFriendsOnlineCheck);
         // Category: SkyBlock
+        propEnableSkyBlockOnlyFeatures.set(enableSkyBlockOnlyFeatures);
         propTooltipToggleKeyBinding.set(tooltipToggleKeyBinding);
         propTooltipAuctionHousePriceEach.set(tooltipAuctionHousePriceEach);
         propTooltipItemAge.set(tooltipItemAge);
@@ -561,6 +569,10 @@ public class MooConfig {
     }
 
     // Category: SkyBlock
+    public static Setting getEnableSkyBlockOnlyFeatures() {
+        return Setting.get(MooConfig.enableSkyBlockOnlyFeatures);
+    }
+
     public static Setting getTooltipAuctionHousePriceEachDisplay() {
         return Setting.get(tooltipAuctionHousePriceEach);
     }
@@ -674,6 +686,7 @@ public class MooConfig {
                 case "never":
                 case "disabled":
                     return DISABLED;
+                case "on SkyBlock":
                 case "key press":
                 case "as tooltip ①§0⬛":
                     return SPECIAL;
