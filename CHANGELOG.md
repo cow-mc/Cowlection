@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Auto-replacement of `/r ` with `/w <last sender>`
   - Short alias `/m` for `/moo` command
   - Copy inventories to clipboard as JSON with <kbd>CTRL</kbd> + <kbd>C</kbs>
+- Added sound when a best friend comes online (deactivated by default)
 
 ### Changed
 - Item age: show timestamp in the local timezone instead of "SkyBlock"-timezone (Eastern Time; also fixed the incorrect 12h ↔ 24h clock conversion)

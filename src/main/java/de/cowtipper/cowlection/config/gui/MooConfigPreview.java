@@ -24,6 +24,8 @@ public class MooConfigPreview {
     private final Type type;
     private ItemStack[] items;
     private IChatComponent chatComponent;
+    private Runnable previewRunnable;
+    private long nextPreviewAt;
     public static ItemStack hoveredItem;
     public static IChatComponent hoveredChatComponent;
     public static MooConfigGui parent;
@@ -38,6 +40,15 @@ public class MooConfigPreview {
         this.items = items;
     }
 
+    public MooConfigPreview(String sound, float volume, float pitch) {
+        this.type = Type.RUNNABLE_ON_HOVER;
+        previewRunnable = () -> {
+            if (Minecraft.getMinecraft().thePlayer != null) {
+                Minecraft.getMinecraft().thePlayer.playSound(sound, volume, pitch);
+            }
+        };
+    }
+
     public void drawPreview(int x, int y, int mouseX, int mouseY, boolean enablePreview) {
         switch (type) {
             case ITEM:
@@ -45,6 +56,9 @@ public class MooConfigPreview {
                 break;
             case CHAT:
                 drawChatPreview(x, y, mouseX, mouseY, enablePreview);
+                break;
+            case RUNNABLE_ON_HOVER:
+                drawButtonWithRunnablePreview(x, y, mouseX, mouseY, enablePreview);
                 break;
             default:
                 // do nothing
@@ -173,7 +187,22 @@ public class MooConfigPreview {
         return new MooChatComponent(name).darkGreen().setHover(new MooChatComponent(gameMode).yellow().appendFreshSibling(new MooChatComponent("Online for " + onlineTime).white()));
     }
 
+    private void drawButtonWithRunnablePreview(int x, int y, int mouseX, int mouseY, boolean enablePreview) {
+        FontRenderer fontRenderer = Minecraft.getMinecraft().fontRendererObj;
+        int currentX = x + 15;
+        int chatY = y + 20 / 2 - fontRenderer.FONT_HEIGHT / 2;
+
+        String previewText = "(hover me to preview)";
+        fontRenderer.drawStringWithShadow(previewText, currentX, chatY, 0xffffffff);
+        if (nextPreviewAt < Minecraft.getSystemTime()
+                && mouseY >= chatY && mouseY <= chatY + fontRenderer.FONT_HEIGHT
+                && mouseX > currentX && mouseX < currentX + fontRenderer.getStringWidth(previewText)) {
+            nextPreviewAt = Minecraft.getSystemTime() + 3000;
+            previewRunnable.run();
+        }
+    }
+
     private enum Type {
-        CHAT, ITEM
+        CHAT, ITEM, RUNNABLE_ON_HOVER
     }
 }

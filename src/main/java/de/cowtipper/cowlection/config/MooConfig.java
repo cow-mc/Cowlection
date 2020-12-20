@@ -9,6 +9,7 @@ import de.cowtipper.cowlection.data.DataHelper;
 import de.cowtipper.cowlection.util.MooChatComponent;
 import de.cowtipper.cowlection.util.Utils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.SoundCategory;
 import net.minecraft.command.ICommand;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagInt;
@@ -57,6 +58,7 @@ public class MooConfig {
     // Category: Notifications
     public static boolean doUpdateCheck;
     public static boolean showBestFriendNotifications;
+    public static boolean enableBestFriendNotificationSound;
     public static boolean showFriendNotifications;
     public static boolean showGuildNotifications;
     public static boolean doBestFriendsOnlineCheck;
@@ -257,6 +259,10 @@ public class MooConfig {
         Property propShowBestFriendNotifications = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "showBestFriendNotifications", true, "Set to true to receive best friends' login/logout messages, set to false hide them."),
                 new MooConfigPreview(new ChatComponentText("§a§lBest friend §a> §6Cow §r§ejoined.")));
+        Property propEnableBestFriendNotificationSound = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "enableBestFriendNotificationSound", false, "Set to true to play a notification sound when a best friend comes online"),
+                new MooConfigPreview("random.pop", Minecraft.getMinecraft().gameSettings.getSoundLevel(SoundCategory.MASTER), 1));
+
         Property propShowFriendNotifications = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "showFriendNotifications", true, "Set to true to receive friends' login/logout messages, set to false hide them."),
                 new MooConfigPreview(new ChatComponentText("§aFriend > §r§aBob §ejoined.")));
@@ -442,6 +448,7 @@ public class MooConfig {
             // Category: Notifications
             doUpdateCheck = propDoUpdateCheck.getBoolean();
             showBestFriendNotifications = propShowBestFriendNotifications.getBoolean();
+            enableBestFriendNotificationSound = propEnableBestFriendNotificationSound.getBoolean();
             showFriendNotifications = propShowFriendNotifications.getBoolean();
             showGuildNotifications = propShowGuildNotifications.getBoolean();
             doBestFriendsOnlineCheck = propDoBestFriendsOnlineCheck.getBoolean();
@@ -490,6 +497,7 @@ public class MooConfig {
         // Category: Notifications
         propDoUpdateCheck.set(doUpdateCheck);
         propShowBestFriendNotifications.set(showBestFriendNotifications);
+        propEnableBestFriendNotificationSound.set(enableBestFriendNotificationSound);
         propShowFriendNotifications.set(showFriendNotifications);
         propShowGuildNotifications.set(showGuildNotifications);
         propDoBestFriendsOnlineCheck.set(doBestFriendsOnlineCheck);
@@ -610,7 +618,7 @@ public class MooConfig {
      * @return true if notifications should be monitored
      */
     public static boolean doMonitorNotifications() {
-        return showBestFriendNotifications || !showFriendNotifications || !showGuildNotifications;
+        return showBestFriendNotifications || enableBestFriendNotificationSound || !showFriendNotifications || !showGuildNotifications;
     }
 
     // Category: SkyBlock

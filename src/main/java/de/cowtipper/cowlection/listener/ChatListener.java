@@ -8,6 +8,7 @@ import de.cowtipper.cowlection.util.ApiUtils;
 import de.cowtipper.cowlection.util.MooChatComponent;
 import de.cowtipper.cowlection.util.Utils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.SoundCategory;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.GuiControls;
 import net.minecraft.client.gui.GuiNewChat;
@@ -68,6 +69,9 @@ public class ChatListener {
                     switch (joinedLeft) {
                         case "joined":
                             main.getPlayerCache().addBestFriend(playerName);
+                            if (MooConfig.enableBestFriendNotificationSound && Minecraft.getMinecraft().thePlayer != null) {
+                                Minecraft.getMinecraft().thePlayer.playSound("random.pop", Minecraft.getMinecraft().gameSettings.getSoundLevel(SoundCategory.MASTER), 1);
+                            }
                             break;
                         case "left":
                             main.getPlayerCache().removeBestFriend(playerName);
