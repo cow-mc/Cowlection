@@ -1,6 +1,7 @@
 package de.cowtipper.cowlection.config;
 
 import de.cowtipper.cowlection.Cowlection;
+import de.cowtipper.cowlection.command.MooCommand;
 import de.cowtipper.cowlection.command.TabCompletableCommand;
 import de.cowtipper.cowlection.config.gui.MooConfigGui;
 import de.cowtipper.cowlection.config.gui.MooConfigPreview;
@@ -46,6 +47,9 @@ import java.util.regex.Pattern;
 public class MooConfig {
     // Category: General
     private static String configGuiExplanations;
+    public static String mooCmdAlias;
+    public static boolean fixReplyCmd;
+    public static boolean enableCopyInventory;
     public static String[] tabCompletableNamesCommands;
     private static final String CATEGORY_LOGS_SEARCH = "logssearch";
     public static String[] logsDirs;
@@ -84,6 +88,7 @@ public class MooConfig {
     private static Configuration cfg = null;
     private static final List<MooConfigCategory> configCategories = new ArrayList<>();
     private final Cowlection main;
+    private Property propMooCmdAlias;
     private Property propTabCompletableNamesCommands;
     private List<Property> logSearchProperties;
 
@@ -195,6 +200,17 @@ public class MooConfig {
                 "Use " + EnumChatFormatting.YELLOW + "/moo apikey " + EnumChatFormatting.RESET + "to see how to request a new API key from Hypixel",
                 "The API key is stored " + EnumChatFormatting.ITALIC + "locally " + EnumChatFormatting.ITALIC + "on your computer.");
         subCat.addConfigEntry(main.getMoo().getPropIsMooValid());
+
+        // Sub-Category: Command settings
+        subCat = configCat.addSubCategory("Command settings");
+
+        propMooCmdAlias = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "mooCmdAlias", "m", "Alias for /moo command")
+                .setValidationPattern(Pattern.compile("^[A-Za-z]*$")));
+        Property propFixReplyCmd = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "fixReplyCmd", true, "Auto-replace /r?"));
+        Property propEnableCopyInventory = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "enableCopyInventory", false, "Enable copy inventory with CTRL + C?"));
 
         // Sub-Category: Tab-completable names in commands
         subCat = configCat.addSubCategory("Tab-completable usernames");
@@ -410,11 +426,16 @@ public class MooConfig {
         Property propDungPartyFinderPlayerLookup = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "dungPartyFinderPlayerLookup", "as a tooltip", "Show armor + dungeons stats of player joining via party finder as a tooltip or in chat?", new String[]{"as a tooltip", "in chat", "disabled"}));
 
+        boolean modifiedMooCmdAlias = false;
+        String mooCmdAliasPreChange = mooCmdAlias;
         boolean modifiedTabCompletableCommandsList = false;
         String[] tabCompletableCommandsPreChange = tabCompletableNamesCommands != null ? tabCompletableNamesCommands.clone() : null;
         if (readFieldsFromConfig) {
             // Category: General
             configGuiExplanations = propConfigGuiExplanations.getString();
+            mooCmdAlias = propMooCmdAlias.getString();
+            fixReplyCmd = propFixReplyCmd.getBoolean();
+            enableCopyInventory = propEnableCopyInventory.getBoolean();
             tabCompletableNamesCommands = propTabCompletableNamesCommands.getStringList();
             logsDirs = propLogsDirs.getStringList();
             defaultStartDate = propDefaultStartDate.getString().trim();
@@ -450,6 +471,9 @@ public class MooConfig {
             dungPartyFinderPlayerLookup = propDungPartyFinderPlayerLookup.getString();
 
 
+            if (!StringUtils.equals(mooCmdAliasPreChange, mooCmdAlias)) {
+                modifiedMooCmdAlias = true;
+            }
             if (!Arrays.equals(tabCompletableCommandsPreChange, tabCompletableNamesCommands)) {
                 modifiedTabCompletableCommandsList = true;
             }
@@ -457,6 +481,9 @@ public class MooConfig {
 
         // Category: General
         propConfigGuiExplanations.set(configGuiExplanations);
+        propMooCmdAlias.set(mooCmdAlias);
+        propFixReplyCmd.set(fixReplyCmd);
+        propEnableCopyInventory.set(enableCopyInventory);
         propTabCompletableNamesCommands.set(tabCompletableNamesCommands);
         propLogsDirs.set(logsDirs);
         propDefaultStartDate.set(defaultStartDate);
@@ -493,6 +520,24 @@ public class MooConfig {
 
         if (saveToFile && cfg.hasChanged()) {
             boolean isPlayerIngame = Minecraft.getMinecraft().thePlayer != null;
+            if (modifiedMooCmdAlias) {
+                Map<String, ICommand> clientCommandsMap = ClientCommandHandler.instance.getCommands();
+                ICommand possibleClientCommand = clientCommandsMap.get(mooCmdAlias);
+                if (possibleClientCommand != null && !(possibleClientCommand instanceof MooCommand)) {
+                    // tried to use a command name which is already used by another client side command; however, this would overwrite the original command
+                    if (isPlayerIngame) {
+                        main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, " ⚠ " + EnumChatFormatting.GOLD + "Client-side commands from other mods cannot be used as a command alias. " + EnumChatFormatting.RED + "This would overwrite the other command! Therefore the alias for " + EnumChatFormatting.DARK_RED + "/moo" + EnumChatFormatting.RED + " was not changed to " + EnumChatFormatting.DARK_RED + "/" + mooCmdAlias);
+                    }
+                    mooCmdAlias = mooCmdAliasPreChange;
+                    propMooCmdAlias.set(mooCmdAlias);
+                } else if (isPlayerIngame) {
+                    if (StringUtils.isEmpty(mooCmdAlias)) {
+                        main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Removed command alias for " + EnumChatFormatting.DARK_RED + "/moo " + EnumChatFormatting.RED + "which takes effect after a game restart.");
+                    } else {
+                        main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Changed command alias for " + EnumChatFormatting.DARK_RED + "/moo " + EnumChatFormatting.RED + "to " + EnumChatFormatting.DARK_RED + "/" + mooCmdAlias + EnumChatFormatting.RED + " which takes effect after a game restart.");
+                    }
+                }
+            }
             if (modifiedTabCompletableCommandsList) {
                 if (isPlayerIngame) {
                     main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Added or removed commands with tab-completable usernames take effect after a game restart! If player names cannot be tab-completed for a command after a game restart, check the capitalization of the command name.");
@@ -647,6 +692,10 @@ public class MooConfig {
     // other stuff
     public static List<MooConfigCategory> getConfigCategories() {
         return configCategories;
+    }
+
+    public Property getMooCmdAliasProperty() {
+        return propMooCmdAlias;
     }
 
     public Property getTabCompletableNamesCommandsProperty() {

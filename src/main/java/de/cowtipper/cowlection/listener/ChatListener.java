@@ -128,7 +128,7 @@ public class ChatListener {
     @SubscribeEvent
     public void onReplyToMsg(GuiScreenEvent.KeyboardInputEvent.Pre e) {
         // TODO Switch to more reliable way: GuiTextField#writeText on GuiChat#inputField (protected field) via reflections [using "Open Command"-key isn't detected currently]
-        if (lastPMSender != null && e.gui instanceof GuiChat && lastTypedChars.length() < 3 && Keyboard.getEventKeyState()) {
+        if (MooConfig.fixReplyCmd && lastPMSender != null && e.gui instanceof GuiChat && lastTypedChars.length() < 3 && Keyboard.getEventKeyState()) {
             char eventCharacter = Keyboard.getEventCharacter();
             if (!CharUtils.isAsciiControl(eventCharacter)) {
                 lastTypedChars += eventCharacter;

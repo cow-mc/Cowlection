@@ -126,6 +126,13 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
                         // special case: moo!
                         this.listEntries.add(new BooleanConfigEntry(configEntry));
                         continue;
+                    } else if (configEntry.equals(Cowlection.getInstance().getConfig().getMooCmdAliasProperty())) {
+                        this.listEntries.add(new GuiSwitchEntry("mooCmdAlias", "➡ modify", () ->
+                                mc.displayGuiScreen(new GuiConfig(MooConfigCategoryScrolling.this.parent,
+                                        Lists.newArrayList(new ConfigElement(Cowlection.getInstance().getConfig().getMooCmdAliasProperty())),
+                                        Cowlection.MODID, "cowlectionMooCmdAlias", false, false,
+                                        EnumChatFormatting.GOLD + "Press Done to save changes. " + EnumChatFormatting.RED + "Requires a game restart to take effect!"))));
+                        continue;
                     } else if (configEntry.getValidValues() != null && configEntry.getValidValues().length > 0) {
                         this.listEntries.add(new CycleConfigEntry(configEntry));
                         continue;
