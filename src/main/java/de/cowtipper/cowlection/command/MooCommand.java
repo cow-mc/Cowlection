@@ -16,6 +16,7 @@ import de.cowtipper.cowlection.search.GuiSearch;
 import de.cowtipper.cowlection.util.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.command.*;
 import net.minecraft.entity.Entity;
@@ -121,6 +122,36 @@ public class MooCommand extends CommandBase {
         } else if (args[0].equalsIgnoreCase("whatyearisit") || args[0].equalsIgnoreCase("year")) {
             long year = ((System.currentTimeMillis() - 1560275700000L) / (TimeUnit.HOURS.toMillis(124))) + 1;
             main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, "It is SkyBlock year " + EnumChatFormatting.GOLD + year + EnumChatFormatting.YELLOW + ".");
+        } else if (args[0].equalsIgnoreCase("worldage")) {
+            long worldTime = Minecraft.getMinecraft().theWorld.getWorldTime();
+            new TickDelay(() -> {
+                WorldClient world = Minecraft.getMinecraft().theWorld;
+                if (world == null) {
+                    return;
+                }
+                String msgPrefix;
+                long worldTime2 = world.getWorldTime();
+                if (worldTime > worldTime2 || (worldTime2 - worldTime) < 15) {
+                    // time is frozen
+                    worldTime2 = world.getTotalWorldTime();
+                    msgPrefix = "World time seems to be frozen at around " + worldTime + " ticks. ";
+                    if (worldTime2 > 24 * 60 * 60 * 20) {
+                        // total world time >24h
+                        main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, msgPrefix + "However, how long this world is loaded cannot be determined.");
+                        return;
+                    }
+                    msgPrefix += "However, this world is probably";
+                } else {
+                    msgPrefix = "This world is";
+                }
+                long days = worldTime2 / 24000L + 1;
+                long minutes = days * 20;
+                long hours = minutes / 60;
+                minutes -= hours * 60;
+
+                main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, msgPrefix + " loaded around " + EnumChatFormatting.GOLD + days + " ingame days "
+                        + EnumChatFormatting.YELLOW + "(= less than " + EnumChatFormatting.GOLD + (hours > 0 ? hours + " hours " : "") + (minutes > 0 ? minutes + " mins " : "") + ")");
+            }, 20);
         }
         //endregion
         //region sub-commands: update mod
@@ -795,6 +826,7 @@ public class MooCommand extends CommandBase {
                 .appendSibling(createCmdHelpEntry("dungeon party", "SkyBlock Dungeons: Shows armor and dungeon info about current party members " + EnumChatFormatting.GRAY + "(alias: " + EnumChatFormatting.WHITE + "/" + getCommandName() + " dp" + EnumChatFormatting.GRAY + ") §d§l⚷"))
                 .appendSibling(createCmdHelpSection(3, "Miscellaneous"))
                 .appendSibling(createCmdHelpEntry("search", "Open Minecraft log search"))
+                .appendSibling(createCmdHelpEntry("worldage", "Check how long the current world is loaded"))
                 .appendSibling(createCmdHelpEntry("guiScale", "Change GUI scale"))
                 .appendSibling(createCmdHelpEntry("rr", "Alias for /r without auto-replacement to /msg"))
                 .appendSibling(createCmdHelpEntry("shrug", "¯\\_(ツ)_/¯"))
@@ -828,7 +860,7 @@ public class MooCommand extends CommandBase {
             return getListOfStringsMatchingLastWord(args,
                     /* Best friends, friends & other players */ "stalk", "add", "remove", "list", "online", "nameChangeCheck",
                     /* SkyBlock */ "stalkskyblock", "skyblockstalk", "analyzeIsland", "dungeon",
-                    /* miscellaneous */ "config", "search", "guiscale", "rr", "shrug", "apikey",
+                    /* miscellaneous */ "config", "search", "worldage", "guiscale", "rr", "shrug", "apikey",
                     /* update mod */ "update", "updateHelp", "version", "directory",
                     /* help */ "help",
                     /* rarely used aliases */ "askPolitelyWhereTheyAre", "askPolitelyAboutTheirSkyBlockProgress", "year", "whatyearisit");

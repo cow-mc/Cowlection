@@ -28,6 +28,7 @@ It is a collection of different features mainly focused on Hypixel SkyBlock. üê
 | Analyze minions on a private island                                     | `/moo analyzeIsland`                    |
 | Dungeon interfaces enhancements (normalize dungeon item stats, improved party finder) | Hold <kbd>shift</kbd> (configurable) while viewing a dungeon item tooltip |
 | Dungeon performance tracker and overlay: Skill score calculation, class milestone tracker, destroyed crypts tracker, and elapsed time indicator | automatically; or with `/moo dungeon` |
+| Check how long current world has been loaded (‚âà when the server was last restarted) | `/moo worldage` + `/moo config` &rarr; SkyBlock |
 
 ## Download
 You can download the compiled .jar files from the [release section](https://github.com/cow-mc/Cowlection/releases).

@@ -8,12 +8,14 @@ import de.cowtipper.cowlection.listener.skyblock.DungeonsListener;
 import de.cowtipper.cowlection.listener.skyblock.SkyBlockListener;
 import de.cowtipper.cowlection.util.AbortableRunnable;
 import de.cowtipper.cowlection.util.GsonUtils;
+import de.cowtipper.cowlection.util.MooChatComponent;
 import de.cowtipper.cowlection.util.TickDelay;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.gui.inventory.GuiInventory;
+import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.ContainerChest;
@@ -116,6 +118,7 @@ public class PlayerListener {
             main.getLogger().info("Registering SkyBlock listeners");
             isOnSkyBlock = true;
             registerSkyBlockListeners();
+            checkWorldAge();
         } else if (MooConfig.getEnableSkyBlockOnlyFeatures() == MooConfig.Setting.SPECIAL) { // only on SkyBlock
             stopScoreboardChecker();
 
@@ -147,10 +150,14 @@ public class PlayerListener {
                             // player wasn't on SkyBlock before but now is on SkyBlock
                             main.getLogger().info("Entered SkyBlock! Registering SkyBlock listeners");
                             registerSkyBlockListeners();
+                            checkWorldAge();
                         } else if (wasOnSkyBlock && !isOnSkyBlock) {
                             // player was on SkyBlock before and is now in another gamemode
                             unregisterSkyBlockListeners();
                             main.getLogger().info("Leaving SkyBlock! Un-registering SkyBlock listeners");
+                        } else if (wasOnSkyBlock /* && isOnSkyBlock */) {
+                            // player is still on SkyBlock
+                            checkWorldAge();
                         }
                         stop();
                     }
@@ -177,6 +184,50 @@ public class PlayerListener {
             isOnSkyBlock = false;
             unregisterSkyBlockListeners();
         }
+    }
+
+    private void checkWorldAge() {
+        WorldClient theWorld = Minecraft.getMinecraft().theWorld;
+        if (MooConfig.notifyFreshServer == 0 && MooConfig.notifyOldServer == 0 || theWorld == null) {
+            return;
+        }
+        long worldTime = theWorld.getWorldTime();
+        new TickDelay(() -> {
+            WorldClient world = Minecraft.getMinecraft().theWorld;
+
+            if (world == null || theWorld != world || main.getDungeonCache().isInDungeon()) {
+                // no longer in a world, or not in the same world as before, or inside dungeons
+                return;
+            }
+            long worldTime2 = world.getWorldTime();
+
+            String infix = "";
+            if (worldTime > worldTime2 || (worldTime2 - worldTime) < 30) {
+                // time is frozen
+                worldTime2 = world.getTotalWorldTime();
+                if (worldTime2 > 24 * 60 * 60 * 20) {
+                    // total world time >24h
+                    return;
+                }
+                infix = "probably ";
+            }
+
+            long days = worldTime2 / 24000L + 1;
+            if (MooConfig.notifyFreshServer > 0 && days <= MooConfig.notifyFreshServer) {
+                // fresh server
+                long minutes = days * 20;
+                long hours = minutes / 60;
+                minutes -= hours * 60;
+                main.getChatHelper().sendMessage(new MooChatComponent("⚠ ").darkGreen()
+                        .appendSibling(new MooChatComponent("This world is " + infix + "loaded around " + EnumChatFormatting.DARK_GREEN + days + " ingame days.").green()
+                                .setHover(new MooChatComponent("= less than " + EnumChatFormatting.DARK_GREEN + (hours > 0 ? hours + " hours " : "") + (minutes > 0 ? minutes + " mins " : "")).green())));
+            } else if (MooConfig.notifyOldServer > 0 && days > MooConfig.notifyOldServer) {
+                // old server
+                main.getChatHelper().sendMessage(new MooChatComponent("⚠ ").red()
+                        .appendSibling(new MooChatComponent("This server has not been restarted for " + EnumChatFormatting.RED + days + "+ ingame days!").gold()
+                                .setHover(new MooChatComponent("Servers usually restart once they exceed 30-38 ingame days (10-13 hours)").yellow())));
+            }
+        }, 40);
     }
 
     private void stopScoreboardChecker() {

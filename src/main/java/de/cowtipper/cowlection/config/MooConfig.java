@@ -64,6 +64,8 @@ public class MooConfig {
     public static boolean doBestFriendsOnlineCheck;
     // Category: SkyBlock
     private static String enableSkyBlockOnlyFeatures;
+    public static int notifyFreshServer;
+    public static int notifyOldServer;
     public static int tooltipToggleKeyBinding;
     private static String tooltipAuctionHousePriceEach;
     private static String tooltipItemAge;
@@ -295,6 +297,16 @@ public class MooConfig {
         Property propEnableSkyBlockOnlyFeatures = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "enableSkyBlockOnlyFeatures", "on SkyBlock", "Enable SkyBlock-only features?", new String[]{"on SkyBlock", "always", "never"}));
 
+        // Sub-Category: Server age notifications
+        subCat = configCat.addSubCategory("Server age notifications");
+        subCat.addExplanations("Servers usually restart once they exceed " + EnumChatFormatting.YELLOW + "30-38 ingame days " + EnumChatFormatting.RESET + "(10-13 hours)",
+                "Use the command " + EnumChatFormatting.YELLOW + "/moo worldage " + EnumChatFormatting.RESET + "to check how long the current world is loaded.",
+                EnumChatFormatting.ITALIC + "Set a value to 0 to disable that notification.");
+        Property propNotifyFreshServer = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "notifyFreshServer", 1, "Notify when a world is loaded <X ingame days", 0, 40));
+        Property propNotifyOldServer = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "notifyOldServer", 30, "Notify when a world is loaded >X ingame days", 0, 40));
+
         // Sub-Category: Tooltip enhancements
         subCat = configCat.addSubCategory("Tooltip enhancements");
 
@@ -454,6 +466,8 @@ public class MooConfig {
             doBestFriendsOnlineCheck = propDoBestFriendsOnlineCheck.getBoolean();
             // Category: SkyBlock
             enableSkyBlockOnlyFeatures = propEnableSkyBlockOnlyFeatures.getString();
+            notifyFreshServer = propNotifyFreshServer.getInt();
+            notifyOldServer = propNotifyOldServer.getInt();
             tooltipToggleKeyBinding = propTooltipToggleKeyBinding.getInt();
             tooltipAuctionHousePriceEach = propTooltipAuctionHousePriceEach.getString();
             tooltipItemAge = propTooltipItemAge.getString();
@@ -503,6 +517,8 @@ public class MooConfig {
         propDoBestFriendsOnlineCheck.set(doBestFriendsOnlineCheck);
         // Category: SkyBlock
         propEnableSkyBlockOnlyFeatures.set(enableSkyBlockOnlyFeatures);
+        propNotifyFreshServer.set(notifyFreshServer);
+        propNotifyOldServer.set(notifyOldServer);
         propTooltipToggleKeyBinding.set(tooltipToggleKeyBinding);
         propTooltipAuctionHousePriceEach.set(tooltipAuctionHousePriceEach);
         propTooltipItemAge.set(tooltipItemAge);
