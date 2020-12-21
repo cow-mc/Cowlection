@@ -220,7 +220,7 @@ public class PlayerListener {
                 minutes -= hours * 60;
                 main.getChatHelper().sendMessage(new MooChatComponent("⚠ ").darkGreen()
                         .appendSibling(new MooChatComponent("This world is " + infix + "loaded around " + EnumChatFormatting.DARK_GREEN + days + " ingame days.").green()
-                                .setHover(new MooChatComponent("= less than " + EnumChatFormatting.DARK_GREEN + (hours > 0 ? hours + " hours " : "") + (minutes > 0 ? minutes + " mins " : "")).green())));
+                                .setHover(new MooChatComponent("= less than" + EnumChatFormatting.DARK_GREEN + (hours > 0 ? " " + hours + " hours" : "") + (minutes > 0 ? " " + minutes + " mins" : "")).green())));
             } else if (MooConfig.notifyOldServer > 0 && days > MooConfig.notifyOldServer) {
                 // old server
                 main.getChatHelper().sendMessage(new MooChatComponent("⚠ ").red()

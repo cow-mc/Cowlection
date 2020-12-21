@@ -150,7 +150,7 @@ public class MooCommand extends CommandBase {
                 minutes -= hours * 60;
 
                 main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, msgPrefix + " loaded around " + EnumChatFormatting.GOLD + days + " ingame days "
-                        + EnumChatFormatting.YELLOW + "(= less than " + EnumChatFormatting.GOLD + (hours > 0 ? hours + " hours " : "") + (minutes > 0 ? minutes + " mins " : "") + ")");
+                        + EnumChatFormatting.YELLOW + "(= less than" + EnumChatFormatting.GOLD + (hours > 0 ? " " + hours + " hours" : "") + (minutes > 0 ? " " + minutes + " mins" : "") + ")");
             }, 20);
         }
         //endregion

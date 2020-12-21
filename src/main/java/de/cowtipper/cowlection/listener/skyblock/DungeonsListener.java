@@ -426,33 +426,6 @@ public class DungeonsListener {
     }
 
     // Events inside dungeons
-    @SubscribeEvent
-    public void onDungeonsEnterOrLeave(PlayerSetSpawnEvent e) {
-        // check if player has entered or left a SkyBlock dungeon
-        new TickDelay(() -> {
-            Scoreboard scoreboard = e.entityPlayer.worldObj.getScoreboard();
-            ScoreObjective scoreboardSidebar = scoreboard.getObjectiveInDisplaySlot(1);
-            if (scoreboardSidebar == null) {
-                return;
-            }
-
-            Collection<Score> scoreboardLines = scoreboard.getSortedScores(scoreboardSidebar);
-            for (Score line : scoreboardLines) {
-                ScorePlayerTeam scorePlayerTeam = scoreboard.getPlayersTeam(line.getPlayerName());
-                if (scorePlayerTeam != null) {
-                    String lineWithoutFormatting = EnumChatFormatting.getTextWithoutFormattingCodes(scorePlayerTeam.getColorPrefix() + scorePlayerTeam.getColorSuffix());
-
-                    if (lineWithoutFormatting.startsWith(" ⏣")) {
-                        // current location: dungeon or outside?
-                        boolean isInDungeonNow = lineWithoutFormatting.startsWith(" ⏣ The Catacombs");
-                        main.getDungeonCache().onDungeonEnterOrLeave(isInDungeonNow);
-                        return;
-                    }
-                }
-            }
-        }, 40); // 2 second delay, making sure scoreboard got sent
-    }
-
     // priority = highest to ignore other mods modifying the chat output
     @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
     public void onMessageReceived(ClientChatReceivedEvent e) {
