@@ -52,11 +52,12 @@ public class MooCommand extends CommandBase {
 
     @Override
     public List<String> getCommandAliases() {
-        if (StringUtils.isEmpty(MooConfig.mooCmdAlias)) {
-            return Collections.emptyList();
-        } else {
-            return Collections.singletonList(MooConfig.mooCmdAlias);
+        List<String> aliases = new ArrayList<>();
+        aliases.add(Cowlection.MODID);
+        if (StringUtils.isNotEmpty(MooConfig.mooCmdAlias)) {
+            aliases.add(MooConfig.mooCmdAlias);
         }
+        return aliases;
     }
 
     @Override

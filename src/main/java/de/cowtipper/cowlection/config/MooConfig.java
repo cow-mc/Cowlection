@@ -1,5 +1,6 @@
 package de.cowtipper.cowlection.config;
 
+import com.google.common.collect.Maps;
 import de.cowtipper.cowlection.Cowlection;
 import de.cowtipper.cowlection.command.MooCommand;
 import de.cowtipper.cowlection.command.TabCompletableCommand;
@@ -68,6 +69,7 @@ public class MooConfig {
     public static int notifyOldServer;
     public static int tooltipToggleKeyBinding;
     private static String tooltipAuctionHousePriceEach;
+    private static String bazaarConnectGraphsNodes;
     private static String tooltipItemAge;
     public static boolean tooltipItemAgeShortened;
     private static String tooltipItemTimestamp;
@@ -316,6 +318,18 @@ public class MooConfig {
         Property propTooltipAuctionHousePriceEach = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "tooltipAuctionHousePriceEach", "always", "Add price per item if multiple items are bought or sold", new String[]{"always", "key press", "never"}));
 
+        MooConfigPreview bazaarGraphPreview = new MooConfigPreview(MooConfigPreview.createDemoItem("paper", "§aBuy Price §731d §77d §e24h", new String[]{
+                "§7The price at which buy orders have been filled.", "",
+                "§r┌----------------------------------------------┐", "§r│§66. 1k§r+§bxxxxxx§8·································§bxx§r│",
+                "§r│§8····§r│§8······································§bx§8··§r│", "§r│§66. 1k§r+§8·····§bx§8···················§bx§8·······§bxxxxx§8···§r│",
+                "§r│§8····§r│§8···············§bx§8········§bxxxxxxxxx§8········§r│", "§r│§8··§66k§r+§8··············§bx§8····§bxx§8··§bx§8·················§r│",
+                "§r│§8····§r│§8············§bx§8··§bxxxx§8·§bxxx§8··················§r│", "§r│§8··§66k§r+§8······§bx§8·§bxxxx§8·§bx§8···························§r│",
+                "§r│§8····§r│§8·······§bx§8·································§r│", "§r│§8··§66k§r+---------+----------+---------+---------+│",
+                "§r│§8····§r24h§8······§r18h§8········§r12h§8·······§r6h§8·······§rnow│", "§r└----------------------------------------------┘"}, Maps.newHashMap()));
+        Property propBazaarConnectGraphsNodes = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "bazaarConnectGraphsNodes", "always", "Bazaar: connect the graph nodes", new String[]{"always", "key press", "never"}),
+                bazaarGraphPreview);
+
         Map<String, NBTBase> demoItemExtraAttributes = new HashMap<>();
         demoItemExtraAttributes.put("new_years_cake", new NBTTagInt(1));
         demoItemExtraAttributes.put("originTag", new NBTTagString("REWARD_NEW_YEARS_CAKE_NPC"));
@@ -470,6 +484,7 @@ public class MooConfig {
             notifyOldServer = propNotifyOldServer.getInt();
             tooltipToggleKeyBinding = propTooltipToggleKeyBinding.getInt();
             tooltipAuctionHousePriceEach = propTooltipAuctionHousePriceEach.getString();
+            bazaarConnectGraphsNodes = propBazaarConnectGraphsNodes.getString();
             tooltipItemAge = propTooltipItemAge.getString();
             tooltipItemAgeShortened = propTooltipItemAgeShortened.getBoolean();
             tooltipItemTimestamp = propTooltipItemTimestamp.getString();
@@ -521,6 +536,7 @@ public class MooConfig {
         propNotifyOldServer.set(notifyOldServer);
         propTooltipToggleKeyBinding.set(tooltipToggleKeyBinding);
         propTooltipAuctionHousePriceEach.set(tooltipAuctionHousePriceEach);
+        propBazaarConnectGraphsNodes.set(bazaarConnectGraphsNodes);
         propTooltipItemAge.set(tooltipItemAge);
         propTooltipItemAgeShortened.set(tooltipItemAgeShortened);
         propTooltipItemTimestamp.set(tooltipItemTimestamp);
@@ -644,6 +660,10 @@ public class MooConfig {
 
     public static Setting getTooltipAuctionHousePriceEachDisplay() {
         return Setting.get(tooltipAuctionHousePriceEach);
+    }
+
+    public static Setting getBazaarConnectGraphsNodes() {
+        return Setting.get(bazaarConnectGraphsNodes);
     }
 
     public static Setting getTooltipItemAgeDisplay() {

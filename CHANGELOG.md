@@ -14,6 +14,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - ≈ when server was last restarted
   - via command `/moo worldage`
   - notification when joining a recently loaded or a very old server (toggleable via config)
+- SkyBlock Bazaar graphs improvements:
+  - make graphs easier to read by connecting graphs' nodes
+  - Fix graphs when using the mc unicode font
 
 ### Changed
 - Item age: show timestamp in the local timezone instead of "SkyBlock"-timezone (Eastern Time; also fixed the incorrect 12h ↔ 24h clock conversion)

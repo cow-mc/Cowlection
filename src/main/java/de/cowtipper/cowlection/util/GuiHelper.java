@@ -4,23 +4,41 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.gui.inventory.GuiChest;
+import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.inventory.Slot;
+import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.ForgeVersion;
 import net.minecraftforge.fml.client.config.GuiUtils;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public final class GuiHelper extends GuiScreen {
     private static GuiHelper instance;
+    private FontRenderer fontRendererAscii;
 
     private GuiHelper() {
         this.mc = Minecraft.getMinecraft();
         this.fontRendererObj = mc.fontRendererObj;
+
+        if (this.fontRendererObj.getCharWidth('x') != this.fontRendererObj.getCharWidth('·')) {
+            // we're not using default font (x and · should be the same width) - could be unicode font or a custom font
+            this.fontRendererAscii = new FontRenderer(mc.gameSettings, new ResourceLocation("textures/font/ascii.png"), mc.renderEngine, false);
+            this.fontRendererAscii.onResourceManagerReload(null); // load font widths
+
+        }
         this.itemRender = mc.getRenderItem();
     }
 
@@ -29,6 +47,15 @@ public final class GuiHelper extends GuiScreen {
             instance = new GuiHelper();
         }
         return instance;
+    }
+
+    public static Slot getSlotUnderMouse(GuiChest guiChest) {
+        try {
+            return ReflectionHelper.getPrivateValue(GuiContainer.class, guiChest, "theSlot", "field_147006_u");
+        } catch (ReflectionHelper.UnableToAccessFieldException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     /**
@@ -73,11 +100,22 @@ public final class GuiHelper extends GuiScreen {
             // using mc built-in method
             getInstance().width = screenWidth;
             getInstance().height = screenHeight;
-            drawHoveringText(textLines, mouseX, mouseY, screenWidth, screenHeight, maxTextWidth, getInstance().fontRendererObj);
+            getInstance().drawHoveringText(textLines, mouseX, mouseY, screenWidth, screenHeight, maxTextWidth, false);
         } else {
             // we're on a newer forge version, so we can use the improved tooltip rendering directly added in 1.8.9-11.15.1.1808 (released 03/24/16 09:25 PM) in this pull request: https://github.com/MinecraftForge/MinecraftForge/pull/2649
             GuiUtils.drawHoveringText(textLines, mouseX, mouseY, screenWidth, screenHeight, maxTextWidth, getInstance().fontRendererObj);
         }
+    }
+
+    public static void drawHoveringTextWithGraph(List<String> toolTip) {
+        int mouseX = Mouse.getX() * getInstance().width / getInstance().mc.displayWidth;
+        int mouseY = getInstance().height - Mouse.getY() * getInstance().height / getInstance().mc.displayHeight - 1;
+        ScaledResolution scaledResolution = new ScaledResolution(Minecraft.getMinecraft());
+
+        getInstance().width = scaledResolution.getScaledWidth();
+        getInstance().height = scaledResolution.getScaledHeight();
+
+        getInstance().drawHoveringText(toolTip, mouseX, mouseY, scaledResolution.getScaledWidth(), scaledResolution.getScaledHeight(), -1, true);
     }
 
     /**
@@ -85,8 +123,10 @@ public final class GuiHelper extends GuiScreen {
      *
      * @see GuiUtils#drawHoveringText
      */
-    public static void drawHoveringText(List<String> textLines, final int mouseX, final int mouseY, final int screenWidth, final int screenHeight, final int maxTextWidth, FontRenderer font) {
+    private void drawHoveringText(List<String> textLines, final int mouseX, final int mouseY, final int screenWidth, final int screenHeight, final int maxTextWidth, boolean drawGraph) {
         if (!textLines.isEmpty()) {
+            FontRenderer font = fontRendererAscii != null ? fontRendererAscii : fontRendererObj;
+
             GlStateManager.disableRescaleNormal();
             RenderHelper.disableStandardItemLighting();
             GlStateManager.disableLighting();
@@ -107,7 +147,7 @@ public final class GuiHelper extends GuiScreen {
             int tooltipX = mouseX + 12;
             if (tooltipX + tooltipTextWidth + 4 > screenWidth) {
                 tooltipX = mouseX - 16 - tooltipTextWidth;
-                if (tooltipX < 4) { // if the tooltip doesn't fit on the screen
+                if (tooltipX < 4 && !drawGraph) { // if the tooltip doesn't fit on the screen
                     if (mouseX > screenWidth / 2) {
                         tooltipTextWidth = mouseX - 12 - 8;
                     } else {
@@ -122,7 +162,7 @@ public final class GuiHelper extends GuiScreen {
                 needsWrap = true;
             }
 
-            if (needsWrap) {
+            if (needsWrap && !drawGraph) {
                 int wrappedTooltipWidth = 0;
                 List<String> wrappedTextLines = new ArrayList<>();
                 for (int i = 0; i < textLines.size(); i++) {
@@ -177,9 +217,41 @@ public final class GuiHelper extends GuiScreen {
             Gui.drawRect(tooltipX - 3, tooltipY - 3, tooltipX + tooltipTextWidth + 3, tooltipY - 3 + 1, borderColorStart);
             Gui.drawRect(tooltipX - 3, tooltipY + tooltipHeight + 2, tooltipX + tooltipTextWidth + 3, tooltipY + tooltipHeight + 3, borderColorEnd);
 
+            List<GraphNode> graphNodes = new ArrayList<>();
+            if (drawGraph) {
+                graphNodes.addAll(Collections.nCopies(100, null));
+            }
+            int widthCharX = font.getCharWidth('x') / 2;
             for (int lineNumber = 0; lineNumber < textLines.size(); ++lineNumber) {
                 String line = textLines.get(lineNumber);
-                font.drawStringWithShadow(line, (float) tooltipX, (float) tooltipY, -1);
+                String lineWithoutFormattingCodes = EnumChatFormatting.getTextWithoutFormattingCodes(line);
+
+                if (drawGraph && (lineWithoutFormattingCodes.startsWith("│") || lineWithoutFormattingCodes.startsWith("┌") || lineWithoutFormattingCodes.startsWith("└"))) {
+                    // use default mc font
+                    int substrWidth = 0;
+                    int spaceOffset = 0;
+                    for (int c = 0; c < Math.min(100, lineWithoutFormattingCodes.length()); c++) {
+                        char xOrDot = lineWithoutFormattingCodes.charAt(c);
+                        substrWidth += font.getCharWidth(xOrDot);
+                        if (xOrDot == 'x') {
+                            int index = c - spaceOffset;
+                            int yPos = tooltipY + font.FONT_HEIGHT / 2;
+                            GraphNode graphNode = graphNodes.get(index);
+                            if (graphNode == null) {
+                                graphNode = new GraphNode(tooltipX + substrWidth - widthCharX, yPos);
+                                graphNodes.set(index, graphNode);
+                            } else {
+                                graphNode.addY(yPos);
+                            }
+                        } else if (xOrDot == ' ') {
+                            spaceOffset = 1;
+                        }
+                    }
+                    font.drawStringWithShadow(line, (float) tooltipX, (float) tooltipY, -1);
+                } else {
+                    // use client's font
+                    fontRendererObj.drawStringWithShadow(line, (float) tooltipX, (float) tooltipY, -1);
+                }
 
                 if (lineNumber + 1 == titleLinesCount) {
                     tooltipY += 2;
@@ -192,6 +264,50 @@ public final class GuiHelper extends GuiScreen {
             GlStateManager.enableDepth();
             RenderHelper.enableStandardItemLighting();
             GlStateManager.enableRescaleNormal();
+
+            if (drawGraph) {
+                GlStateManager.pushMatrix();
+                GlStateManager.clear(GL11.GL_DEPTH_BUFFER_BIT);
+                GL11.glLineWidth(6F);
+                GlStateManager.disableTexture2D();
+                GlStateManager.color(255 / 255F, 170 / 255F, 0 / 255F);
+                WorldRenderer wr = Tessellator.getInstance().getWorldRenderer();
+                wr.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION);
+                for (GraphNode graphNode : graphNodes) {
+                    if (graphNode == null) {
+                        continue;
+                    }
+                    wr.pos(graphNode.getX(), graphNode.getY(), 0).endVertex();
+                }
+                Tessellator.getInstance().draw();
+                GlStateManager.popMatrix();
+            }
+        }
+    }
+
+    private static class GraphNode {
+        private final int x;
+        private final List<Integer> y = new ArrayList<>();
+
+        public GraphNode(int x, int y) {
+            this.x = x;
+            this.y.add(y);
+        }
+
+        public int getX() {
+            return x;
+        }
+
+        public int getY() {
+            int sum = 0;
+            for (Integer y : this.y) {
+                sum += y;
+            }
+            return sum / this.y.size();
+        }
+
+        public void addY(int y) {
+            this.y.add(y);
         }
     }
 }

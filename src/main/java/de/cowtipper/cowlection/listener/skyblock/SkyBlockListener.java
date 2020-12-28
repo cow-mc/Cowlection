@@ -1,12 +1,17 @@
 package de.cowtipper.cowlection.listener.skyblock;
 
 import de.cowtipper.cowlection.config.MooConfig;
+import de.cowtipper.cowlection.config.gui.MooConfigGui;
+import de.cowtipper.cowlection.util.GuiHelper;
 import de.cowtipper.cowlection.util.Utils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.ContainerChest;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -24,15 +29,11 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.regex.Pattern;
 
 public class SkyBlockListener {
-    /**
-     * timestamp example: 4/20/20 4:20 AM
-     */
-    private final Pattern SB_TIMESTAMP_PATTERN = Pattern.compile("^(\\d{1,2})/(\\d{1,2})/(\\d{2}) (\\d{1,2}):(\\d{2}) (AM|PM)$");
     private final NumberFormat numberFormatter;
 
     public SkyBlockListener() {
@@ -45,6 +46,34 @@ public class SkyBlockListener {
         if (e.itemStack == null || e.toolTip == null) {
             return;
         }
+
+        // bazaar graphs enhancements
+        if ((MooConfig.getBazaarConnectGraphsNodes() == MooConfig.Setting.ALWAYS
+                || MooConfig.getBazaarConnectGraphsNodes() == MooConfig.Setting.SPECIAL && MooConfig.isTooltipToggleKeyBindingPressed())
+                && e.itemStack.getItem() == Items.paper) {
+            boolean drawGraph = false;
+            GuiScreen currentScreen = Minecraft.getMinecraft().currentScreen;
+            if (currentScreen instanceof GuiChest) {
+                // some kind of chest
+                ContainerChest chestContainer = (ContainerChest) ((GuiChest) currentScreen).inventorySlots;
+                IInventory inventory = chestContainer.getLowerChestInventory();
+                String inventoryName = (inventory.hasCustomName() ? EnumChatFormatting.getTextWithoutFormattingCodes(inventory.getDisplayName().getUnformattedTextForChat()) : inventory.getName());
+
+                if (inventoryName.endsWith("➜ Graphs")) {
+                    // bazaar interface with graphs
+                    drawGraph = true;
+                }
+            } else if (currentScreen instanceof MooConfigGui) {
+                // preview in config gui
+                drawGraph = true;
+            }
+            if (drawGraph) {
+                GuiHelper.drawHoveringTextWithGraph(new ArrayList<>(e.toolTip));
+                e.toolTip.clear();
+                return;
+            }
+        }
+
         // remove unnecessary tooltip entries: dyed leather armor
         NBTTagCompound nbtDisplay = e.itemStack.getSubCompound("display", false);
         if (nbtDisplay != null && nbtDisplay.hasKey("color", Constants.NBT.TAG_INT)) {
