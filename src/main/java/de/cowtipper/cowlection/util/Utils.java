@@ -1,7 +1,9 @@
 package de.cowtipper.cowlection.util;
 
 import com.mojang.realmsclient.util.Pair;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumChatFormatting;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -272,5 +274,69 @@ public final class Utils {
                 .limit(numberOfElements)
                 .sorted(Map.Entry.comparingByKey())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a, LinkedHashMap::new));
+    }
+
+    public static Pair<String, String> extractSbItemBaseName(String originalItemName, NBTTagCompound extraAttributes, boolean strikethrough) {
+        String reforge = "";
+        StringBuilder modifiedItemName = new StringBuilder(originalItemName);
+        String grayedOutFormatting = "" + EnumChatFormatting.GRAY + EnumChatFormatting.STRIKETHROUGH;
+
+        if (extraAttributes.hasKey("modifier")) {
+            // item has been reforged; re-format item name to exclude reforges
+            reforge = StringUtils.capitalize(extraAttributes.getString("modifier"));
+            int modifierSuffix = Math.max(reforge.indexOf("_sword"), reforge.indexOf("_bow"));
+            if (modifierSuffix != -1) {
+                reforge = reforge.substring(0, modifierSuffix);
+            }
+            int reforgeInItemName = originalItemName.indexOf(reforge);
+            if (reforgeInItemName == -1 && reforge.equals("Light") && extraAttributes.getString("id").startsWith("HEAVY_")) {
+                // special case: heavy armor with light reforge
+                reforgeInItemName = originalItemName.indexOf("Heavy");
+            }
+
+            if (reforgeInItemName > 0 && !originalItemName.contains(EnumChatFormatting.STRIKETHROUGH.toString())) {
+                // we have a reforged item! remove reforge in item name and remove any essence upgrades (✪)
+
+                int reforgeLength = reforge.length();
+                String reforgePrefix = null;
+                // special cases for reforge + item name
+                if (reforge.equals("Heavy") && extraAttributes.getString("id").startsWith("HEAVY_")) {
+                    reforgePrefix = "Extremely ";
+                } else if (reforge.equals("Light") && extraAttributes.getString("id").startsWith("HEAVY_")) {
+                    reforgePrefix = "Not So ";
+                } else if ((reforge.equals("Wise") && extraAttributes.getString("id").startsWith("WISE_DRAGON_"))
+                        || (reforge.equals("Strong") && extraAttributes.getString("id").startsWith("STRONG_DRAGON_"))) {
+                    reforgePrefix = "Very ";
+                } else if (reforge.equals("Superior") && extraAttributes.getString("id").startsWith("SUPERIOR_DRAGON_")) {
+                    reforgePrefix = "Highly ";
+                } else if (reforge.equals("Perfect") && extraAttributes.getString("id").startsWith("PERFECT_")) {
+                    reforgePrefix = "Absolutely ";
+                }
+                if (reforgePrefix != null) {
+                    reforgeInItemName -= reforgePrefix.length();
+                    reforgeLength = reforgePrefix.length() - 1;
+                }
+
+                if (strikethrough) {
+                    modifiedItemName.insert(reforgeInItemName, grayedOutFormatting)
+                            .insert(reforgeInItemName + reforgeLength + grayedOutFormatting.length(), originalItemName.substring(0, reforgeInItemName));
+                } else {
+                    modifiedItemName.delete(reforgeInItemName, reforgeInItemName + reforgeLength);
+                }
+            }
+        }
+        // remove essence upgrade indicators (✪)
+        String essenceUpgradeIndicator = EnumChatFormatting.GOLD + "✪";
+        int essenceModifier = modifiedItemName.indexOf(essenceUpgradeIndicator);
+        while (essenceModifier > 0) {
+            if (strikethrough) {
+                modifiedItemName.replace(essenceModifier, essenceModifier + essenceUpgradeIndicator.length(), grayedOutFormatting + "✪");
+            } else {
+                modifiedItemName.delete(essenceModifier, essenceModifier + essenceUpgradeIndicator.length());
+            }
+            essenceModifier = modifiedItemName.indexOf(essenceUpgradeIndicator);
+        }
+
+        return Pair.of(modifiedItemName.toString().trim(), reforge);
     }
 }

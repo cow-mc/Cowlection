@@ -74,6 +74,8 @@ public class MooConfig {
     public static boolean tooltipItemAgeShortened;
     private static String tooltipItemTimestamp;
     private static String numeralSystem;
+    private static int lookupWikiKeyBinding;
+    private static int lookupPriceKeyBinding;
     // Category: SkyBlock Dungeons
     private static String showItemQualityAndFloor;
     private static String dungItemQualityPos;
@@ -351,6 +353,14 @@ public class MooConfig {
         Property propNumeralSystem = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "numeralSystem", "Arabic: 1, 4, 10", "Use Roman or Arabic numeral system?", new String[]{"Arabic: 1, 4, 10", "Roman: I, IV, X"}));
 
+        // Sub-Category: Item lookup
+        subCat = configCat.addSubCategory("Item lookup");
+        subCat.addExplanations("Lookup item prices or wiki articles for any SkyBlock item in any inventory.");
+
+        Property propLookupWikiKeyBinding = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "lookupWikiKeyBinding", Keyboard.KEY_I, "Key to lookup wiki"));
+        Property propLookupPriceKeyBinding = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "lookupPriceKeyBinding", Keyboard.KEY_P, "Key to lookup item price"));
 
         // Category: SkyBlock Dungeons
         configCat = new MooConfigCategory("SkyBlock Dungeons", "skyblockdungeons");
@@ -489,6 +499,8 @@ public class MooConfig {
             tooltipItemAgeShortened = propTooltipItemAgeShortened.getBoolean();
             tooltipItemTimestamp = propTooltipItemTimestamp.getString();
             numeralSystem = propNumeralSystem.getString();
+            lookupWikiKeyBinding = propLookupWikiKeyBinding.getInt();
+            lookupPriceKeyBinding = propLookupPriceKeyBinding.getInt();
             // Category: SkyBlock Dungeons
             showItemQualityAndFloor = propShowItemQualityAndFloor.getString();
             dungItemQualityPos = propDungItemQualityPos.getString();
@@ -541,6 +553,8 @@ public class MooConfig {
         propTooltipItemAgeShortened.set(tooltipItemAgeShortened);
         propTooltipItemTimestamp.set(tooltipItemTimestamp);
         propNumeralSystem.set(numeralSystem);
+        propLookupWikiKeyBinding.set(lookupWikiKeyBinding);
+        propLookupPriceKeyBinding.set(lookupPriceKeyBinding);
         // Category: SkyBlock Dungeons
         propShowItemQualityAndFloor.set(showItemQualityAndFloor);
         propDungItemQualityPos.set(dungItemQualityPos);
@@ -655,7 +669,7 @@ public class MooConfig {
 
     // Category: SkyBlock
     public static Setting getEnableSkyBlockOnlyFeatures() {
-        return Setting.get(MooConfig.enableSkyBlockOnlyFeatures);
+        return Setting.get(enableSkyBlockOnlyFeatures);
     }
 
     public static Setting getTooltipAuctionHousePriceEachDisplay() {
@@ -679,11 +693,13 @@ public class MooConfig {
     }
 
     public static boolean isTooltipToggleKeyBindingPressed() {
-        return tooltipToggleKeyBinding > 0 && Keyboard.isKeyDown(MooConfig.tooltipToggleKeyBinding);
+        return tooltipToggleKeyBinding > 0 && Keyboard.isKeyDown(tooltipToggleKeyBinding);
     }
-
-    public static boolean isDungeonItemTooltipToggleKeyBindingPressed() {
-        return dungItemToolTipToggleKeyBinding > 0 && Keyboard.isKeyDown(MooConfig.dungItemToolTipToggleKeyBinding);
+    public static boolean isLookupWikiKeyBindingPressed() {
+        return lookupWikiKeyBinding > 0 && Keyboard.isKeyDown(lookupWikiKeyBinding);
+    }
+    public static boolean isLookupPriceKeyBindingPressed() {
+        return lookupPriceKeyBinding > 0 && Keyboard.isKeyDown(lookupPriceKeyBinding);
     }
 
     // Category: SkyBlock Dungeons
@@ -693,6 +709,10 @@ public class MooConfig {
 
     public static boolean isDungItemQualityAtTop() {
         return dungItemQualityPos.equals("top");
+    }
+
+    public static boolean isDungeonItemTooltipToggleKeyBindingPressed() {
+        return dungItemToolTipToggleKeyBinding > 0 && Keyboard.isKeyDown(dungItemToolTipToggleKeyBinding);
     }
 
     public static Setting getDungPartyFinderPlayerLookupDisplay() {

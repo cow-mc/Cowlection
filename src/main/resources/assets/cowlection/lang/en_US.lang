@@ -37,7 +37,7 @@ cowlection.config.notifyFreshServer.tooltip=Notify when entering a world that ha
 cowlection.config.notifyOldServer=Notify when server restarted ≥X days ago
 cowlection.config.notifyOldServer.tooltip=Notify when joining a server that hasn't restarted for X ingame days.\n§eSet to 0 to disable notifications!
 cowlection.config.tooltipToggleKeyBinding=Key binding: toggle tooltip
-cowlection.config.tooltipToggleKeyBinding.tooltip=Hold down this key to toggle tooltip if one of the following settings is set to 'key press'
+cowlection.config.tooltipToggleKeyBinding.tooltip=Hold down this key to toggle tooltip if one of the following settings is set to 'key press'\n\n§7§odisable key binding: §e§oset key binding to §lESC
 cowlection.config.tooltipAuctionHousePriceEach=§7Auction house: §rprice per item
 cowlection.config.tooltipAuctionHousePriceEach.tooltip=Add price per item if multiple items are bought or sold?
 cowlection.config.bazaarConnectGraphsNodes=§7Bazaar: §rconnect the graph nodes
@@ -50,12 +50,16 @@ cowlection.config.tooltipItemTimestamp=Show item creation date
 cowlection.config.tooltipItemTimestamp.tooltip=Show item creation date? Only works for non-stackable items
 cowlection.config.numeralSystem=Numeral system
 cowlection.config.numeralSystem.tooltip=Use Roman or Arabic numeral system?\nThis is currently used to display numbers in the commands /moo stalkSkyBlock and /moo analyzeIsland
+cowlection.config.lookupWikiKeyBinding=Key binding: lookup item wiki
+cowlection.config.lookupWikiKeyBinding.tooltip=Hover over an item in any inventory and press keybinding to open the item's wiki article.\n§7§oAccesses §e§ohypixel-skyblock.fandom.com\n§7§odefault key: §e§oI = info\n\n§7§odisable key binding: §e§oset key binding to §lESC
+cowlection.config.lookupPriceKeyBinding=Key binding: lookup item price
+cowlection.config.lookupPriceKeyBinding.tooltip=Hover over an item in any inventory and press keybinding to open the item's price details.\n§7§oAccesses §e§ostonks.gg\n§7§odefault key: §e§oP = price\n\n§7§odisable key binding: §e§oset key binding to §lESC
 cowlection.config.showItemQualityAndFloor=Show item quality + obtained floor
 cowlection.config.showItemQualityAndFloor.tooltip=Should the item quality (in %%) and the obtained floor be added to the dungeon items' tooltips?\n§e'top' replaces the default 'gear score' entry §rwhich normally includes reforges and essence upgrades.
 cowlection.config.dungItemQualityPos=Item quality + obtained floor position
 cowlection.config.dungItemQualityPos.tooltip=Position of item quality and otained floor in dungeon item tooltips
 cowlection.config.dungItemToolTipToggleKeyBinding=Key binding: Show dungeon item base stats
-cowlection.config.dungItemToolTipToggleKeyBinding.tooltip=Hold down this key to toggle dungeon item tooltip.\nDisplays the base stats of an item without reforges and without essence upgrades.
+cowlection.config.dungItemToolTipToggleKeyBinding.tooltip=Hold down this key to toggle dungeon item tooltip.\nDisplays the base stats of an item without reforges and without essence upgrades.\n\n§7§odisable key binding: §e§oset key binding to §lESC
 cowlection.config.dungOverlayEnabled=Show overlay inside dungeons?
 cowlection.config.dungOverlayEnabled.tooltip=Show the performance overlay while inside a dungeon?
 cowlection.config.dungOverlayPositionX=Overlay x position (⇦/⇨ keys to fine-tune)

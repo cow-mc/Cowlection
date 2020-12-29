@@ -1,5 +1,6 @@
 package de.cowtipper.cowlection.listener.skyblock;
 
+import com.mojang.realmsclient.util.Pair;
 import de.cowtipper.cowlection.Cowlection;
 import de.cowtipper.cowlection.config.MooConfig;
 import de.cowtipper.cowlection.config.gui.MooConfigGui;
@@ -34,7 +35,6 @@ import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
-import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.input.Mouse;
 
 import java.awt.*;
@@ -130,57 +130,9 @@ public class DungeonsListener {
             if (toggleKeyBindingPressed) {
                 // simplify dungeon armor stats
                 String originalItemName = e.itemStack.getDisplayName();
-                StringBuilder modifiedItemName = new StringBuilder(originalItemName);
-                String grayedOutFormatting = "" + EnumChatFormatting.GRAY + EnumChatFormatting.STRIKETHROUGH;
-
-                if (extraAttributes.hasKey("modifier")) {
-                    // item has been reforged; re-format item name to exclude reforges
-                    reforge = StringUtils.capitalize(extraAttributes.getString("modifier"));
-                    int modifierSuffix = Math.max(reforge.indexOf("_sword"), reforge.indexOf("_bow"));
-                    if (modifierSuffix != -1) {
-                        reforge = reforge.substring(0, modifierSuffix);
-                    }
-                    int reforgeInItemName = originalItemName.indexOf(reforge);
-                    if (reforgeInItemName == -1 && reforge.equals("Light") && extraAttributes.getString("id").startsWith("HEAVY_")) {
-                        // special case: heavy armor with light reforge
-                        reforgeInItemName = originalItemName.indexOf("Heavy");
-                    }
-
-                    if (reforgeInItemName > 0 && !originalItemName.contains(EnumChatFormatting.STRIKETHROUGH.toString())) {
-                        // we have a reforged item! strike through reforge in item name and remove any essence upgrades (✪)
-
-                        int reforgeLength = reforge.length();
-                        String reforgePrefix = null;
-                        // special cases for reforge + item name
-                        if (reforge.equals("Heavy") && extraAttributes.getString("id").startsWith("HEAVY_")) {
-                            reforgePrefix = "Extremely ";
-                        } else if (reforge.equals("Light") && extraAttributes.getString("id").startsWith("HEAVY_")) {
-                            reforgePrefix = "Not So ";
-                        } else if ((reforge.equals("Wise") && extraAttributes.getString("id").startsWith("WISE_DRAGON_"))
-                                || (reforge.equals("Strong") && extraAttributes.getString("id").startsWith("STRONG_DRAGON_"))) {
-                            reforgePrefix = "Very ";
-                        } else if (reforge.equals("Superior") && extraAttributes.getString("id").startsWith("SUPERIOR_DRAGON_")) {
-                            reforgePrefix = "Highly ";
-                        } else if (reforge.equals("Perfect") && extraAttributes.getString("id").startsWith("PERFECT_")) {
-                            reforgePrefix = "Absolutely ";
-                        }
-                        if (reforgePrefix != null) {
-                            reforgeInItemName -= reforgePrefix.length();
-                            reforgeLength = reforgePrefix.length() - 1;
-                        }
-
-                        modifiedItemName.insert(reforgeInItemName, grayedOutFormatting)
-                                .insert(reforgeInItemName + reforgeLength + grayedOutFormatting.length(), originalItemName.substring(0, reforgeInItemName));
-                    }
-                }
-                // remove essence upgrade indicators (✪)
-                String essenceUpgradeIndicator = EnumChatFormatting.GOLD + "✪";
-                int essenceModifier = modifiedItemName.indexOf(essenceUpgradeIndicator);
-                while (essenceModifier > 0) {
-                    modifiedItemName.replace(essenceModifier, essenceModifier + essenceUpgradeIndicator.length(), grayedOutFormatting + "✪");
-                    essenceModifier = modifiedItemName.indexOf(essenceUpgradeIndicator);
-                }
-                e.toolTip.set(0, modifiedItemName.toString()); // replace item name
+                Pair<String, String> sbItemBaseName = Utils.extractSbItemBaseName(originalItemName, extraAttributes, true);
+                e.toolTip.set(0, sbItemBaseName.first()); // replace item name
+                reforge = sbItemBaseName.second();
             }
             // add item quality/floor and (if key bind is pressed: subtract stat boosts from reforge and update stats for dungeons)
             ListIterator<String> tooltipIterator = e.toolTip.listIterator();

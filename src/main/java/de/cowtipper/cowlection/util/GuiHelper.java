@@ -49,9 +49,9 @@ public final class GuiHelper extends GuiScreen {
         return instance;
     }
 
-    public static Slot getSlotUnderMouse(GuiChest guiChest) {
+    public static Slot getSlotUnderMouse(GuiContainer guiContainer) {
         try {
-            return ReflectionHelper.getPrivateValue(GuiContainer.class, guiChest, "theSlot", "field_147006_u");
+            return ReflectionHelper.getPrivateValue(GuiContainer.class, guiContainer, "theSlot", "field_147006_u");
         } catch (ReflectionHelper.UnableToAccessFieldException e) {
             e.printStackTrace();
             return null;
@@ -94,6 +94,17 @@ public final class GuiHelper extends GuiScreen {
         tessellator.draw();
     }
 
+    public static void drawHoveringTextWithGraph(List<String> toolTip) {
+        int mouseX = Mouse.getX() * getInstance().width / getInstance().mc.displayWidth;
+        int mouseY = getInstance().height - Mouse.getY() * getInstance().height / getInstance().mc.displayHeight - 1;
+        ScaledResolution scaledResolution = new ScaledResolution(Minecraft.getMinecraft());
+
+        getInstance().width = scaledResolution.getScaledWidth();
+        getInstance().height = scaledResolution.getScaledHeight();
+
+        getInstance().drawHoveringText(toolTip, mouseX, mouseY, scaledResolution.getScaledWidth(), scaledResolution.getScaledHeight(), -1, true);
+    }
+
     public static void drawHoveringText(List<String> textLines, int mouseX, int mouseY, int screenWidth, int screenHeight, int maxTextWidth) {
         if (ForgeVersion.getBuildVersion() < 1808) {
             // we're running a forge version from before 24 March 2016 (http://files.minecraftforge.net/maven/net/minecraftforge/forge/index_1.8.9.html for reference)
@@ -105,17 +116,6 @@ public final class GuiHelper extends GuiScreen {
             // we're on a newer forge version, so we can use the improved tooltip rendering directly added in 1.8.9-11.15.1.1808 (released 03/24/16 09:25 PM) in this pull request: https://github.com/MinecraftForge/MinecraftForge/pull/2649
             GuiUtils.drawHoveringText(textLines, mouseX, mouseY, screenWidth, screenHeight, maxTextWidth, getInstance().fontRendererObj);
         }
-    }
-
-    public static void drawHoveringTextWithGraph(List<String> toolTip) {
-        int mouseX = Mouse.getX() * getInstance().width / getInstance().mc.displayWidth;
-        int mouseY = getInstance().height - Mouse.getY() * getInstance().height / getInstance().mc.displayHeight - 1;
-        ScaledResolution scaledResolution = new ScaledResolution(Minecraft.getMinecraft());
-
-        getInstance().width = scaledResolution.getScaledWidth();
-        getInstance().height = scaledResolution.getScaledHeight();
-
-        getInstance().drawHoveringText(toolTip, mouseX, mouseY, scaledResolution.getScaledWidth(), scaledResolution.getScaledHeight(), -1, true);
     }
 
     /**

@@ -1,49 +1,127 @@
 package de.cowtipper.cowlection.listener.skyblock;
 
+import com.mojang.realmsclient.util.Pair;
+import de.cowtipper.cowlection.Cowlection;
 import de.cowtipper.cowlection.config.MooConfig;
 import de.cowtipper.cowlection.config.gui.MooConfigGui;
 import de.cowtipper.cowlection.util.GuiHelper;
 import de.cowtipper.cowlection.util.Utils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.SoundCategory;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiChest;
+import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.Slot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.StatCollector;
+import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.apache.commons.lang3.StringUtils;
+import org.lwjgl.input.Keyboard;
 
+import java.awt.*;
+import java.net.URI;
+import java.net.URLEncoder;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class SkyBlockListener {
+    private static final Set<String> blackList = new HashSet<>(Arrays.asList("ENCHANTED_BOOK", "RUNE", "PET", "POTION")); // + minions (_GENERATOR_)
+    private static final Pattern ITEM_COUNT_PREFIXED_PATTERN = Pattern.compile("^(?:§[0-9a-fl-or])*[\\d]+x ");
+    private static final Pattern ITEM_COUNT_SUFFIXED_PATTERN = Pattern.compile(" (?:§[0-9a-fl-or])*x[\\d]+$");
     private final NumberFormat numberFormatter;
+    private final Cowlection main;
 
-    public SkyBlockListener() {
+    public SkyBlockListener(Cowlection main) {
+        this.main = main;
         numberFormatter = NumberFormat.getNumberInstance(Locale.US);
         numberFormatter.setMaximumFractionDigits(0);
     }
 
     @SubscribeEvent
+    public void onItemLookupInGui(GuiScreenEvent.KeyboardInputEvent.Pre e) {
+        // open item info (wiki, price: bazaar or auction)
+        ItemLookupType itemLookupType;
+        if (MooConfig.isLookupWikiKeyBindingPressed()) {
+            itemLookupType = ItemLookupType.WIKI;
+        } else if (MooConfig.isLookupPriceKeyBindingPressed()) {
+            itemLookupType = ItemLookupType.PRICE;
+        } else {
+            itemLookupType = ItemLookupType.INVALID;
+        }
+        if (itemLookupType != ItemLookupType.INVALID && Keyboard.getEventKeyState() && e.gui instanceof GuiContainer) {
+            GuiContainer guiContainer = (GuiContainer) e.gui;
+            Slot hoveredSlot = GuiHelper.getSlotUnderMouse(guiContainer);
+            if (hoveredSlot != null && hoveredSlot.getHasStack()) {
+                ItemStack itemStack = hoveredSlot.getStack();
+                NBTTagCompound extraAttributes = itemStack.getSubCompound("ExtraAttributes", false);
+                if (extraAttributes != null && extraAttributes.hasKey("id")) {
+                    // seems to be a SkyBlock item
+                    String sbId = extraAttributes.getString("id");
+                    if (itemLookupType == ItemLookupType.WIKI || (/* itemLookupType == ItemLookupType.PRICE && */ !blackList.contains(sbId) && !sbId.contains("_GENERATOR_"))) {
+                        // open item price info or open wiki entry
+                        Pair<String, String> sbItemBaseName = Utils.extractSbItemBaseName(itemStack.getDisplayName(), extraAttributes, false);
+                        String itemBaseName = sbItemBaseName.first();
+
+                        // exceptions:
+                        String querySuffix = "";
+                        // remove item count (prefixed or suffixed)
+                        Matcher itemCountPrefixMatcher = ITEM_COUNT_PREFIXED_PATTERN.matcher(itemBaseName);
+                        Matcher itemCountSuffixMatcher = ITEM_COUNT_SUFFIXED_PATTERN.matcher(itemBaseName);
+                        if (itemCountPrefixMatcher.find()) {
+                            itemBaseName = itemBaseName.substring(itemCountPrefixMatcher.end());
+                        } else if (itemCountSuffixMatcher.find()) {
+                            itemBaseName = itemBaseName.substring(0, itemCountSuffixMatcher.start());
+                        }
+                        // special sb item ids
+                        if ("PET".equals(sbId)) {
+                            int petLevelPrefix = itemBaseName.indexOf("] ");
+                            if (petLevelPrefix > 0) {
+                                itemBaseName = itemBaseName.substring(petLevelPrefix + 2);
+                            }
+                            querySuffix = " Pet";
+                        } else if ("CAKE_SOUL".equals(sbId)) {
+                            itemBaseName = EnumChatFormatting.LIGHT_PURPLE + "Cake Soul";
+                        }
+
+                        main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Opening " + itemLookupType.getDescription() + " for " + itemBaseName);
+                        boolean success = openLink(EnumChatFormatting.getTextWithoutFormattingCodes(itemBaseName).trim() + querySuffix, itemLookupType);
+                        if (!success) {
+                            main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Error: couldn't open your browser");
+                            Minecraft.getMinecraft().thePlayer.playSound("mob.villager.no", Minecraft.getMinecraft().gameSettings.getSoundLevel(SoundCategory.MASTER), 1.4f);
+                        }
+                    } else {
+                        // item is blacklisted from lookup
+                        main.getChatHelper().sendMessage(EnumChatFormatting.RED, "⚠ " + EnumChatFormatting.RESET + itemStack.getDisplayName() + EnumChatFormatting.RED + " (" + Utils.fancyCase(sbId) + ") " + itemLookupType.getDescription() + " cannot be looked up.");
+                        Minecraft.getMinecraft().thePlayer.playSound("mob.villager.no", Minecraft.getMinecraft().gameSettings.getSoundLevel(SoundCategory.MASTER), 1.4f);
+                    }
+                }
+            }
+        }
+    }
+
+    @SubscribeEvent
     public void onItemTooltip(ItemTooltipEvent e) {
-        if (e.itemStack == null || e.toolTip == null) {
+        if (e.itemStack == null || e.toolTip == null || e.entityPlayer == null) {
             return;
         }
 
@@ -140,7 +218,7 @@ public class SkyBlockListener {
         // for auction house: show price for each item if multiple items are sold at once
         MooConfig.Setting tooltipAuctionHousePriceEachDisplay = MooConfig.getTooltipAuctionHousePriceEachDisplay();
         if ((tooltipAuctionHousePriceEachDisplay == MooConfig.Setting.ALWAYS || tooltipAuctionHousePriceEachDisplay == MooConfig.Setting.SPECIAL && MooConfig.isTooltipToggleKeyBindingPressed())
-                && e.entityPlayer != null && e.entityPlayer.openContainer instanceof ContainerChest) {
+                && e.entityPlayer.openContainer instanceof ContainerChest) {
             int stackSize = e.itemStack.stackSize;
             if ((stackSize == 1 && !isSubmitBidItem(e.itemStack)) || e.toolTip.size() < 4) {
                 // only 1 item or irrelevant tooltip - nothing to do here, abort!
@@ -184,9 +262,44 @@ public class SkyBlockListener {
         }
     }
 
+    private boolean openLink(String itemName, ItemLookupType itemLookupType) {
+        String baseUrl = itemLookupType.getBaseUrl();
+        try {
+            String url = baseUrl + URLEncoder.encode(itemName, "UTF-8");
+            Desktop.getDesktop().browse(new URI(url));
+            main.getLogger().info("Opening url: " + url);
+            return true;
+        } catch (Throwable throwable) {
+            main.getLogger().error("Couldn't open link: " + baseUrl + itemName, throwable);
+            return false;
+        }
+    }
+
     private boolean isSubmitBidItem(ItemStack itemStack) {
         return ((itemStack.getItem().equals(Items.gold_nugget) || itemStack.getItem().equals(Item.getItemFromBlock(Blocks.gold_block)))
                 && (itemStack.hasDisplayName() && (itemStack.getDisplayName().endsWith("Submit Bid") || itemStack.getDisplayName().endsWith("Collect Auction"))))
                 || (/* green hardened clay + */ itemStack.hasDisplayName() && (itemStack.getDisplayName().endsWith("Create BIN Auction") || itemStack.getDisplayName().endsWith("Create Auction")));
+    }
+
+    private enum ItemLookupType {
+        WIKI("wiki", "https://hypixel-skyblock.fandom.com/wiki/Special:Search?search="),
+        PRICE("price info", "https://stonks.gg/search?input="),
+        INVALID("nothing", "https://google.com/search?q=");
+
+        private final String description;
+        private final String baseUrl;
+
+        ItemLookupType(String description, String baseUrl) {
+            this.description = description;
+            this.baseUrl = baseUrl;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public String getBaseUrl() {
+            return baseUrl;
+        }
     }
 }
