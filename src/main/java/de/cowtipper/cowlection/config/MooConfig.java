@@ -85,13 +85,16 @@ public class MooConfig {
     public static int dungOverlayPositionY;
     public static int dungOverlayGuiScale;
     public static boolean dungOverlayTextShadow;
-    public static int dungClassMin;
-    public static boolean dungFilterPartiesWithArcherDupes;
-    public static boolean dungFilterPartiesWithBerserkDupes;
-    public static boolean dungFilterPartiesWithHealerDupes;
-    public static boolean dungFilterPartiesWithMageDupes;
-    public static boolean dungFilterPartiesWithTankDupes;
     private static String dungPartyFinderPlayerLookup;
+    public static boolean dungPartyFinderPartyLookup;
+    public static boolean dungPartiesSize;
+    public static int dungClassMin;
+    public static boolean dungFilterPartiesWithCarry;
+    private static boolean dungFilterPartiesWithArcherDupes;
+    private static boolean dungFilterPartiesWithBerserkDupes;
+    private static boolean dungFilterPartiesWithHealerDupes;
+    private static boolean dungFilterPartiesWithMageDupes;
+    private static boolean dungFilterPartiesWithTankDupes;
 
     private static Configuration cfg = null;
     private static final List<MooConfigCategory> configCategories = new ArrayList<>();
@@ -435,38 +438,52 @@ public class MooConfig {
                 "to make it easier to find the perfect party:",
                 "",
                 "Marks parties...",
-                "  ‣ you cannot join: " + EnumChatFormatting.RED + "⬛" + EnumChatFormatting.RESET + " (red carpet)",
-                "  ‣ with someone below a certain class level: " + EnumChatFormatting.RED + EnumChatFormatting.BOLD + "ᐯ" + EnumChatFormatting.RESET,
-                "  ‣ with duplicated roles you specify below: " + EnumChatFormatting.GOLD + "²⁺",
-                "  ‣ that match your criteria: " + EnumChatFormatting.GREEN + "⬛" + EnumChatFormatting.RESET + " (green carpet)");
+                "  ‣ you cannot join: " + EnumChatFormatting.RED + "⬛",
+                "  ‣ that do not meet all your criteria: " + EnumChatFormatting.GOLD + "⬛",
+                "    ‣ with someone below a certain class level: " + EnumChatFormatting.RED + EnumChatFormatting.BOLD + "ᐯ" + EnumChatFormatting.RESET,
+                "    ‣ with duplicated roles you specify below: " + EnumChatFormatting.GOLD + "²⁺",
+                "    ‣ with 'carry' in their notes: " + EnumChatFormatting.AQUA + "carry",
+                "  ‣ that match your criteria: " + EnumChatFormatting.GREEN + "⬛");
+
+        Property propDungPartyFinderPlayerLookup = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "dungPartyFinderPlayerLookup", "as a tooltip", "Show armor + dungeons stats of player joining via party finder as a tooltip or in chat?", new String[]{"as a tooltip", "in chat", "disabled"}));
+
+        Property propDungPartyFinderPartyLookup = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "dungPartyFinderPartyLookup", false, "Lookup info when joining another party?"));
+
+        Property propDungPartiesSize = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "dungPartiesSize", true, "Show size of parties?"),
+                new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.WHITE + "1 - 4").gray()));
 
         Property propDungClassMin = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "dungClassMin", 0, "Marks parties with members with lower class level than this value")
                         .setMinValue(0).setMaxValue(50),
                 new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.RED + EnumChatFormatting.BOLD + "ᐯ").gray()));
 
+        Property propDungFilterPartiesWithCarry = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "dungFilterPartiesWithCarry", true, "Mark parties with carry in the notes"),
+                new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.AQUA + "carry"
+                        + EnumChatFormatting.GRAY + " or " + EnumChatFormatting.GREEN + "carry " + EnumChatFormatting.GRAY + "('free' carries)").gray()));
+
         Property propDungFilterPartiesWithArcherDupes = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "dungFilterPartiesWithArcherDupes", true, "Mark parties with duplicated Archer class?"),
-                new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.GOLD + "²⁺A").gray()));
+                new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.GOLD + "²⁺" + EnumChatFormatting.YELLOW + "A").gray()));
 
         Property propDungFilterPartiesWithBerserkDupes = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "dungFilterPartiesWithBerserkDupes", false, "Mark parties with duplicated Berserk class?"),
-                new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.GOLD + "²⁺B").gray()));
+                new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.GOLD + "²⁺" + EnumChatFormatting.YELLOW + "B").gray()));
 
         Property propDungFilterPartiesWithHealerDupes = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "dungFilterPartiesWithHealerDupes", false, "Mark parties with duplicated Healer class?"),
-                new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.GOLD + "²⁺H").gray()));
+                new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.GOLD + "²⁺" + EnumChatFormatting.YELLOW + "H").gray()));
 
         Property propDungFilterPartiesWithMageDupes = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "dungFilterPartiesWithMageDupes", false, "Mark parties with duplicated Mage class?"),
-                new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.GOLD + "²⁺M").gray()));
+                new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.GOLD + "²⁺" + EnumChatFormatting.YELLOW + "M").gray()));
 
         Property propDungFilterPartiesWithTankDupes = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "dungFilterPartiesWithTankDupes", false, "Mark parties with duplicated Tank class?"),
-                new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.GOLD + "²⁺T").gray()));
-
-        Property propDungPartyFinderPlayerLookup = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungPartyFinderPlayerLookup", "as a tooltip", "Show armor + dungeons stats of player joining via party finder as a tooltip or in chat?", new String[]{"as a tooltip", "in chat", "disabled"}));
+                new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.GOLD + "²⁺" + EnumChatFormatting.YELLOW + "T").gray()));
 
         boolean modifiedMooCmdAlias = false;
         String mooCmdAliasPreChange = mooCmdAlias;
@@ -510,13 +527,16 @@ public class MooConfig {
             dungOverlayPositionY = propDungOverlayPositionY.getInt();
             dungOverlayGuiScale = propDungOverlayGuiScale.getInt();
             dungOverlayTextShadow = propDungOverlayTextShadow.getBoolean();
+            dungPartyFinderPlayerLookup = propDungPartyFinderPlayerLookup.getString();
+            dungPartyFinderPartyLookup = propDungPartyFinderPartyLookup.getBoolean();
+            dungPartiesSize = propDungPartiesSize.getBoolean();
             dungClassMin = propDungClassMin.getInt();
+            dungFilterPartiesWithCarry = propDungFilterPartiesWithCarry.getBoolean();
             dungFilterPartiesWithArcherDupes = propDungFilterPartiesWithArcherDupes.getBoolean();
             dungFilterPartiesWithBerserkDupes = propDungFilterPartiesWithBerserkDupes.getBoolean();
             dungFilterPartiesWithHealerDupes = propDungFilterPartiesWithHealerDupes.getBoolean();
             dungFilterPartiesWithMageDupes = propDungFilterPartiesWithMageDupes.getBoolean();
             dungFilterPartiesWithTankDupes = propDungFilterPartiesWithTankDupes.getBoolean();
-            dungPartyFinderPlayerLookup = propDungPartyFinderPlayerLookup.getString();
 
 
             if (!StringUtils.equals(mooCmdAliasPreChange, mooCmdAlias)) {
@@ -564,13 +584,16 @@ public class MooConfig {
         propDungOverlayPositionY.set(dungOverlayPositionY);
         propDungOverlayGuiScale.set(dungOverlayGuiScale);
         propDungOverlayTextShadow.set(dungOverlayTextShadow);
+        propDungPartyFinderPlayerLookup.set(dungPartyFinderPlayerLookup);
+        propDungPartyFinderPartyLookup.set(dungPartyFinderPartyLookup);
+        propDungPartiesSize.set(dungPartiesSize);
         propDungClassMin.set(dungClassMin);
+        propDungFilterPartiesWithCarry.set(dungFilterPartiesWithCarry);
         propDungFilterPartiesWithArcherDupes.set(dungFilterPartiesWithArcherDupes);
         propDungFilterPartiesWithBerserkDupes.set(dungFilterPartiesWithBerserkDupes);
         propDungFilterPartiesWithHealerDupes.set(dungFilterPartiesWithHealerDupes);
         propDungFilterPartiesWithMageDupes.set(dungFilterPartiesWithMageDupes);
         propDungFilterPartiesWithTankDupes.set(dungFilterPartiesWithTankDupes);
-        propDungPartyFinderPlayerLookup.set(dungPartyFinderPlayerLookup);
 
         if (saveToFile && cfg.hasChanged()) {
             boolean isPlayerIngame = Minecraft.getMinecraft().thePlayer != null;
@@ -695,9 +718,11 @@ public class MooConfig {
     public static boolean isTooltipToggleKeyBindingPressed() {
         return tooltipToggleKeyBinding > 0 && Keyboard.isKeyDown(tooltipToggleKeyBinding);
     }
+
     public static boolean isLookupWikiKeyBindingPressed() {
         return lookupWikiKeyBinding > 0 && Keyboard.isKeyDown(lookupWikiKeyBinding);
     }
+
     public static boolean isLookupPriceKeyBindingPressed() {
         return lookupPriceKeyBinding > 0 && Keyboard.isKeyDown(lookupPriceKeyBinding);
     }

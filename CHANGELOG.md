@@ -26,6 +26,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Improved 'being on SkyBlock' detection
   - gave scoreboard more time to get detected
   - also added config option to always (or never) enable SkyBlock event listeners
+- Dungeon Party Finder (overlay):
+  - Made party indicators clearer (current, suitable, unideal, unjoinable party)
+  - Show sizes of parties
+  - Mark parties with 'carry' in their notes
+  - Lookup info when joining another party via Dungeon Party Finder (disabled by default)
+  - Added active pet + found dungeon secrets to dungeon player lookup
 
 ### Fixed
 - Fixed some possible problems with bad server connection

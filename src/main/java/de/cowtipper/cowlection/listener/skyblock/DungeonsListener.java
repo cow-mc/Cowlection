@@ -2,6 +2,7 @@ package de.cowtipper.cowlection.listener.skyblock;
 
 import com.mojang.realmsclient.util.Pair;
 import de.cowtipper.cowlection.Cowlection;
+import de.cowtipper.cowlection.config.CredentialStorage;
 import de.cowtipper.cowlection.config.MooConfig;
 import de.cowtipper.cowlection.config.gui.MooConfigGui;
 import de.cowtipper.cowlection.data.DataHelper.DungeonClass;
@@ -12,15 +13,13 @@ import de.cowtipper.cowlection.util.Utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.SoundCategory;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
-import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.ItemSkull;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -50,7 +49,7 @@ public class DungeonsListener {
     /**
      * example: (space)Robin_Hood: Archer (42)
      */
-    private final Pattern DUNGEON_PARTY_FINDER_PLAYER = Pattern.compile("^ (?:\\w+): ([A-Za-z]+) \\((\\d+)\\)$");
+    private final Pattern DUNGEON_PARTY_FINDER_PLAYER = Pattern.compile("^ (\\w+): ([A-Za-z]+) \\((\\d+)\\)$");
     /**
      * examples: "Floor: Entrance", "Floor: Floor 4", "Floor: Floor IV"
      */
@@ -284,7 +283,7 @@ public class DungeonsListener {
             // not a player skull, don't draw party status indicator
             return;
         }
-        ItemStack indicatorItem = null;
+        PartyType partyType = PartyType.NONE;
 
         List<String> itemTooltip = item.getTooltip(Minecraft.getMinecraft().thePlayer, false);
         if (itemTooltip.size() < 5) {
@@ -296,35 +295,58 @@ public class DungeonsListener {
                 || lastToolTipLine.startsWith("Requires a Class at Level")
                 || lastToolTipLine.startsWith("Requires Catacombs Level")) {
             // cannot enter dungeon
-            indicatorItem = new ItemStack(Blocks.carpet, 1, EnumDyeColor.RED.getMetadata());
+            partyType = PartyType.UNJOINABLE;
         } else if (lastToolTipLine.endsWith("You are in this party!")) {
-            indicatorItem = new ItemStack(Items.leather, 1);
+            partyType = PartyType.CURRENT;
         } else {
             Map<DungeonClass, AtomicInteger> dungClassesInParty = new LinkedHashMap<>();
             AtomicInteger classCounter = new AtomicInteger();
             classCounter.incrementAndGet();
             dungClassesInParty.put(activeDungeonClass, classCounter); // add our own class
 
+            int partySize = 5;
+            String isCarry = null;
             boolean memberTooLowLevel = false;
 
             for (String toolTipLine : itemTooltip) {
-                Matcher playerDetailMatcher = DUNGEON_PARTY_FINDER_PLAYER.matcher(EnumChatFormatting.getTextWithoutFormattingCodes(toolTipLine));
+                String toolTipLineWithoutFormatting = EnumChatFormatting.getTextWithoutFormattingCodes(toolTipLine);
+                Matcher playerDetailMatcher = DUNGEON_PARTY_FINDER_PLAYER.matcher(toolTipLineWithoutFormatting);
                 if (playerDetailMatcher.matches()) {
-                    String className = playerDetailMatcher.group(1);
+                    String className = playerDetailMatcher.group(2);
                     DungeonClass clazz = DungeonClass.get(className);
                     dungClassesInParty.putIfAbsent(clazz, new AtomicInteger(0));
                     dungClassesInParty.get(clazz).incrementAndGet();
 
-                    int classLevel = MathHelper.parseIntWithDefault(playerDetailMatcher.group(2), 100);
+                    int classLevel = MathHelper.parseIntWithDefault(playerDetailMatcher.group(3), 100);
                     if (classLevel < MooConfig.dungClassMin) {
                         memberTooLowLevel = true;
                     }
+                } else if (" Empty".equals(toolTipLineWithoutFormatting)) {
+                    --partySize;
+                } else if (MooConfig.dungFilterPartiesWithCarry && toolTipLineWithoutFormatting.startsWith("Note: ")) {
+                    String partyNote = toolTipLineWithoutFormatting.toLowerCase();
+                    if (partyNote.contains("carry") || partyNote.contains("carries")) {
+                        partyType = PartyType.UNIDEAL;
+                        isCarry = partyNote.contains("free") ? "free" : "paid";
+                    }
                 }
             }
+            FontRenderer font = Minecraft.getMinecraft().fontRendererObj;
+            if (MooConfig.dungFilterPartiesWithCarry && isCarry != null) {
+                GlStateManager.pushMatrix();
+                GlStateManager.translate(0, 0, 281);
+                double scaleFactor = 0.5;
+                GlStateManager.scale(scaleFactor, scaleFactor, 0);
+                int carryColor = "free".equals(isCarry) ? new Color(85, 240, 85, 255).getRGB() : new Color(85, 240, 240, 255).getRGB();
+                font.drawStringWithShadow("carry", (float) ((x + 1) / scaleFactor), (float) ((y + 5) / scaleFactor), carryColor);
+                GlStateManager.popMatrix();
+            }
             if (memberTooLowLevel) {
+                // at least one party member is lower than the min class level
+                partyType = PartyType.UNIDEAL;
                 GlStateManager.pushMatrix();
                 GlStateManager.translate(0, 0, 280);
-                Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(EnumChatFormatting.BOLD + "ᐯ", x + 1, y + 8, new Color(220, 20, 20, 255).getRGB());
+                font.drawStringWithShadow(EnumChatFormatting.BOLD + "ᐯ", x + 1, y + 8, new Color(220, 20, 20, 255).getRGB());
                 GlStateManager.popMatrix();
             }
             StringBuilder dupedClasses = new StringBuilder();
@@ -334,25 +356,35 @@ public class DungeonsListener {
                 }
             }
             if (dupedClasses.length() > 0) {
-                dupedClasses.insert(0, EnumChatFormatting.RED).insert(0, "²⁺");
+                // party has class duplicates
+                partyType = PartyType.UNIDEAL;
+                dupedClasses.insert(0, EnumChatFormatting.YELLOW).insert(0, "²⁺"); // 2+
 
                 GlStateManager.pushMatrix();
                 GlStateManager.translate(0, 0, 280);
                 double scaleFactor = 0.8;
                 GlStateManager.scale(scaleFactor, scaleFactor, 0);
-                Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(dupedClasses.toString(), (float) (x / scaleFactor), (float) (y / scaleFactor), new Color(255, 170, 0, 255).getRGB());
+                font.drawStringWithShadow(dupedClasses.toString(), (float) (x / scaleFactor), (float) (y / scaleFactor), new Color(255, 170, 0, 255).getRGB());
                 GlStateManager.popMatrix();
-            } else if (!memberTooLowLevel) {
+            } else if (!memberTooLowLevel && isCarry == null) {
                 // party matches our criteria!
-                indicatorItem = new ItemStack(Blocks.carpet, 1, EnumDyeColor.LIME.getMetadata());
+                partyType = PartyType.SUITABLE;
+            }
+            // add party size indicator
+            if (MooConfig.dungPartiesSize && partySize > 0) {
+                GlStateManager.pushMatrix();
+                GlStateManager.translate(0, 0, 280);
+                String partySizeIndicator = String.valueOf(partySize);
+                font.drawStringWithShadow(partySizeIndicator, x + 17 - font.getStringWidth(partySizeIndicator), y + 9, 0xffFFFFFF);
+                GlStateManager.popMatrix();
             }
         }
-        if (indicatorItem != null) {
-            GlStateManager.enableRescaleNormal();
-            RenderHelper.enableGUIStandardItemLighting();
-            Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(indicatorItem, x, y);
-            RenderHelper.disableStandardItemLighting();
-            GlStateManager.disableRescaleNormal();
+        if (partyType != PartyType.CURRENT
+                || (/*partyType == PartyType.CURRENT &&*/ Minecraft.getSystemTime() % 1000 < 600)) {
+            GlStateManager.pushMatrix();
+            GlStateManager.translate(0, 0, partyType.getZIndex());
+            Gui.drawRect(x, y, x + 16, y + 16, partyType.getColor());
+            GlStateManager.popMatrix();
         }
     }
 
@@ -454,11 +486,25 @@ public class DungeonsListener {
                 if (hoveredSlot != null && hoveredSlot.getHasStack()) {
                     // clicked on an item
                     List<String> itemToolTip = hoveredSlot.getStack().getTooltip(Minecraft.getMinecraft().thePlayer, false);
-                    if (itemToolTip.size() < 5) {
+                    if (itemToolTip.size() < 5 || hoveredSlot.getStack().getItem() != Items.skull) {
                         // not a valid dungeon party tooltip
                         return;
                     }
                     extractQueuedFloorNr(itemToolTip, DUNGEON_PARTY_FINDER_FLOOR);
+
+                    if (CredentialStorage.isMooValid && MooConfig.dungPartyFinderPartyLookup) {
+                        List<String> partyMembers = new ArrayList<>();
+                        for (String toolTipLine : itemToolTip) {
+                            String toolTipLineWithoutFormatting = EnumChatFormatting.getTextWithoutFormattingCodes(toolTipLine);
+                            Matcher playerDetailMatcher = DUNGEON_PARTY_FINDER_PLAYER.matcher(toolTipLineWithoutFormatting);
+                            if (playerDetailMatcher.matches()) {
+                                partyMembers.add(playerDetailMatcher.group(1));
+                            }
+                        }
+                        if (partyMembers.size() > 0) {
+                            new DungeonsPartyListener(main, partyMembers);
+                        }
+                    }
                 }
             } else if (inventory.getName().equals("Group Builder")) {
                 // get dungeon floor nr when creating a dungeon party for party finder
@@ -580,6 +626,30 @@ public class DungeonsListener {
                 }
                 GlStateManager.popMatrix();
             }
+        }
+    }
+
+    private enum PartyType {
+        SUITABLE(0xff32CD32, 240),
+        UNIDEAL(0xffCD8032, 240),
+        UNJOINABLE(0xffD75B5B, 279),
+        CURRENT(0xff5FDE6C, 240),
+        NONE(0xffFF0000, 279);
+
+        private final float zIndex;
+        private final int color;
+
+        PartyType(int color, float zIndex) {
+            this.color = color;
+            this.zIndex = zIndex;
+        }
+
+        public float getZIndex() {
+            return zIndex;
+        }
+
+        public int getColor() {
+            return color;
         }
     }
 }

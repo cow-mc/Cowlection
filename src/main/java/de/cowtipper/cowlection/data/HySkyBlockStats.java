@@ -200,6 +200,15 @@ public class HySkyBlockStats {
                 return pets;
             }
 
+            public Pet getActivePet() {
+                for (Pet pet : pets) {
+                    if (pet.isActive()) {
+                        return pet;
+                    }
+                }
+                return null;
+            }
+
             public List<String> getArmor() {
                 NBTTagCompound nbt = inv_armor.getDecodedData();
                 List<String> armorList = new ArrayList<>();

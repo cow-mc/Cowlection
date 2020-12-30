@@ -2,6 +2,8 @@ package de.cowtipper.cowlection.data;
 
 import net.minecraft.util.EnumChatFormatting;
 
+import java.util.Map;
+
 @SuppressWarnings("unused")
 public class HyPlayerData {
     private String displayname;
@@ -14,6 +16,7 @@ public class HyPlayerData {
     private long lastLogin;
     private long lastLogout;
     private String mostRecentGameType;
+    private Map<String, Integer> achievements;
 
     /**
      * No-args constructor for GSON
@@ -39,6 +42,13 @@ public class HyPlayerData {
 
     public String getLastGame() {
         return DataHelper.GameType.getFancyName(mostRecentGameType);
+    }
+
+    public int getAchievement(String achievementName) {
+        if (achievements != null) {
+            return achievements.getOrDefault(achievementName, 0);
+        }
+        return 0;
     }
 
     public boolean hasNeverJoinedHypixel() {

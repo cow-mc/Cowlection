@@ -8,12 +8,14 @@ import de.cowtipper.cowlection.data.HySkyBlockStats;
 import de.cowtipper.cowlection.util.ApiUtils;
 import de.cowtipper.cowlection.util.MooChatComponent;
 import de.cowtipper.cowlection.util.Utils;
+import net.minecraft.client.Minecraft;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -34,12 +36,25 @@ public class DungeonsPartyListener {
     private final AtomicInteger pendingApiRequests = new AtomicInteger();
     private final ConcurrentHashMap<String, Optional<UUID>> partyMembers = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, HySkyBlockStats> partyMemberStats = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Integer> partyMemberFoundDungeonSecrets = new ConcurrentHashMap<>();
 
     public DungeonsPartyListener(Cowlection main) {
         if (nextStep == Step.STOP) { // prevent double-registration of this listener
             nextStep = Step.START;
             this.main = main;
+            // get party members by parsing output of /party list:
             MinecraftForge.EVENT_BUS.register(this);
+        }
+    }
+
+    public DungeonsPartyListener(Cowlection main, List<String> partyMembers) {
+        if (nextStep == Step.STOP) { // prevent double-registration of this listener
+            this.main = main;
+            nextStep = Step.AWAITING_API_RESPONSE;
+            for (String partyMember : partyMembers) {
+                this.partyMembers.put(partyMember, Optional.empty());
+            }
+            getDungeonPartyStats();
         }
     }
 
@@ -130,16 +145,28 @@ public class DungeonsPartyListener {
     private void getDungeonPartyStats() {
         for (String partyMemberName : partyMembers.keySet()) {
             pendingApiRequests.incrementAndGet();
+            pendingApiRequests.incrementAndGet();
             ApiUtils.fetchFriendData(partyMemberName, partyMember -> {
                 // (1) send Mojang API request to get uuid
                 if (partyMember != null && !partyMember.equals(Friend.FRIEND_NOT_FOUND)) {
                     partyMembers.put(partyMemberName, Optional.ofNullable(partyMember.getUuid()));
+
                     ApiUtils.fetchSkyBlockStats(partyMember, hySkyBlockStats -> {
                         // (2) once completed, request SkyBlock stats
-                        int apiRequestsLeft = pendingApiRequests.decrementAndGet();
                         partyMemberStats.put(partyMemberName, hySkyBlockStats);
 
-                        if (apiRequestsLeft == 0) {
+                        if (pendingApiRequests.decrementAndGet() == 0) {
+                            // (3) wait for all requests to finish
+                            // (4) once completed extract relevant data
+                            nextStep = Step.SEND_PARTY_STATS;
+                            sendDungeonPartyStats();
+                        }
+                    });
+                    ApiUtils.fetchHyPlayerDetails(partyMember, hyPlayerData -> {
+                        // (2) once completed, request player stats
+                        partyMemberFoundDungeonSecrets.put(partyMemberName, (hyPlayerData != null ? hyPlayerData.getAchievement("skyblock_treasure_hunter") : 0));
+
+                        if (pendingApiRequests.decrementAndGet() == 0) {
                             // (3) wait for all requests to finish
                             // (4) once completed extract relevant data
                             nextStep = Step.SEND_PARTY_STATS;
@@ -149,23 +176,24 @@ public class DungeonsPartyListener {
                 } else {
                     // player not found (nicked?)
                     pendingApiRequests.decrementAndGet();
+                    pendingApiRequests.decrementAndGet();
                 }
             });
         }
     }
 
     private void sendDungeonPartyStats() {
+        String thePlayerName = Minecraft.getMinecraft().thePlayer.getName();
         MooChatComponent dungeonsParty = new MooChatComponent("Dungeons party").gold().bold();
 
         StringBuilder playerEntry = new StringBuilder();
         StringBuilder playerTooltip = new StringBuilder();
         String partyMemberName = "";
         for (Map.Entry<String, Optional<UUID>> partyMember : partyMembers.entrySet()) {
-            partyMemberName = partyMember.getKey();
             if (playerEntry.length() > 0) {
                 // append previous data
                 MooChatComponent dungeonPartyEntry = new MooChatComponent(playerEntry.toString())
-                        .setSuggestCommand("/p kick " + partyMemberName, false);
+                        .setSuggestCommand((partyMemberName.equals(thePlayerName) ? "/boop " : "/p kick ") + partyMemberName, false);
                 if (playerTooltip.length() > 0) {
                     dungeonPartyEntry.setHover(new MooChatComponent(playerTooltip.toString()));
                 }
@@ -174,6 +202,7 @@ public class DungeonsPartyListener {
                 playerEntry.setLength(0);
                 playerTooltip.setLength(0);
             }
+            partyMemberName = partyMember.getKey();
             String errorNamePrefix = "  " + EnumChatFormatting.RED + partyMemberName + EnumChatFormatting.LIGHT_PURPLE + " ➜ " + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC;
 
             if (!partyMember.getValue().isPresent()) {
@@ -184,7 +213,6 @@ public class DungeonsPartyListener {
             UUID uuid = partyMember.getValue().get();
             // player name:
             playerEntry.append("  ").append(EnumChatFormatting.DARK_GREEN).append(partyMemberName).append(EnumChatFormatting.LIGHT_PURPLE).append(" ➜ ").append(EnumChatFormatting.GRAY);
-
 
             HySkyBlockStats sbStats = partyMemberStats.get(partyMemberName);
             if (sbStats != null && sbStats.isSuccess()) {
@@ -199,9 +227,13 @@ public class DungeonsPartyListener {
                 // ^ abort if any of the above failed, otherwise visualize API data:
                 HySkyBlockStats.Profile.Member member = activeProfile.getMember(uuid);
 
-                // append player name + class and class level + armor
+                // active pet:
+                HySkyBlockStats.Profile.Pet activePet = member.getActivePet();
+
+                // append player name + class and class level + armor + active pet
                 playerTooltip.append(EnumChatFormatting.WHITE).append(EnumChatFormatting.BOLD).append(partyMemberName).append(EnumChatFormatting.LIGHT_PURPLE).append(" ➜ ").append(EnumChatFormatting.GRAY).append(EnumChatFormatting.ITALIC).append("no class selected")
-                        .append("\n").append(String.join("\n", member.getArmor()));
+                        .append("\n").append(String.join("\n", member.getArmor()))
+                        .append("\n\n").append(EnumChatFormatting.GRAY).append("Active pet: ").append(activePet != null ? activePet.toFancyString() : "" + EnumChatFormatting.DARK_GRAY + EnumChatFormatting.ITALIC + "none");
 
                 HySkyBlockStats.Profile.Dungeons dungeons = member.getDungeons();
                 boolean hasNotPlayedDungeons = dungeons == null || !dungeons.hasPlayed();
@@ -221,13 +253,16 @@ public class DungeonsPartyListener {
 
                 // highest floor completions:
                 playerTooltip.append(dungeons.getHighestFloorCompletions(3, false));
+
+                // found dungeon secrets:
+                playerTooltip.append("\n").append(EnumChatFormatting.GRAY).append("Found secrets: ").append(EnumChatFormatting.GOLD).append(partyMemberFoundDungeonSecrets.getOrDefault(partyMemberName, 0));
             } else {
                 playerEntry.setLength(0);
                 playerEntry.append(errorNamePrefix).append("API error").append(sbStats != null && sbStats.getCause() != null ? ": " + sbStats.getCause() : "");
             }
         }
         MooChatComponent dungeonPartyEntry = new MooChatComponent(playerEntry.toString())
-                .setSuggestCommand("/p kick " + partyMemberName, false);
+                .setSuggestCommand((partyMemberName.equals(thePlayerName) ? "/boop " : "/p kick ") + partyMemberName, false);
         if (playerTooltip.length() > 0) {
             dungeonPartyEntry.setHover(new MooChatComponent(playerTooltip.toString()));
         }

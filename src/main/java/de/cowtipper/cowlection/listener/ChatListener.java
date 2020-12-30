@@ -1,6 +1,7 @@
 package de.cowtipper.cowlection.listener;
 
 import de.cowtipper.cowlection.Cowlection;
+import de.cowtipper.cowlection.config.CredentialStorage;
 import de.cowtipper.cowlection.config.MooConfig;
 import de.cowtipper.cowlection.data.Friend;
 import de.cowtipper.cowlection.data.HySkyBlockStats;
@@ -175,7 +176,9 @@ public class ChatListener {
                 messageSender = partyOrGameInviteMatcher.group(1);
             } else if (dungeonPartyFinderJoinedMatcher.find()) {
                 messageSender = dungeonPartyFinderJoinedMatcher.group(1);
-                if (MooConfig.getDungPartyFinderPlayerLookupDisplay() != MooConfig.Setting.DISABLED && !messageSender.equals(Minecraft.getMinecraft().thePlayer.getName())) {
+                if (CredentialStorage.isMooValid && !messageSender.equals(Minecraft.getMinecraft().thePlayer.getName())
+                        && MooConfig.getDungPartyFinderPlayerLookupDisplay() != MooConfig.Setting.DISABLED) {
+                    // another player joined via Dungeon Party Finder
                     String dungeonClass = dungeonPartyFinderJoinedMatcher.group(2) + " Lvl " + dungeonPartyFinderJoinedMatcher.group(3);
                     getDungeonPartyMemberDetails(messageSender, dungeonClass);
                 }
@@ -200,29 +203,48 @@ public class ChatListener {
                         boolean outputAsChatMessages = MooConfig.getDungPartyFinderPlayerLookupDisplay() == MooConfig.Setting.TEXT;
 
                         HySkyBlockStats.Profile.Member member = activeProfile.getMember(stalkedPlayer.getUuid());
-                        MooChatComponent armorLookupComponent;
                         String armorLookupPrefix = " ❈ " + EnumChatFormatting.DARK_GREEN + playerName;
                         String delimiter = "\n" + (outputAsChatMessages ? "    " : "");
                         String armorLookupResult = EnumChatFormatting.LIGHT_PURPLE + " ➜ " + EnumChatFormatting.GRAY + dungeonClass + delimiter + String.join(delimiter, member.getArmor());
 
+                        // active pet:
+                        HySkyBlockStats.Profile.Pet activePet = member.getActivePet();
+                        String petInfo = (outputAsChatMessages ? "\n  " : "\n\n") + EnumChatFormatting.GRAY + "Active pet: " + (activePet != null ? activePet.toFancyString() : "" + EnumChatFormatting.DARK_GRAY + EnumChatFormatting.ITALIC + "none");
+
                         HySkyBlockStats.Profile.Dungeons dungeons = member.getDungeons();
                         String highestFloorCompletions = "\n" + (outputAsChatMessages ? "  " : "") + EnumChatFormatting.GRAY + "Completed no dungeons yet";
+
+                        String skyBlockDetails;
                         if (outputAsChatMessages) {
                             // highest floor completions:
                             if (dungeons != null && dungeons.hasPlayed()) {
                                 highestFloorCompletions = dungeons.getHighestFloorCompletions(1, true).toString();
                             }
-                            armorLookupComponent = new MooChatComponent(armorLookupPrefix + armorLookupResult + highestFloorCompletions).green();
+                            skyBlockDetails = armorLookupPrefix + armorLookupResult + petInfo + highestFloorCompletions;
                         } else {
                             // as a tooltip: == MooConfig.Setting.TOOLTIP
                             if (dungeons != null && dungeons.hasPlayed()) {
                                 // highest floor completions:
                                 highestFloorCompletions = dungeons.getHighestFloorCompletions(3, false).toString();
                             }
-                            armorLookupComponent = new MooChatComponent(armorLookupPrefix + EnumChatFormatting.GREEN + (playerName.endsWith("s") ? "'" : "'s") + " dungeons info (hover me)").green()
-                                    .setHover(new MooChatComponent(EnumChatFormatting.BOLD + playerName + armorLookupResult + highestFloorCompletions));
+                            skyBlockDetails = EnumChatFormatting.BOLD + playerName + armorLookupResult + petInfo + highestFloorCompletions;
                         }
-                        main.getChatHelper().sendMessage(armorLookupComponent.setSuggestCommand("/p kick " + playerName, outputAsChatMessages));
+
+                        ApiUtils.fetchHyPlayerDetails(stalkedPlayer, hyPlayerData -> {
+                            String foundDungeonsSecrets = "";
+                            if (hyPlayerData != null) {
+                                foundDungeonsSecrets = "\n" + (outputAsChatMessages ? "  " : "") + EnumChatFormatting.GRAY + "Found secrets: " + EnumChatFormatting.GOLD + hyPlayerData.getAchievement("skyblock_treasure_hunter");
+                            }
+
+                            MooChatComponent armorLookupComponent;
+                            if (outputAsChatMessages) {
+                                armorLookupComponent = new MooChatComponent(skyBlockDetails + foundDungeonsSecrets).green();
+                            } else {
+                                armorLookupComponent = new MooChatComponent(armorLookupPrefix + EnumChatFormatting.GREEN + (playerName.endsWith("s") ? "'" : "'s") + " dungeons info (hover me)").green()
+                                        .setHover(new MooChatComponent(skyBlockDetails + foundDungeonsSecrets));
+                            }
+                            main.getChatHelper().sendMessage(armorLookupComponent.setSuggestCommand("/p kick " + playerName, outputAsChatMessages));
+                        });
                     }
                 });
             }
