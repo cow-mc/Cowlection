@@ -42,6 +42,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Fixed deaths sometimes being counted multiple times
   - Read destroyed crypts from tab list (if available) for more accurate numbers
   - Fixed rarely occurring infinite message loop
+- MC log search: now ignores corrupted/broken files instead of displaying an error
 
 ## [1.8.9-0.11.0] - 28.09.2020
 ### Added

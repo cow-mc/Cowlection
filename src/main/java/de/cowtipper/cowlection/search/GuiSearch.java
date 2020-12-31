@@ -276,7 +276,7 @@ public class GuiSearch extends GuiScreen {
     }
 
     @Override
-    protected void actionPerformed(GuiButton button) throws IOException {
+    protected void actionPerformed(GuiButton button) {
         if (button == this.buttonClose && button.enabled) {
             guiSearchResults = null;
             this.mc.setIngameFocus();
@@ -300,8 +300,6 @@ public class GuiSearch extends GuiScreen {
                         areEntriesSearchResults = true;
                     }
                 } catch (IOException e) {
-                    System.err.println("Error reading/parsing file log files:");
-                    e.printStackTrace();
                     if (e.getStackTrace().length > 0) {
                         searchResults.add(new LogEntry(StringUtils.replaceEach(ExceptionUtils.getStackTrace(e), new String[]{"\t", "\r\n"}, new String[]{"  ", "\n"})));
                     }

@@ -1,5 +1,6 @@
 package de.cowtipper.cowlection.search;
 
+import com.mojang.realmsclient.util.Pair;
 import de.cowtipper.cowlection.config.MooConfig;
 import de.cowtipper.cowlection.data.LogEntry;
 import net.minecraft.util.EnumChatFormatting;
@@ -10,11 +11,7 @@ import java.io.*;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
+import java.time.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -24,6 +21,7 @@ import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 class LogFilesSearcher {
+    private static final Pattern LOG_FILE_PATTERN = Pattern.compile("^(\\d{4})-(\\d{2})-(\\d{2})-\\d+\\.log\\.gz$");
     /**
      * Log4j.xml PatternLayout: [%d{HH:mm:ss}] [%t/%level]: %msg%n
      * Log line: [TIME] [THREAD/LEVEL]: [CHAT] msg
@@ -35,20 +33,21 @@ class LogFilesSearcher {
     private int analyzedFilesWithHits = 0;
 
     ImmutableTriple<Integer, Integer, List<LogEntry>> searchFor(String searchQuery, boolean chatOnly, boolean matchCase, boolean removeFormatting, LocalDate dateStart, LocalDate dateEnd) throws IOException {
-        List<Path> files = new ArrayList<>();
+        List<Pair<Path, LocalDate>> files = new ArrayList<>();
         for (String logsDirPath : MooConfig.logsDirs) {
             File logsDir = new File(logsDirPath);
             if (logsDir.exists() && logsDir.isDirectory()) {
                 try {
                     files.addAll(fileList(logsDir, dateStart, dateEnd));
                 } catch (IOException e) {
-                    throw throwIoException(logsDirPath, e);
+                    throw new IOException(EnumChatFormatting.DARK_RED + "ERROR: An error occurred trying to read/parse '" + EnumChatFormatting.RED + logsDirPath + EnumChatFormatting.DARK_RED + "':\n"
+                            + EnumChatFormatting.GOLD + e.getLocalizedMessage(), e);
                 }
             }
         }
 
         if (files.isEmpty()) {
-            throw new FileNotFoundException(EnumChatFormatting.DARK_RED + "ERROR: Couldn't find any Minecraft log files. Please check if the log file directories are set correctly (Log Search ➡ Settings).");
+            throw new FileNotFoundException(EnumChatFormatting.DARK_RED + "ERROR: No Minecraft log files could be found for the selected date range. Please check if the dates as well as the directories of the log files are set correctly (Log Search ➡ Settings).");
         } else {
             List<LogEntry> searchResults = analyzeFiles(files, searchQuery, chatOnly, matchCase, removeFormatting)
                     .stream().sorted(Comparator.comparing(LogEntry::getTime)).collect(Collectors.toList());
@@ -56,17 +55,15 @@ class LogFilesSearcher {
         }
     }
 
-    private List<LogEntry> analyzeFiles(List<Path> paths, String searchTerm, boolean chatOnly, boolean matchCase, boolean removeFormatting) throws IOException {
+    private List<LogEntry> analyzeFiles(List<Pair<Path, LocalDate>> pathsData, String searchTerm, boolean chatOnly, boolean matchCase, boolean removeFormatting) {
         List<LogEntry> searchResults = new ArrayList<>();
-        for (Path path : paths) {
+        for (Pair<Path, LocalDate> pathData : pathsData) {
+            Path path = pathData.first();
             boolean foundSearchTermInFile = false;
             try (BufferedReader in = (path.endsWith("latest.log")
                     ? new BufferedReader(new InputStreamReader(new FileInputStream(path.toFile()))) // latest.log
                     : new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(path.toFile())))))) { // ....log.gz
-                String fileName = path.getFileName().toString(); // 2020-04-20-3.log.gz
-                String date = fileName.equals("latest.log")
-                        ? DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(Files.getLastModifiedTime(path).toInstant())
-                        : fileName.substring(0, fileName.lastIndexOf('-'));
+                LocalDate date = pathData.second();
                 String content;
                 LogEntry logEntry = null;
                 while ((content = in.readLine()) != null) {
@@ -104,22 +101,19 @@ class LogFilesSearcher {
                 if (foundSearchTermInFile) {
                     analyzedFilesWithHits++;
                 }
-            } catch (IOException e) {
-                throw throwIoException(path.toString(), e);
+            } catch (IOException ignored) {
+                // most likely corrupted .log.gz file - skip it.
             }
         }
         return searchResults;
     }
 
-    private LocalDateTime getDate(String date, Matcher logLineMatcher) {
-        int year = Integer.parseInt(date.substring(0, 4));
-        int month = Integer.parseInt(date.substring(5, 7));
-        int day = Integer.parseInt(date.substring(8, 10));
+    private LocalDateTime getDate(LocalDate date, Matcher logLineMatcher) {
         int hour = Integer.parseInt(logLineMatcher.group(1));
         int minute = Integer.parseInt(logLineMatcher.group(2));
         int sec = Integer.parseInt(logLineMatcher.group(3));
 
-        return LocalDateTime.of(year, month, day, hour, minute, sec);
+        return LocalDateTime.of(date, LocalTime.of(hour, minute, sec));
     }
 
     private LogEntry analyzeLogEntry(LogEntry logEntry, String searchTerms, boolean matchCase, boolean removeFormatting) {
@@ -146,36 +140,27 @@ class LogFilesSearcher {
         return logEntry;
     }
 
-    private List<Path> fileList(File directory, LocalDate startDate, LocalDate endDate) throws IOException {
-        List<Path> fileNames = new ArrayList<>();
+    private List<Pair<Path, LocalDate>> fileList(File directory, LocalDate startDate, LocalDate endDate) throws IOException {
+        List<Pair<Path, LocalDate>> fileNames = new ArrayList<>();
         try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(directory.toPath())) {
             for (Path path : directoryStream) {
                 if (path.toString().endsWith(".log.gz")) {
-                    String[] fileDate = path.getFileName().toString().split("-");
-                    if (fileDate.length == 4) {
-                        LocalDate fileLocalDate = LocalDate.of(Integer.parseInt(fileDate[0]),
-                                Integer.parseInt(fileDate[1]), Integer.parseInt(fileDate[2]));
-
-                        if (fileLocalDate.compareTo(startDate) >= 0 && fileLocalDate.compareTo(endDate) <= 0) {
-                            fileNames.add(path);
+                    Matcher fileNameMatcher = LOG_FILE_PATTERN.matcher(path.getFileName().toString());
+                    if (fileNameMatcher.matches()) {
+                        LocalDate fileLocalDate = LocalDate.of(Integer.parseInt(fileNameMatcher.group(1)),
+                                Integer.parseInt(fileNameMatcher.group(2)), Integer.parseInt(fileNameMatcher.group(3)));
+                        if (!fileLocalDate.isBefore(startDate) && !fileLocalDate.isAfter(endDate)) {
+                            fileNames.add(Pair.of(path, fileLocalDate));
                         }
-                    } else {
-                        System.err.println("Error with " + path.toString());
                     }
                 } else if (path.getFileName().toString().equals("latest.log")) {
                     LocalDate lastModified = Instant.ofEpochMilli(path.toFile().lastModified()).atZone(ZoneId.systemDefault()).toLocalDate();
                     if (!lastModified.isBefore(startDate) && !lastModified.isAfter(endDate)) {
-                        fileNames.add(path);
+                        fileNames.add(Pair.of(path, lastModified));
                     }
                 }
             }
         }
         return fileNames;
-    }
-
-    private IOException throwIoException(String file, IOException e) throws IOException {
-        IOException ioException = new IOException(EnumChatFormatting.DARK_RED + "ERROR: An error occurred trying to read/parse '" + EnumChatFormatting.RED + file + EnumChatFormatting.DARK_RED + "'");
-        ioException.setStackTrace(e.getStackTrace());
-        throw ioException;
     }
 }
