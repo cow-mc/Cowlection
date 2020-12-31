@@ -38,6 +38,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Fixed sending 'offline' messages (new version notification and online best friends)
   - Fixed rare occurrence of repeated triggering of server join and leave events
 - Fixed other mods interfering with detection of specific chat messages
+- SkyBlock Dungeons related:
+  - Fixed deaths sometimes being counted multiple times
+  - Read destroyed crypts from tab list (if available) for more accurate numbers
+  - Fixed rarely occurring infinite message loop
 
 ## [1.8.9-0.11.0] - 28.09.2020
 ### Added

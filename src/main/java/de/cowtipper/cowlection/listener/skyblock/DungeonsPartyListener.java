@@ -62,10 +62,12 @@ public class DungeonsPartyListener {
     @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
     public void onMessageReceived(ClientChatReceivedEvent e) {
         if (e.type != 2 && listenForChatMsgs) { // normal chat or system msg (not above action bar), and not stopped
-            if (msgCounter > 15) {
+            if (msgCounter == 15) {
                 // received too many messages without detecting any party-related lines, abort!
+                listenForChatMsgs = false;
+                shutdown();
                 main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Wasn't able to detect the party member list. Maybe the chat formatting was changed?");
-                nextStep = Step.STOP;
+                return;
             }
             ++msgCounter;
 

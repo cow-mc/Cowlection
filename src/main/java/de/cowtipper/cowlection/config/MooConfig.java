@@ -398,8 +398,8 @@ public class MooConfig {
         subCat = configCat.addSubCategory("Performance Overlay");
         subCat.addExplanations(EnumChatFormatting.UNDERLINE + "Keeps track of:",
                 "  ‣ skill score " + EnumChatFormatting.GRAY + "(reduced by deaths and failed puzzles)",
-                "  ‣ speed score " + EnumChatFormatting.GRAY + "(-2.2 points when over 20 minutes)",
-                "  ‣ bonus score " + EnumChatFormatting.GRAY + "(+1 [max 5] for each destroyed crypt; can only be detected up to ~50 blocks away from the player)",
+                "  ‣ speed score " + EnumChatFormatting.GRAY + "(-2.2 points/minute when over 20 minutes)",
+                "  ‣ bonus score " + EnumChatFormatting.GRAY + "(+1 [max 5] for each destroyed crypt; if 'enhanced tab list' is disabled: limited to ~50 blocks away from the player)",
                 "Does " + EnumChatFormatting.ITALIC + "not" + EnumChatFormatting.RESET + " track explorer score " + EnumChatFormatting.GRAY + "(explored rooms, secrets, ...)");
 
         Property propDungOverlayEnabled = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),

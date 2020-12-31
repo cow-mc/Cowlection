@@ -91,7 +91,7 @@ public class DungeonsListener {
      * <li> ☠ You were killed by [mob] and became a ghost.</li>
      * </ul>
      */
-    private final Pattern DUNGEON_DEATH_PATTERN = Pattern.compile("^ ☠ (\\w+) (.+) and became a ghost\\.$");
+    private final Pattern DUNGEON_DEATH_PATTERN = Pattern.compile("^ ☠ (\\w+) (?:.+) and became a ghost\\.$");
     private final Pattern DUNGEON_REVIVED_PATTERN = Pattern.compile("^ ❣ (\\w+) was revived(?:.*?)$");
     /**
      * Class milestones:
@@ -443,7 +443,7 @@ public class DungeonsListener {
                 if (playerName.equals("You")) {
                     playerName = Minecraft.getMinecraft().thePlayer.getName();
                 }
-                main.getDungeonCache().addDeath(playerName, dungeonDeathMatcher.group(2).contains("disconnected"));
+                main.getDungeonCache().addDeath(playerName);
             } else if (dungeonRevivedMatcher.matches()) {
                 main.getDungeonCache().revivedPlayer(dungeonRevivedMatcher.group(1));
             } else if (text.trim().equals("> EXTRA STATS <")) {
@@ -559,10 +559,7 @@ public class DungeonsListener {
             return;
         }
         if ("Crypt Undead".equals(e.player.getName())) {
-            boolean isNewDestroyedCrypt = main.getDungeonCache().addDestroyedCrypt(e.player.getUniqueID());
-            if (isNewDestroyedCrypt) {
-                main.getLogger().info("[Dungeon Bonus Score] Crypt Undead spawned @ " + e.player.getPosition() + " - distance to player: " + Math.sqrt(e.player.getPosition().distanceSq(Minecraft.getMinecraft().thePlayer.getPosition())));
-            }
+            main.getDungeonCache().addDestroyedCrypt(e.player.getUniqueID());
         }
     }
 
@@ -572,7 +569,7 @@ public class DungeonsListener {
             DungeonCache dungeonCache = main.getDungeonCache();
 
             if (dungeonCache.isInDungeon()) {
-                dungeonCache.updateElapsedMinutesFromScoreboard();
+                dungeonCache.fetchScoreboardData();
             }
 
             boolean isEditingDungeonOverlaySettings = MooConfigGui.showDungeonPerformanceOverlay();
