@@ -41,6 +41,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -189,36 +190,51 @@ public class SkyBlockListener {
         NBTTagCompound extraAttributes = e.itemStack.getSubCompound("ExtraAttributes", false);
         if (extraAttributes != null && extraAttributes.hasKey("timestamp")
                 && (tooltipItemAgeDisplay != MooConfig.Setting.DISABLED || tooltipItemTimestampDisplay != MooConfig.Setting.DISABLED)) {
-            LocalDateTime skyBlockDateTime = LocalDateTime.parse(extraAttributes.getString("timestamp"), DateTimeFormatter.ofPattern("M/d/yy h:mm a", Locale.US));
-
-            // Timezone = America/Toronto! headquarter is in Val-des-Monts, Quebec, Canada; timezone can also be confirmed by looking at the timestamps of New Year Cakes
-            ZonedDateTime dateTime = ZonedDateTime.of(skyBlockDateTime, ZoneId.of("America/Toronto")); // EDT/EST
-
-            int index = Math.max(0, e.toolTip.size() - (e.showAdvancedItemTooltips ? /* item name & nbt info */ 2 : 0));
-
-            switch (tooltipItemTimestampDisplay) {
-                case SPECIAL:
-                    if (!MooConfig.isTooltipToggleKeyBindingPressed()) {
-                        break;
-                    }
-                case ALWAYS:
-                    e.toolTip.add(index, "Timestamp: " + EnumChatFormatting.DARK_GRAY + dateTime.withZoneSameInstant(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm zzz")));
-                    break;
-                default:
-                    // do nothing
-                    break;
+            LocalDateTime skyBlockDateTime;
+            try {
+                String timestamp = extraAttributes.getString("timestamp");
+                if (timestamp.endsWith("M")) {
+                    // format: month > day > year + 12 hour clock (AM or PM)
+                    skyBlockDateTime = LocalDateTime.parse(timestamp, DateTimeFormatter.ofPattern("M/d/yy h:mm a", Locale.US));
+                } else {
+                    // format: day > month > year + 24 hour clock (very, very rare)
+                    skyBlockDateTime = LocalDateTime.parse(timestamp, DateTimeFormatter.ofPattern("d/M/yy hh:mm", Locale.US));
+                }
+            } catch (DateTimeParseException ignored) {
+                // unknown/invalid timestamp format
+                skyBlockDateTime = null;
             }
-            switch (tooltipItemAgeDisplay) {
-                case SPECIAL:
-                    if (!MooConfig.isTooltipToggleKeyBindingPressed()) {
+
+            if (skyBlockDateTime != null) {
+                // Timezone = America/Toronto! headquarter is in Val-des-Monts, Quebec, Canada; timezone can also be confirmed by looking at the timestamps of New Year Cakes
+                ZonedDateTime dateTime = ZonedDateTime.of(skyBlockDateTime, ZoneId.of("America/Toronto")); // EDT/EST
+
+                int index = Math.max(0, e.toolTip.size() - (e.showAdvancedItemTooltips ? /* item name & nbt info */ 2 : 0));
+
+                switch (tooltipItemTimestampDisplay) {
+                    case SPECIAL:
+                        if (!MooConfig.isTooltipToggleKeyBindingPressed()) {
+                            break;
+                        }
+                    case ALWAYS:
+                        e.toolTip.add(index, "Timestamp: " + EnumChatFormatting.DARK_GRAY + dateTime.withZoneSameInstant(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm zzz")));
                         break;
-                    }
-                case ALWAYS:
-                    e.toolTip.add(index, "Item age: " + EnumChatFormatting.DARK_GRAY + ((MooConfig.tooltipItemAgeShortened) ? Utils.getDurationAsWord(dateTime.toEpochSecond() * 1000) : Utils.getDurationAsWords(dateTime.toEpochSecond() * 1000).first()));
-                    break;
-                default:
-                    // do nothing
-                    break;
+                    default:
+                        // do nothing
+                        break;
+                }
+                switch (tooltipItemAgeDisplay) {
+                    case SPECIAL:
+                        if (!MooConfig.isTooltipToggleKeyBindingPressed()) {
+                            break;
+                        }
+                    case ALWAYS:
+                        e.toolTip.add(index, "Item age: " + EnumChatFormatting.DARK_GRAY + ((MooConfig.tooltipItemAgeShortened) ? Utils.getDurationAsWord(dateTime.toEpochSecond() * 1000) : Utils.getDurationAsWords(dateTime.toEpochSecond() * 1000).first()));
+                        break;
+                    default:
+                        // do nothing
+                        break;
+                }
             }
         }
 
