@@ -188,7 +188,7 @@ public class PlayerListener {
 
     private void checkWorldAge() {
         WorldClient theWorld = Minecraft.getMinecraft().theWorld;
-        if (MooConfig.notifyFreshServer == 0 && MooConfig.notifyOldServer == 0 || theWorld == null) {
+        if (!MooConfig.notifyServerAge || MooConfig.notifyFreshServer == 0 && MooConfig.notifyOldServer == 0 || theWorld == null) {
             return;
         }
         long worldTime = theWorld.getWorldTime();

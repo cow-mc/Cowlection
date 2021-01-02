@@ -5,10 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [1.8.9-0.12.0] - unreleased
 ### Added
-- New config options to enable/disable some features:
+- New config options to change/adjust/deactivate some features:
   - Auto-replacement of `/r ` with `/w <last sender>`
   - Short alias `/m` for `/moo` command
   - Copy inventories to clipboard as JSON with <kbd>CTRL</kbd> + <kbd>C</kbs>
+  - (and several more - simply look through `/moo config`)
 - Added sound when a best friend comes online (deactivated by default)
 - Check how long current world has been loaded
   - ≈ when server was last restarted
@@ -30,7 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Made party indicators clearer (current, suitable, unideal, unjoinable party)
   - Show sizes of parties
   - Mark parties with 'carry' in their notes
-  - Lookup info when joining another party via Dungeon Party Finder (disabled by default)
+  - Lookup info when joining another party via Dungeon Party Finder
   - Added active pet + found dungeon secrets to dungeon player lookup
 
 ### Fixed

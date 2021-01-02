@@ -123,36 +123,56 @@ public class MooCommand extends CommandBase {
         } else if (args[0].equalsIgnoreCase("whatyearisit") || args[0].equalsIgnoreCase("year")) {
             long year = ((System.currentTimeMillis() - 1560275700000L) / (TimeUnit.HOURS.toMillis(124))) + 1;
             main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, "It is SkyBlock year " + EnumChatFormatting.GOLD + year + EnumChatFormatting.YELLOW + ".");
-        } else if (args[0].equalsIgnoreCase("worldage")) {
-            long worldTime = Minecraft.getMinecraft().theWorld.getWorldTime();
-            new TickDelay(() -> {
-                WorldClient world = Minecraft.getMinecraft().theWorld;
-                if (world == null) {
-                    return;
+        } else if (args[0].equalsIgnoreCase("worldage") || args[0].equalsIgnoreCase("serverage")) {
+            if (args.length == 2) {
+                boolean enable;
+                switch (args[1]) {
+                    case "on":
+                    case "enable":
+                        enable = true;
+                        break;
+                    case "off":
+                    case "disable":
+                        enable = false;
+                        break;
+                    default:
+                        main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Command usage: /" + getCommandName() + " worldage [on|off]");
+                        return;
                 }
-                String msgPrefix;
-                long worldTime2 = world.getWorldTime();
-                if (worldTime > worldTime2 || (worldTime2 - worldTime) < 15) {
-                    // time is frozen
-                    worldTime2 = world.getTotalWorldTime();
-                    msgPrefix = "World time seems to be frozen at around " + worldTime + " ticks. ";
-                    if (worldTime2 > 24 * 60 * 60 * 20) {
-                        // total world time >24h
-                        main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, msgPrefix + "However, how long this world is loaded cannot be determined.");
+                MooConfig.notifyServerAge = enable;
+                main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "✔ " + (enable ? EnumChatFormatting.DARK_GREEN + "Enabled" : EnumChatFormatting.RED + "Disabled") + EnumChatFormatting.GREEN + " world age notifications.");
+                main.getConfig().syncFromFields();
+            } else {
+                long worldTime = Minecraft.getMinecraft().theWorld.getWorldTime();
+                new TickDelay(() -> {
+                    WorldClient world = Minecraft.getMinecraft().theWorld;
+                    if (world == null) {
                         return;
                     }
-                    msgPrefix += "However, this world is probably";
-                } else {
-                    msgPrefix = "This world is";
-                }
-                long days = worldTime2 / 24000L + 1;
-                long minutes = days * 20;
-                long hours = minutes / 60;
-                minutes -= hours * 60;
+                    String msgPrefix;
+                    long worldTime2 = world.getWorldTime();
+                    if (worldTime > worldTime2 || (worldTime2 - worldTime) < 15) {
+                        // time is frozen
+                        worldTime2 = world.getTotalWorldTime();
+                        msgPrefix = "World time seems to be frozen at around " + worldTime + " ticks. ";
+                        if (worldTime2 > 24 * 60 * 60 * 20) {
+                            // total world time >24h
+                            main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, msgPrefix + "However, how long this world is loaded cannot be determined.");
+                            return;
+                        }
+                        msgPrefix += "However, this world is probably";
+                    } else {
+                        msgPrefix = "This world is";
+                    }
+                    long days = worldTime2 / 24000L + 1;
+                    long minutes = days * 20;
+                    long hours = minutes / 60;
+                    minutes -= hours * 60;
 
-                main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, msgPrefix + " loaded around " + EnumChatFormatting.GOLD + days + " ingame days "
-                        + EnumChatFormatting.YELLOW + "(= less than" + EnumChatFormatting.GOLD + (hours > 0 ? " " + hours + " hours" : "") + (minutes > 0 ? " " + minutes + " mins" : "") + ")");
-            }, 20);
+                    main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, msgPrefix + " loaded around " + EnumChatFormatting.GOLD + days + " ingame days "
+                            + EnumChatFormatting.YELLOW + "(= less than" + EnumChatFormatting.GOLD + (hours > 0 ? " " + hours + " hours" : "") + (minutes > 0 ? " " + minutes + " mins" : "") + ")");
+                }, 20);
+            }
         }
         //endregion
         //region sub-commands: update mod
@@ -812,6 +832,7 @@ public class MooCommand extends CommandBase {
     private void sendCommandUsage(ICommandSender sender) {
         IChatComponent usage = new MooChatComponent("➜ " + Cowlection.MODNAME + " commands:").gold().bold()
                 .appendSibling(createCmdHelpEntry("config", "Open mod's configuration"))
+                .appendSibling(new MooChatComponent("\n").reset().white().appendText(EnumChatFormatting.DARK_GREEN + "  ❢" + EnumChatFormatting.LIGHT_PURPLE + EnumChatFormatting.ITALIC + " To move the Dungeons overlay: " + EnumChatFormatting.WHITE + "/" + getCommandName() + " config " + EnumChatFormatting.GRAY + "➡ " + EnumChatFormatting.WHITE + "SB Dungeons " + EnumChatFormatting.GRAY + "➡ " + EnumChatFormatting.WHITE + "Performance Overlay"))
                 .appendSibling(new MooChatComponent("\n").reset().gray().appendText(EnumChatFormatting.DARK_GREEN + "  ❢" + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + " Commands marked with §d§l⚷" + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + " require a valid API key"))
                 .appendSibling(createCmdHelpSection(1, "Best friends, friends & other players"))
                 .appendSibling(createCmdHelpEntry("stalk", "Get info of player's status §d§l⚷"))
@@ -861,7 +882,7 @@ public class MooCommand extends CommandBase {
             return getListOfStringsMatchingLastWord(args,
                     /* Best friends, friends & other players */ "stalk", "add", "remove", "list", "online", "nameChangeCheck",
                     /* SkyBlock */ "stalkskyblock", "skyblockstalk", "analyzeIsland", "dungeon",
-                    /* miscellaneous */ "config", "search", "worldage", "guiscale", "rr", "shrug", "apikey",
+                    /* miscellaneous */ "config", "search", "worldage", "serverage", "guiscale", "rr", "shrug", "apikey",
                     /* update mod */ "update", "updateHelp", "version", "directory",
                     /* help */ "help",
                     /* rarely used aliases */ "askPolitelyWhereTheyAre", "askPolitelyAboutTheirSkyBlockProgress", "year", "whatyearisit");
@@ -869,6 +890,8 @@ public class MooCommand extends CommandBase {
             return getListOfStringsMatchingLastWord(args, main.getFriendsHandler().getBestFriends());
         } else if (args.length == 2 && args[0].equalsIgnoreCase("dungeon")) {
             return getListOfStringsMatchingLastWord(args, "party", "enter", "leave");
+        } else if (args.length == 2 && (args[0].equalsIgnoreCase("worldage") || args[0].equalsIgnoreCase("serverage"))) {
+            return getListOfStringsMatchingLastWord(args, "off", "on", "disable", "enable");
         }
         String commandArg = args[0].toLowerCase();
         if (args.length == 2 && (commandArg.equals("s") || commandArg.equals("ss") || commandArg.equals("namechangecheck") || commandArg.contains("stalk") || commandArg.contains("askpolitely"))) { // stalk & stalkskyblock + namechangecheck

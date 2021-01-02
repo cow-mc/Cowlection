@@ -1,5 +1,6 @@
 package de.cowtipper.cowlection.util;
 
+import de.cowtipper.cowlection.config.MooConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
@@ -124,7 +125,7 @@ public final class GuiHelper extends GuiScreen {
      */
     private void drawHoveringText(List<String> textLines, final int mouseX, final int mouseY, final int screenWidth, final int screenHeight, final int maxTextWidth, boolean drawGraph) {
         if (!textLines.isEmpty()) {
-            FontRenderer font = fontRendererAscii != null ? fontRendererAscii : fontRendererObj;
+            FontRenderer font = (drawGraph && fontRendererAscii != null) ? fontRendererAscii : fontRendererObj;
 
             GlStateManager.disableRescaleNormal();
             RenderHelper.disableStandardItemLighting();
@@ -267,7 +268,7 @@ public final class GuiHelper extends GuiScreen {
             if (drawGraph) {
                 GlStateManager.pushMatrix();
                 GlStateManager.clear(GL11.GL_DEPTH_BUFFER_BIT);
-                GL11.glLineWidth(6F);
+                GL11.glLineWidth(MooConfig.bazaarConnectGraphsLineWidth);
                 GlStateManager.disableTexture2D();
                 GlStateManager.color(255 / 255F, 170 / 255F, 0 / 255F);
                 WorldRenderer wr = Tessellator.getInstance().getWorldRenderer();

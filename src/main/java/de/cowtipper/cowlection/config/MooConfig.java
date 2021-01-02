@@ -12,6 +12,7 @@ import de.cowtipper.cowlection.util.Utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.SoundCategory;
 import net.minecraft.command.ICommand;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagInt;
 import net.minecraft.nbt.NBTTagString;
@@ -67,19 +68,23 @@ public class MooConfig {
     private static String enableSkyBlockOnlyFeatures;
     public static int notifyFreshServer;
     public static int notifyOldServer;
+    public static boolean notifyServerAge;
     public static int tooltipToggleKeyBinding;
-    private static String tooltipAuctionHousePriceEach;
-    private static String bazaarConnectGraphsNodes;
     private static String tooltipItemAge;
     public static boolean tooltipItemAgeShortened;
     private static String tooltipItemTimestamp;
     private static String numeralSystem;
+    private static String tooltipAuctionHousePriceEach;
+    private static String bazaarConnectGraphsNodes;
+    public static int bazaarConnectGraphsLineWidth;
     private static int lookupWikiKeyBinding;
     private static int lookupPriceKeyBinding;
+    public static boolean lookupItemDirectly;
     // Category: SkyBlock Dungeons
     private static String showItemQualityAndFloor;
     private static String dungItemQualityPos;
     public static int dungItemToolTipToggleKeyBinding;
+    public static boolean dungSendPerformanceOnDeath;
     public static boolean dungOverlayEnabled;
     public static int dungOverlayPositionX;
     public static int dungOverlayPositionY;
@@ -313,27 +318,14 @@ public class MooConfig {
                 "notifyFreshServer", 1, "Notify when a world is loaded <X ingame days", 0, 40));
         Property propNotifyOldServer = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "notifyOldServer", 30, "Notify when a world is loaded >X ingame days", 0, 40));
+        Property propNotifyServerAge = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "notifyServerAge", true, "Show server age notifications?"));
 
         // Sub-Category: Tooltip enhancements
         subCat = configCat.addSubCategory("Tooltip enhancements");
 
         Property propTooltipToggleKeyBinding = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "tooltipToggleKeyBinding", Keyboard.KEY_LSHIFT, "Key to toggle tooltip"));
-
-        Property propTooltipAuctionHousePriceEach = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "tooltipAuctionHousePriceEach", "always", "Add price per item if multiple items are bought or sold", new String[]{"always", "key press", "never"}));
-
-        MooConfigPreview bazaarGraphPreview = new MooConfigPreview(MooConfigPreview.createDemoItem("paper", "§aBuy Price §731d §77d §e24h", new String[]{
-                "§7The price at which buy orders have been filled.", "",
-                "§r┌----------------------------------------------┐", "§r│§66. 1k§r+§bxxxxxx§8·································§bxx§r│",
-                "§r│§8····§r│§8······································§bx§8··§r│", "§r│§66. 1k§r+§8·····§bx§8···················§bx§8·······§bxxxxx§8···§r│",
-                "§r│§8····§r│§8···············§bx§8········§bxxxxxxxxx§8········§r│", "§r│§8··§66k§r+§8··············§bx§8····§bxx§8··§bx§8·················§r│",
-                "§r│§8····§r│§8············§bx§8··§bxxxx§8·§bxxx§8··················§r│", "§r│§8··§66k§r+§8······§bx§8·§bxxxx§8·§bx§8···························§r│",
-                "§r│§8····§r│§8·······§bx§8·································§r│", "§r│§8··§66k§r+---------+----------+---------+---------+│",
-                "§r│§8····§r24h§8······§r18h§8········§r12h§8·······§r6h§8·······§rnow│", "§r└----------------------------------------------┘"}, Maps.newHashMap()));
-        Property propBazaarConnectGraphsNodes = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "bazaarConnectGraphsNodes", "always", "Bazaar: connect the graph nodes", new String[]{"always", "key press", "never"}),
-                bazaarGraphPreview);
 
         Map<String, NBTBase> demoItemExtraAttributes = new HashMap<>();
         demoItemExtraAttributes.put("new_years_cake", new NBTTagInt(1));
@@ -356,6 +348,29 @@ public class MooConfig {
         Property propNumeralSystem = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "numeralSystem", "Arabic: 1, 4, 10", "Use Roman or Arabic numeral system?", new String[]{"Arabic: 1, 4, 10", "Roman: I, IV, X"}));
 
+        Map<String, NBTBase> demoAhItemExtraAttributes = new HashMap<>();
+        demoItemExtraAttributes.put("id", new NBTTagString("BEACON"));
+        ItemStack demoAhItem = MooConfigPreview.createDemoItem("beacon", "§764x §fB§8e§facon Block", new String[]{"§f§lCOMMON", "§8§m-----------------", "§7Seller: §6[MVP§0++§6] Enlightener", "§7Buy it now: §63,900,000 coins", "", "§7Ends in: §e13h 33m 37s", "", "§eDon't click to inspect!"}, demoAhItemExtraAttributes);
+        demoAhItem.stackSize = 64;
+        MooConfigPreview ahItemPreview = new MooConfigPreview(demoAhItem);
+        Property propTooltipAuctionHousePriceEach = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "tooltipAuctionHousePriceEach", "always", "Add price per item if multiple items are bought or sold", new String[]{"always", "key press", "never"}), ahItemPreview);
+
+        MooConfigPreview bazaarGraphPreview = new MooConfigPreview(MooConfigPreview.createDemoItem("paper", "§aBuy Price §731d §77d §e24h", new String[]{
+                "§7The price at which buy orders have been filled.", "",
+                "§r┌----------------------------------------------┐", "§r│§66. 1k§r+§bxxxxxx§8·································§bxx§r│",
+                "§r│§8····§r│§8······································§bx§8··§r│", "§r│§66. 1k§r+§8·····§bx§8···················§bx§8·······§bxxxxx§8···§r│",
+                "§r│§8····§r│§8···············§bx§8········§bxxxxxxxxx§8········§r│", "§r│§8··§66k§r+§8··············§bx§8····§bxx§8··§bx§8·················§r│",
+                "§r│§8····§r│§8············§bx§8··§bxxxx§8·§bxxx§8··················§r│", "§r│§8··§66k§r+§8······§bx§8·§bxxxx§8·§bx§8···························§r│",
+                "§r│§8····§r│§8·······§bx§8·································§r│", "§r│§8··§66k§r+---------+----------+---------+---------+│",
+                "§r│§8····§r24h§8······§r18h§8········§r12h§8·······§r6h§8·······§rnow│", "§r└----------------------------------------------┘"}, Maps.newHashMap()));
+        Property propBazaarConnectGraphsNodes = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "bazaarConnectGraphsNodes", "always", "Bazaar: connect the graph nodes", new String[]{"always", "key press", "never"}),
+                bazaarGraphPreview);
+
+        Property propBazaarConnectGraphsLineWidth = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "bazaarConnectGraphsLineWidth", 3, "Line width of bazaar graph", 1, 10));
+
         // Sub-Category: Item lookup
         subCat = configCat.addSubCategory("Item lookup");
         subCat.addExplanations("Lookup item prices or wiki articles for any SkyBlock item in any inventory.");
@@ -364,6 +379,9 @@ public class MooConfig {
                 "lookupWikiKeyBinding", Keyboard.KEY_I, "Key to lookup wiki"));
         Property propLookupPriceKeyBinding = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "lookupPriceKeyBinding", Keyboard.KEY_P, "Key to lookup item price"));
+
+        Property propLookupItemDirectly = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "lookupItemDirectly", true, "Open website directly?"));
 
         // Category: SkyBlock Dungeons
         configCat = new MooConfigCategory("SkyBlock Dungeons", "skyblockdungeons");
@@ -401,6 +419,9 @@ public class MooConfig {
                 "  ‣ speed score " + EnumChatFormatting.GRAY + "(-2.2 points/minute when over 20 minutes)",
                 "  ‣ bonus score " + EnumChatFormatting.GRAY + "(+1 [max 5] for each destroyed crypt; if 'enhanced tab list' is disabled: limited to ~50 blocks away from the player)",
                 "Does " + EnumChatFormatting.ITALIC + "not" + EnumChatFormatting.RESET + " track explorer score " + EnumChatFormatting.GRAY + "(explored rooms, secrets, ...)");
+
+        Property propDungSendPerformanceOnDeath = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "dungSendPerformanceOnDeath", true, "Send dungeon performance after a player died?"));
 
         Property propDungOverlayEnabled = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "dungOverlayEnabled", true, "Enable Dungeon performance overlay?"));
@@ -449,7 +470,7 @@ public class MooConfig {
                 "dungPartyFinderPlayerLookup", "as a tooltip", "Show armor + dungeons stats of player joining via party finder as a tooltip or in chat?", new String[]{"as a tooltip", "in chat", "disabled"}));
 
         Property propDungPartyFinderPartyLookup = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungPartyFinderPartyLookup", false, "Lookup info when joining another party?"));
+                "dungPartyFinderPartyLookup", true, "Lookup info when joining another party?"));
 
         Property propDungPartiesSize = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "dungPartiesSize", true, "Show size of parties?"),
@@ -509,19 +530,23 @@ public class MooConfig {
             enableSkyBlockOnlyFeatures = propEnableSkyBlockOnlyFeatures.getString();
             notifyFreshServer = propNotifyFreshServer.getInt();
             notifyOldServer = propNotifyOldServer.getInt();
+            notifyServerAge = propNotifyServerAge.getBoolean();
             tooltipToggleKeyBinding = propTooltipToggleKeyBinding.getInt();
-            tooltipAuctionHousePriceEach = propTooltipAuctionHousePriceEach.getString();
-            bazaarConnectGraphsNodes = propBazaarConnectGraphsNodes.getString();
             tooltipItemAge = propTooltipItemAge.getString();
             tooltipItemAgeShortened = propTooltipItemAgeShortened.getBoolean();
             tooltipItemTimestamp = propTooltipItemTimestamp.getString();
             numeralSystem = propNumeralSystem.getString();
+            tooltipAuctionHousePriceEach = propTooltipAuctionHousePriceEach.getString();
+            bazaarConnectGraphsNodes = propBazaarConnectGraphsNodes.getString();
+            bazaarConnectGraphsLineWidth = propBazaarConnectGraphsLineWidth.getInt();
             lookupWikiKeyBinding = propLookupWikiKeyBinding.getInt();
             lookupPriceKeyBinding = propLookupPriceKeyBinding.getInt();
+            lookupItemDirectly = propLookupItemDirectly.getBoolean();
             // Category: SkyBlock Dungeons
             showItemQualityAndFloor = propShowItemQualityAndFloor.getString();
             dungItemQualityPos = propDungItemQualityPos.getString();
             dungItemToolTipToggleKeyBinding = propDungItemToolTipToggleKeyBinding.getInt();
+            dungSendPerformanceOnDeath = propDungSendPerformanceOnDeath.getBoolean();
             dungOverlayEnabled = propDungOverlayEnabled.getBoolean();
             dungOverlayPositionX = propDungOverlayPositionX.getInt();
             dungOverlayPositionY = propDungOverlayPositionY.getInt();
@@ -566,19 +591,23 @@ public class MooConfig {
         propEnableSkyBlockOnlyFeatures.set(enableSkyBlockOnlyFeatures);
         propNotifyFreshServer.set(notifyFreshServer);
         propNotifyOldServer.set(notifyOldServer);
+        propNotifyServerAge.set(notifyServerAge);
         propTooltipToggleKeyBinding.set(tooltipToggleKeyBinding);
-        propTooltipAuctionHousePriceEach.set(tooltipAuctionHousePriceEach);
-        propBazaarConnectGraphsNodes.set(bazaarConnectGraphsNodes);
         propTooltipItemAge.set(tooltipItemAge);
         propTooltipItemAgeShortened.set(tooltipItemAgeShortened);
         propTooltipItemTimestamp.set(tooltipItemTimestamp);
         propNumeralSystem.set(numeralSystem);
+        propTooltipAuctionHousePriceEach.set(tooltipAuctionHousePriceEach);
+        propBazaarConnectGraphsNodes.set(bazaarConnectGraphsNodes);
+        propBazaarConnectGraphsLineWidth.set(bazaarConnectGraphsLineWidth);
         propLookupWikiKeyBinding.set(lookupWikiKeyBinding);
         propLookupPriceKeyBinding.set(lookupPriceKeyBinding);
+        propLookupItemDirectly.set(lookupItemDirectly);
         // Category: SkyBlock Dungeons
         propShowItemQualityAndFloor.set(showItemQualityAndFloor);
         propDungItemQualityPos.set(dungItemQualityPos);
         propDungItemToolTipToggleKeyBinding.set(dungItemToolTipToggleKeyBinding);
+        propDungSendPerformanceOnDeath.set(dungSendPerformanceOnDeath);
         propDungOverlayEnabled.set(dungOverlayEnabled);
         propDungOverlayPositionX.set(dungOverlayPositionX);
         propDungOverlayPositionY.set(dungOverlayPositionY);

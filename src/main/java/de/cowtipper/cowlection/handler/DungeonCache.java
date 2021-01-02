@@ -3,6 +3,8 @@ package de.cowtipper.cowlection.handler;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import de.cowtipper.cowlection.Cowlection;
+import de.cowtipper.cowlection.config.MooConfig;
+import de.cowtipper.cowlection.listener.skyblock.DungeonsPartyListener;
 import de.cowtipper.cowlection.util.TickDelay;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiPlayerTabOverlay;
@@ -33,6 +35,7 @@ public class DungeonCache {
     private long lastScoreboardCheck;
     private long nextPerformanceSend;
     private String queuedFloor;
+    private List<String> potentialPartyMembers;
 
     public DungeonCache(Cowlection main) {
         this.main = main;
@@ -156,7 +159,18 @@ public class DungeonCache {
         }
     }
 
+    public void lookupPartyMembers() {
+        if (potentialPartyMembers.size() > 0) {
+            new DungeonsPartyListener(main, potentialPartyMembers);
+            potentialPartyMembers.clear();
+        }
+    }
+
     // setter/adder
+    public void setPotentialPartyMembers(List<String> potentialPartyMembers) {
+        this.potentialPartyMembers = potentialPartyMembers;
+    }
+
     public void setQueuedFloor(String floorNr) {
         this.queuedFloor = floorNr;
     }
@@ -170,7 +184,9 @@ public class DungeonCache {
         int previousPlayerDeaths = deathCounter.getOrDefault(playerName, 0);
         deathCounter.put(playerName, previousPlayerDeaths + 1);
 
-        new TickDelay(this::sendDungeonPerformance, 1);
+        if (MooConfig.dungSendPerformanceOnDeath) {
+            new TickDelay(this::sendDungeonPerformance, 1);
+        }
     }
 
     public void revivedPlayer(String playerName) {

@@ -5,6 +5,7 @@ import de.cowtipper.cowlection.Cowlection;
 import de.cowtipper.cowlection.config.MooConfig;
 import de.cowtipper.cowlection.config.gui.MooConfigGui;
 import de.cowtipper.cowlection.util.GuiHelper;
+import de.cowtipper.cowlection.util.MooChatComponent;
 import de.cowtipper.cowlection.util.Utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.SoundCategory;
@@ -31,6 +32,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.input.Keyboard;
 
 import java.awt.*;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.text.NumberFormat;
@@ -102,12 +104,20 @@ public class SkyBlockListener {
                         } else if ("CAKE_SOUL".equals(sbId)) {
                             itemBaseName = EnumChatFormatting.LIGHT_PURPLE + "Cake Soul";
                         }
+                        String link = buildLink(EnumChatFormatting.getTextWithoutFormattingCodes(itemBaseName).trim() + querySuffix, itemLookupType);
+                        if (link == null) {
+                            main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Error: Your operating system doesn't support UTF-8? Huh?");
+                            return;
+                        }
+                        main.getChatHelper().sendMessage(new MooChatComponent(EnumChatFormatting.DARK_GREEN + " ➡ "
+                                + EnumChatFormatting.GREEN + "Open" + (MooConfig.lookupItemDirectly ? "ing " : " ") + itemLookupType.getDescription() + " for " + itemBaseName).green()
+                                .setUrl(link, itemLookupType.description + ": " + EnumChatFormatting.WHITE + link));
 
-                        main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Opening " + itemLookupType.getDescription() + " for " + itemBaseName);
-                        boolean success = openLink(EnumChatFormatting.getTextWithoutFormattingCodes(itemBaseName).trim() + querySuffix, itemLookupType);
-                        if (!success) {
-                            main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Error: couldn't open your browser");
-                            Minecraft.getMinecraft().thePlayer.playSound("mob.villager.no", Minecraft.getMinecraft().gameSettings.getSoundLevel(SoundCategory.MASTER), 1.4f);
+                        if (MooConfig.lookupItemDirectly) {
+                            boolean success = openLink(link);
+                            if (!success) {
+                                main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Error: couldn't open your browser");
+                            }
                         }
                     } else {
                         // item is blacklisted from lookup
@@ -154,12 +164,9 @@ public class SkyBlockListener {
 
         // remove unnecessary tooltip entries: dyed leather armor
         NBTTagCompound nbtDisplay = e.itemStack.getSubCompound("display", false);
-        if (nbtDisplay != null && nbtDisplay.hasKey("color", Constants.NBT.TAG_INT)) {
-            if (Minecraft.getMinecraft().gameSettings.advancedItemTooltips) {
-                e.toolTip.removeIf(line -> line.startsWith("Color: #"));
-            } else {
-                e.toolTip.removeIf(line -> line.equals(EnumChatFormatting.ITALIC + StatCollector.translateToLocal("item.dyed")));
-            }
+        if (!Minecraft.getMinecraft().gameSettings.advancedItemTooltips
+                && nbtDisplay != null && nbtDisplay.hasKey("color", Constants.NBT.TAG_INT)) {
+            e.toolTip.removeIf(line -> line.equals(EnumChatFormatting.ITALIC + StatCollector.translateToLocal("item.dyed")));
         }
 
         // remove unnecessary tooltip entries: enchantments (already added via lore)
@@ -218,7 +225,7 @@ public class SkyBlockListener {
         // for auction house: show price for each item if multiple items are sold at once
         MooConfig.Setting tooltipAuctionHousePriceEachDisplay = MooConfig.getTooltipAuctionHousePriceEachDisplay();
         if ((tooltipAuctionHousePriceEachDisplay == MooConfig.Setting.ALWAYS || tooltipAuctionHousePriceEachDisplay == MooConfig.Setting.SPECIAL && MooConfig.isTooltipToggleKeyBindingPressed())
-                && e.entityPlayer.openContainer instanceof ContainerChest) {
+                && (e.entityPlayer.openContainer instanceof ContainerChest || Minecraft.getMinecraft().currentScreen instanceof MooConfigGui)) {
             int stackSize = e.itemStack.stackSize;
             if ((stackSize == 1 && !isSubmitBidItem(e.itemStack)) || e.toolTip.size() < 4) {
                 // only 1 item or irrelevant tooltip - nothing to do here, abort!
@@ -262,15 +269,20 @@ public class SkyBlockListener {
         }
     }
 
-    private boolean openLink(String itemName, ItemLookupType itemLookupType) {
-        String baseUrl = itemLookupType.getBaseUrl();
+    private String buildLink(String itemName, ItemLookupType itemLookupType) {
         try {
-            String url = baseUrl + URLEncoder.encode(itemName, "UTF-8");
-            Desktop.getDesktop().browse(new URI(url));
-            main.getLogger().info("Opening url: " + url);
+            return itemLookupType.getBaseUrl() + URLEncoder.encode(itemName, "UTF-8");
+        } catch (UnsupportedEncodingException ignored) {
+        }
+        return null;
+    }
+
+    private boolean openLink(String link) {
+        try {
+            Desktop.getDesktop().browse(new URI(link));
             return true;
         } catch (Throwable throwable) {
-            main.getLogger().error("Couldn't open link: " + baseUrl + itemName, throwable);
+            main.getLogger().error("Couldn't open link: " + link, throwable);
             return false;
         }
     }

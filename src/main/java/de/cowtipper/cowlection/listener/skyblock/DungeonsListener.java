@@ -501,9 +501,7 @@ public class DungeonsListener {
                                 partyMembers.add(playerDetailMatcher.group(1));
                             }
                         }
-                        if (partyMembers.size() > 0) {
-                            new DungeonsPartyListener(main, partyMembers);
-                        }
+                        main.getDungeonCache().setPotentialPartyMembers(partyMembers);
                     }
                 }
             } else if (inventory.getName().equals("Group Builder")) {

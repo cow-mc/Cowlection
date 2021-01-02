@@ -176,11 +176,16 @@ public class ChatListener {
                 messageSender = partyOrGameInviteMatcher.group(1);
             } else if (dungeonPartyFinderJoinedMatcher.find()) {
                 messageSender = dungeonPartyFinderJoinedMatcher.group(1);
-                if (CredentialStorage.isMooValid && !messageSender.equals(Minecraft.getMinecraft().thePlayer.getName())
-                        && MooConfig.getDungPartyFinderPlayerLookupDisplay() != MooConfig.Setting.DISABLED) {
-                    // another player joined via Dungeon Party Finder
-                    String dungeonClass = dungeonPartyFinderJoinedMatcher.group(2) + " Lvl " + dungeonPartyFinderJoinedMatcher.group(3);
-                    getDungeonPartyMemberDetails(messageSender, dungeonClass);
+                if (CredentialStorage.isMooValid) {
+                    boolean joinedYourself = messageSender.equals(Minecraft.getMinecraft().thePlayer.getName());
+                    if (!joinedYourself && MooConfig.getDungPartyFinderPlayerLookupDisplay() != MooConfig.Setting.DISABLED) {
+                        // another player joined via Dungeon Party Finder
+                        String dungeonClass = dungeonPartyFinderJoinedMatcher.group(2) + " Lvl " + dungeonPartyFinderJoinedMatcher.group(3);
+                        getDungeonPartyMemberDetails(messageSender, dungeonClass);
+                    } else if (joinedYourself && MooConfig.dungPartyFinderPartyLookup) {
+                        // successfully joined another party via Dungeon Party Finder
+                        main.getDungeonCache().lookupPartyMembers();
+                    }
                 }
             }
 
