@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [1.8.9-0.12.0] - unreleased
+## [1.8.9-0.12.0] - 03.01.2020
 ### Added
 - New config options to change/adjust/deactivate some features:
   - Auto-replacement of `/r ` with `/w <last sender>`
@@ -19,8 +19,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - make graphs easier to read by connecting graphs' nodes
   - Fix graphs when using the mc unicode font
 - Added quick lookup for item prices and wiki:
-  - wiki: hypixel-skyblock.fandom.com (default key: `I` = info)
-  - item prices: stonks.gg (default key: `P` = price)
+  - wiki: hypixel-skyblock.fandom.com (default key: <kbd>I</kbd> = info)
+  - item prices: stonks.gg (default key: <kbd>P</kbd> = price)
 - Display pet exp in pet tooltips
 
 ### Changed
@@ -271,7 +271,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 *Note:* The 'best friends' list is currently available via <kbd>ESC</kbd> > Mod Options > Cowlection > Config > bestFriends.
 
-[1.8.9-0.12.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.11.0...master
+[1.8.9-0.12.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.11.0...v1.8.9-0.12.0
 [1.8.9-0.11.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.10.2...v1.8.9-0.11.0
 [1.8.9-0.10.2]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.10.1...v1.8.9-0.10.2
 [1.8.9-0.10.1]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.10.0...v1.8.9-0.10.1
