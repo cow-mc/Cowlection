@@ -78,6 +78,9 @@ public class SkyBlockListener {
             GuiContainer guiContainer = (GuiContainer) e.gui;
             Slot hoveredSlot = GuiHelper.getSlotUnderMouse(guiContainer);
             if (hoveredSlot != null && hoveredSlot.getHasStack()) {
+                String itemBaseName = null;
+                String querySuffix = "";
+
                 ItemStack itemStack = hoveredSlot.getStack();
                 NBTTagCompound extraAttributes = itemStack.getSubCompound("ExtraAttributes", false);
                 if (extraAttributes != null && extraAttributes.hasKey("id")) {
@@ -86,10 +89,9 @@ public class SkyBlockListener {
                     if (itemLookupType == ItemLookupType.WIKI || (/* itemLookupType == ItemLookupType.PRICE && */ !blackList.contains(sbId) && !sbId.contains("_GENERATOR_"))) {
                         // open item price info or open wiki entry
                         Pair<String, String> sbItemBaseName = Utils.extractSbItemBaseName(itemStack.getDisplayName(), extraAttributes, false);
-                        String itemBaseName = sbItemBaseName.first();
+                        itemBaseName = sbItemBaseName.first();
 
                         // exceptions:
-                        String querySuffix = "";
                         // remove item count (prefixed or suffixed)
                         Matcher itemCountPrefixMatcher = ITEM_COUNT_PREFIXED_PATTERN.matcher(itemBaseName);
                         Matcher itemCountSuffixMatcher = ITEM_COUNT_SUFFIXED_PATTERN.matcher(itemBaseName);
@@ -108,25 +110,34 @@ public class SkyBlockListener {
                         } else if ("CAKE_SOUL".equals(sbId)) {
                             itemBaseName = EnumChatFormatting.LIGHT_PURPLE + "Cake Soul";
                         }
-                        String link = buildLink(EnumChatFormatting.getTextWithoutFormattingCodes(itemBaseName).trim() + querySuffix, itemLookupType);
-                        if (link == null) {
-                            main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Error: Your operating system doesn't support UTF-8? Huh?");
-                            return;
-                        }
-                        main.getChatHelper().sendMessage(new MooChatComponent(EnumChatFormatting.DARK_GREEN + " ➡ "
-                                + EnumChatFormatting.GREEN + "Open" + (MooConfig.lookupItemDirectly ? "ing " : " ") + itemLookupType.getDescription() + " for " + itemBaseName).green()
-                                .setUrl(link, itemLookupType.description + ": " + EnumChatFormatting.WHITE + link));
-
-                        if (MooConfig.lookupItemDirectly) {
-                            boolean success = openLink(link);
-                            if (!success) {
-                                main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Error: couldn't open your browser");
-                            }
-                        }
                     } else {
                         // item is blacklisted from lookup
                         main.getChatHelper().sendMessage(EnumChatFormatting.RED, "⚠ " + EnumChatFormatting.RESET + itemStack.getDisplayName() + EnumChatFormatting.RED + " (" + Utils.fancyCase(sbId) + ") " + itemLookupType.getDescription() + " cannot be looked up.");
                         Minecraft.getMinecraft().thePlayer.playSound("mob.villager.no", Minecraft.getMinecraft().gameSettings.getSoundLevel(SoundCategory.MASTER), 1.4f);
+                    }
+                } else {
+                    // check if item is inside Bazaar
+                    List<String> lore = itemStack.getTooltip(Minecraft.getMinecraft().thePlayer, false);
+                    if (lore.size() > 5 && lore.get(1).endsWith(" commodity")) {
+                        // item is a Bazaar commodity
+                        itemBaseName = itemStack.getDisplayName();
+                    }
+                }
+                if (itemBaseName != null) {
+                    String link = buildLink(EnumChatFormatting.getTextWithoutFormattingCodes(itemBaseName).trim() + querySuffix, itemLookupType);
+                    if (link == null) {
+                        main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Error: Your operating system doesn't support UTF-8? Huh?");
+                        return;
+                    }
+                    main.getChatHelper().sendMessage(new MooChatComponent(EnumChatFormatting.DARK_GREEN + " ➡ "
+                            + EnumChatFormatting.GREEN + "Open" + (MooConfig.lookupItemDirectly ? "ing " : " ") + itemLookupType.getDescription() + " for " + itemBaseName).green()
+                            .setUrl(link, itemLookupType.description + ": " + EnumChatFormatting.WHITE + link));
+
+                    if (MooConfig.lookupItemDirectly) {
+                        boolean success = openLink(link);
+                        if (!success) {
+                            main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Error: couldn't open your browser");
+                        }
                     }
                 }
             }

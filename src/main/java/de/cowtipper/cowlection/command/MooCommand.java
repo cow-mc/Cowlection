@@ -880,11 +880,11 @@ public class MooCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args,
+                    /* help */ "help",
                     /* Best friends, friends & other players */ "stalk", "add", "remove", "list", "online", "nameChangeCheck",
                     /* SkyBlock */ "stalkskyblock", "skyblockstalk", "analyzeIsland", "dungeon",
                     /* miscellaneous */ "config", "search", "worldage", "serverage", "guiscale", "rr", "shrug", "apikey",
                     /* update mod */ "update", "updateHelp", "version", "directory",
-                    /* help */ "help",
                     /* rarely used aliases */ "askPolitelyWhereTheyAre", "askPolitelyAboutTheirSkyBlockProgress", "year", "whatyearisit");
         } else if (args.length == 2 && args[0].equalsIgnoreCase("remove")) {
             return getListOfStringsMatchingLastWord(args, main.getFriendsHandler().getBestFriends());
