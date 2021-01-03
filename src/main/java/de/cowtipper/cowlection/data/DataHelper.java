@@ -32,6 +32,19 @@ public final class DataHelper {
             return Arrays.stream(values(), 0, 5).toArray(SkyBlockRarity[]::new);
         }
 
+        public static SkyBlockRarity getPetRarityByColorCode(String colorCode) {
+            if (MYTHIC.rarityColor.toString().equals(colorCode)) {
+                // special case: Mystic Bat
+                return LEGENDARY;
+            }
+            for (SkyBlockRarity petRarity : getPetRarities()) {
+                if (petRarity.rarityColor.toString().equals(colorCode)) {
+                    return petRarity;
+                }
+            }
+            return null;
+        }
+
         public EnumChatFormatting getColor() {
             return rarityColor;
         }
@@ -90,6 +103,30 @@ public final class DataHelper {
 
         public String getCleanName() {
             return cleanName;
+        }
+    }
+
+    public enum PartyType {
+        SUITABLE(0xff22B14C, 240),
+        UNIDEAL(0xffCD8032, 240),
+        UNJOINABLE(0xffEB6E6E, 279),
+        CURRENT(0xff5FDE6C, 240),
+        NONE(0xffFF0000, 279);
+
+        private final float zIndex;
+        private final int color;
+
+        PartyType(int color, float zIndex) {
+            this.color = color;
+            this.zIndex = zIndex;
+        }
+
+        public float getZIndex() {
+            return zIndex;
+        }
+
+        public int getColor() {
+            return color;
         }
     }
 

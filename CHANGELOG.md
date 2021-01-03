@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Added quick lookup for item prices and wiki:
   - wiki: hypixel-skyblock.fandom.com (default key: `I` = info)
   - item prices: stonks.gg (default key: `P` = price)
+- Display pet exp in pet tooltips
 
 ### Changed
 - Item age: show timestamp in the local timezone instead of "SkyBlock"-timezone (Eastern Time; also fixed the incorrect 12h ↔ 24h clock conversion)
@@ -30,9 +31,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Dungeon Party Finder (overlay):
   - Made party indicators clearer (current, suitable, unideal, unjoinable party)
   - Show sizes of parties
-  - Mark parties with 'carry' in their notes
+  - Mark parties with 'carry' or 'hyperion' in their notes (disabled by default)
+  - Lookup info when dungeon party is full
   - Lookup info when joining another party via Dungeon Party Finder
-  - Added active pet + found dungeon secrets to dungeon player lookup
+  - Added active pet + found dungeon secrets + dungeon types (currently only Catacombs) level to dungeon player lookup
 
 ### Fixed
 - Fixed some possible problems with bad server connection

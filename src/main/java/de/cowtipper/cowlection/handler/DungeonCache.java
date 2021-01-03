@@ -27,7 +27,7 @@ public class DungeonCache {
     private final Set<String> deadPlayers;
     private final Set<String> failedPuzzles;
     private final Set<UUID> destroyedCrypts;
-    private int cryptsOffset;
+    private int destroyedCryptsInTabList;
 
     private boolean isInDungeon;
     private int elapsedMinutes;
@@ -43,7 +43,7 @@ public class DungeonCache {
         deadPlayers = new HashSet<>();
         failedPuzzles = new HashSet<>();
         destroyedCrypts = new HashSet<>();
-        cryptsOffset = 0;
+        destroyedCryptsInTabList = 0;
     }
 
     public boolean isInDungeon() {
@@ -147,8 +147,7 @@ public class DungeonCache {
                     String tabListEntry = EnumChatFormatting.getTextWithoutFormattingCodes(tabList.getPlayerName(playerInfo));
                     if (tabListEntry != null && tabListEntry.startsWith(" Crypts: ")) {
                         try {
-                            int cryptsFromTabList = Integer.parseInt(tabListEntry.substring(" Crypts: ".length()).trim());
-                            cryptsOffset = cryptsFromTabList - destroyedCrypts.size();
+                            destroyedCryptsInTabList = Integer.parseInt(tabListEntry.substring(" Crypts: ".length()).trim());
                         } catch (NumberFormatException | IndexOutOfBoundsException ex) {
                             // couldn't parse crypts count from tab list
                             ex.printStackTrace();
@@ -235,7 +234,7 @@ public class DungeonCache {
     }
 
     public int getDestroyedCrypts() {
-        return destroyedCrypts.size() + cryptsOffset;
+        return destroyedCryptsInTabList > 0 ? destroyedCryptsInTabList : destroyedCrypts.size();
     }
 
     public int getElapsedMinutes() {
@@ -248,7 +247,7 @@ public class DungeonCache {
         deadPlayers.clear();
         failedPuzzles.clear();
         destroyedCrypts.clear();
-        cryptsOffset = 0;
+        destroyedCryptsInTabList = 0;
         elapsedMinutes = 0;
         classMilestone = 0;
         nextPerformanceSend = 0;

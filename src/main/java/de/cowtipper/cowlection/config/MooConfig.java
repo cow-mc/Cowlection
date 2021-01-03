@@ -73,6 +73,7 @@ public class MooConfig {
     private static String tooltipItemAge;
     public static boolean tooltipItemAgeShortened;
     private static String tooltipItemTimestamp;
+    private static String showPetExp;
     private static String numeralSystem;
     private static String tooltipAuctionHousePriceEach;
     private static String bazaarConnectGraphsNodes;
@@ -91,10 +92,12 @@ public class MooConfig {
     public static int dungOverlayGuiScale;
     public static boolean dungOverlayTextShadow;
     private static String dungPartyFinderPlayerLookup;
+    public static boolean dungPartyFullLookup;
     public static boolean dungPartyFinderPartyLookup;
     public static boolean dungPartiesSize;
     public static int dungClassMin;
-    public static boolean dungFilterPartiesWithCarry;
+    private static String dungMarkPartiesWithCarry;
+    private static String dungMarkPartiesWithHyperion;
     private static boolean dungFilterPartiesWithArcherDupes;
     private static boolean dungFilterPartiesWithBerserkDupes;
     private static boolean dungFilterPartiesWithHealerDupes;
@@ -345,6 +348,9 @@ public class MooConfig {
         Property propTooltipItemTimestamp = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "tooltipItemTimestamp", "key press", "Show item creation date", new String[]{"always", "key press", "never"}));
 
+        Property propShowPetExp = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "showPetExp", "always", "Show pet exp", new String[]{"always", "key press", "never"}));
+
         Property propNumeralSystem = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "numeralSystem", "Arabic: 1, 4, 10", "Use Roman or Arabic numeral system?", new String[]{"Arabic: 1, 4, 10", "Roman: I, IV, X"}));
 
@@ -463,11 +469,13 @@ public class MooConfig {
                 "  ‣ that do not meet all your criteria: " + EnumChatFormatting.GOLD + "⬛",
                 "    ‣ with someone below a certain class level: " + EnumChatFormatting.RED + EnumChatFormatting.BOLD + "ᐯ" + EnumChatFormatting.RESET,
                 "    ‣ with duplicated roles you specify below: " + EnumChatFormatting.GOLD + "²⁺",
-                "    ‣ with 'carry' in their notes: " + EnumChatFormatting.AQUA + "carry",
                 "  ‣ that match your criteria: " + EnumChatFormatting.GREEN + "⬛");
 
         Property propDungPartyFinderPlayerLookup = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "dungPartyFinderPlayerLookup", "as a tooltip", "Show armor + dungeons stats of player joining via party finder as a tooltip or in chat?", new String[]{"as a tooltip", "in chat", "disabled"}));
+
+        Property propDungPartyFullLookup = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "dungPartyFullLookup", true, "Lookup info when party full?"));
 
         Property propDungPartyFinderPartyLookup = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "dungPartyFinderPartyLookup", true, "Lookup info when joining another party?"));
@@ -481,10 +489,16 @@ public class MooConfig {
                         .setMinValue(0).setMaxValue(50),
                 new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.RED + EnumChatFormatting.BOLD + "ᐯ").gray()));
 
-        Property propDungFilterPartiesWithCarry = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungFilterPartiesWithCarry", true, "Mark parties with carry in the notes"),
+        Property propDungMarkPartiesWithCarry = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "dungMarkPartiesWithCarry", "do not mark", "Mark parties with carry in the notes",
+                new String[]{"suitable " + EnumChatFormatting.GREEN + "⬛", "unideal " + EnumChatFormatting.GOLD + "⬛", "block " + EnumChatFormatting.RED + "⬛", "do not mark"}),
                 new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.AQUA + "carry"
                         + EnumChatFormatting.GRAY + " or " + EnumChatFormatting.GREEN + "carry " + EnumChatFormatting.GRAY + "('free' carries)").gray()));
+
+        Property propDungMarkPartiesWithHyperion = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "dungMarkPartiesWithHyperion", "do not mark", "Mark parties with hyperion in the notes",
+                new String[]{"suitable " + EnumChatFormatting.GREEN + "⬛", "unideal " + EnumChatFormatting.GOLD + "⬛", "block " + EnumChatFormatting.RED + "⬛", "do not mark"}),
+                new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.AQUA + "hyper").gray()));
 
         Property propDungFilterPartiesWithArcherDupes = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "dungFilterPartiesWithArcherDupes", true, "Mark parties with duplicated Archer class?"),
@@ -535,6 +549,7 @@ public class MooConfig {
             tooltipItemAge = propTooltipItemAge.getString();
             tooltipItemAgeShortened = propTooltipItemAgeShortened.getBoolean();
             tooltipItemTimestamp = propTooltipItemTimestamp.getString();
+            showPetExp = propShowPetExp.getString();
             numeralSystem = propNumeralSystem.getString();
             tooltipAuctionHousePriceEach = propTooltipAuctionHousePriceEach.getString();
             bazaarConnectGraphsNodes = propBazaarConnectGraphsNodes.getString();
@@ -553,10 +568,12 @@ public class MooConfig {
             dungOverlayGuiScale = propDungOverlayGuiScale.getInt();
             dungOverlayTextShadow = propDungOverlayTextShadow.getBoolean();
             dungPartyFinderPlayerLookup = propDungPartyFinderPlayerLookup.getString();
+            dungPartyFullLookup = propDungPartyFullLookup.getBoolean();
             dungPartyFinderPartyLookup = propDungPartyFinderPartyLookup.getBoolean();
             dungPartiesSize = propDungPartiesSize.getBoolean();
             dungClassMin = propDungClassMin.getInt();
-            dungFilterPartiesWithCarry = propDungFilterPartiesWithCarry.getBoolean();
+            dungMarkPartiesWithCarry = propDungMarkPartiesWithCarry.getString();
+            dungMarkPartiesWithHyperion = propDungMarkPartiesWithHyperion.getString();
             dungFilterPartiesWithArcherDupes = propDungFilterPartiesWithArcherDupes.getBoolean();
             dungFilterPartiesWithBerserkDupes = propDungFilterPartiesWithBerserkDupes.getBoolean();
             dungFilterPartiesWithHealerDupes = propDungFilterPartiesWithHealerDupes.getBoolean();
@@ -596,6 +613,7 @@ public class MooConfig {
         propTooltipItemAge.set(tooltipItemAge);
         propTooltipItemAgeShortened.set(tooltipItemAgeShortened);
         propTooltipItemTimestamp.set(tooltipItemTimestamp);
+        propShowPetExp.set(showPetExp);
         propNumeralSystem.set(numeralSystem);
         propTooltipAuctionHousePriceEach.set(tooltipAuctionHousePriceEach);
         propBazaarConnectGraphsNodes.set(bazaarConnectGraphsNodes);
@@ -614,10 +632,12 @@ public class MooConfig {
         propDungOverlayGuiScale.set(dungOverlayGuiScale);
         propDungOverlayTextShadow.set(dungOverlayTextShadow);
         propDungPartyFinderPlayerLookup.set(dungPartyFinderPlayerLookup);
+        propDungPartyFullLookup.set(dungPartyFullLookup);
         propDungPartyFinderPartyLookup.set(dungPartyFinderPartyLookup);
         propDungPartiesSize.set(dungPartiesSize);
         propDungClassMin.set(dungClassMin);
-        propDungFilterPartiesWithCarry.set(dungFilterPartiesWithCarry);
+        propDungMarkPartiesWithCarry.set(dungMarkPartiesWithCarry);
+        propDungMarkPartiesWithHyperion.set(dungMarkPartiesWithHyperion);
         propDungFilterPartiesWithArcherDupes.set(dungFilterPartiesWithArcherDupes);
         propDungFilterPartiesWithBerserkDupes.set(dungFilterPartiesWithBerserkDupes);
         propDungFilterPartiesWithHealerDupes.set(dungFilterPartiesWithHealerDupes);
@@ -740,6 +760,10 @@ public class MooConfig {
         return Setting.get(tooltipItemTimestamp);
     }
 
+    public static Setting getTooltipPetExpDisplay() {
+        return Setting.get(showPetExp);
+    }
+
     public static boolean useRomanNumerals() {
         return numeralSystem.startsWith("Roman");
     }
@@ -771,6 +795,28 @@ public class MooConfig {
 
     public static Setting getDungPartyFinderPlayerLookupDisplay() {
         return Setting.get(dungPartyFinderPlayerLookup);
+    }
+
+    public static DataHelper.PartyType getDungPartyFinderMarkCarry() {
+        return getPartyType(dungMarkPartiesWithCarry);
+    }
+
+    public static DataHelper.PartyType getDungPartyFinderMarkHyperion() {
+        return getPartyType(dungMarkPartiesWithHyperion);
+    }
+
+    private static DataHelper.PartyType getPartyType(String configValue) {
+        String configValueBeginning = configValue.length() >= 5 ? configValue.substring(0, 5) : "invalid";
+        switch (configValueBeginning) {
+            case "suita": // "suitable " + EnumChatFormatting.GREEN + "⬛"
+                return DataHelper.PartyType.SUITABLE;
+            case "unide": // "unideal " + EnumChatFormatting.GOLD + "⬛"
+                return DataHelper.PartyType.UNIDEAL;
+            case "block": // "block " + EnumChatFormatting.RED + "⬛"
+                return DataHelper.PartyType.UNJOINABLE;
+            default: // "do not mark"
+                return DataHelper.PartyType.NONE;
+        }
     }
 
     public static boolean filterDungPartiesWithDupes(DataHelper.DungeonClass dungeonClass) {

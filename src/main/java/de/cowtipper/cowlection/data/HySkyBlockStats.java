@@ -338,6 +338,23 @@ public class HySkyBlockStats {
                 return output;
             }
 
+            public String getDungeonTypesLevels() {
+                StringBuilder dungeonTypesLevels = new StringBuilder();
+                if (dungeon_types != null && !dungeon_types.isEmpty()) {
+                    for (Map.Entry<String, HySkyBlockStats.Profile.Dungeons.Type> dungeonType : dungeon_types.entrySet()) {
+                        if (dungeonTypesLevels.length() == 0) {
+                            dungeonTypesLevels.append(EnumChatFormatting.DARK_GRAY).append("  [").append(EnumChatFormatting.GRAY);
+                        } else {
+                            dungeonTypesLevels.append(EnumChatFormatting.DARK_GRAY).append(", ").append(EnumChatFormatting.GRAY);
+                        }
+                        int dungeonTypeLevel = dungeonType.getValue().getLevel();
+                        dungeonTypesLevels.append(Utils.fancyCase(dungeonType.getKey().substring(0, 4))).append(" ").append(MooConfig.useRomanNumerals() ? Utils.convertArabicToRoman(dungeonTypeLevel) : dungeonTypeLevel);
+                    }
+                    dungeonTypesLevels.append(EnumChatFormatting.DARK_GRAY).append("]");
+                }
+                return dungeonTypesLevels.toString();
+            }
+
             public static class Type {
                 private Map<String, Integer> times_played;
                 private Map<String, Integer> tier_completions;

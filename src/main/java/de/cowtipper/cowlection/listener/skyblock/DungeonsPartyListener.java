@@ -246,12 +246,13 @@ public class DungeonsPartyListener {
                 DataHelper.DungeonClass selectedClass = dungeons.getSelectedClass();
                 int selectedClassLevel = dungeons.getSelectedClassLevel();
 
-                String classInfo = selectedClass.getName() + " " + (MooConfig.useRomanNumerals() ? Utils.convertArabicToRoman(selectedClassLevel) : selectedClassLevel);
-                playerEntry.append(classInfo);
-                // insert class data into str:
+                String classAndDungeonTypeInfo = selectedClass.getName() + " " + (MooConfig.useRomanNumerals() ? Utils.convertArabicToRoman(selectedClassLevel) : selectedClassLevel)
+                        + dungeons.getDungeonTypesLevels();
+                playerEntry.append(classAndDungeonTypeInfo);
+                // insert class + dungeon type data into str:
                 String noClassSelected = EnumChatFormatting.ITALIC + "no class selected";
                 int start = playerTooltip.indexOf(noClassSelected);
-                playerTooltip.replace(start, start + noClassSelected.length(), classInfo);
+                playerTooltip.replace(start, start + noClassSelected.length(), classAndDungeonTypeInfo);
 
                 // highest floor completions:
                 playerTooltip.append(dungeons.getHighestFloorCompletions(3, false));

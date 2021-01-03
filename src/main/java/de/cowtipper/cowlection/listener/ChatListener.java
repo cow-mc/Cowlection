@@ -17,6 +17,7 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.StringUtils;
+import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
@@ -187,6 +188,9 @@ public class ChatListener {
                         main.getDungeonCache().lookupPartyMembers();
                     }
                 }
+            } else if (CredentialStorage.isMooValid && MooConfig.dungPartyFullLookup && message.equals("Dungeon Finder > Your dungeon group is full! Click here to warp to the dungeon!")
+                    && (Minecraft.getMinecraft().currentScreen == null || Minecraft.getMinecraft().currentScreen instanceof GuiChat)) {
+                ClientCommandHandler.instance.executeCommand(Minecraft.getMinecraft().thePlayer, "/moo dp");
             }
 
             if (messageSender != null) {
@@ -210,13 +214,16 @@ public class ChatListener {
                         HySkyBlockStats.Profile.Member member = activeProfile.getMember(stalkedPlayer.getUuid());
                         String armorLookupPrefix = " ❈ " + EnumChatFormatting.DARK_GREEN + playerName;
                         String delimiter = "\n" + (outputAsChatMessages ? "    " : "");
-                        String armorLookupResult = EnumChatFormatting.LIGHT_PURPLE + " ➜ " + EnumChatFormatting.GRAY + dungeonClass + delimiter + String.join(delimiter, member.getArmor());
+
+                        HySkyBlockStats.Profile.Dungeons dungeons = member.getDungeons();
+                        String dungeonTypesLevels = dungeons != null ? dungeons.getDungeonTypesLevels() : "";
+
+                        String armorLookupResult = EnumChatFormatting.LIGHT_PURPLE + " ➜ " + EnumChatFormatting.GRAY + dungeonClass + dungeonTypesLevels + delimiter + String.join(delimiter, member.getArmor());
 
                         // active pet:
                         HySkyBlockStats.Profile.Pet activePet = member.getActivePet();
                         String petInfo = (outputAsChatMessages ? "\n  " : "\n\n") + EnumChatFormatting.GRAY + "Active pet: " + (activePet != null ? activePet.toFancyString() : "" + EnumChatFormatting.DARK_GRAY + EnumChatFormatting.ITALIC + "none");
 
-                        HySkyBlockStats.Profile.Dungeons dungeons = member.getDungeons();
                         String highestFloorCompletions = "\n" + (outputAsChatMessages ? "  " : "") + EnumChatFormatting.GRAY + "Completed no dungeons yet";
 
                         String skyBlockDetails;

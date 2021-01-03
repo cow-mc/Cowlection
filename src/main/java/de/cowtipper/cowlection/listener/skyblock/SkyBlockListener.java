@@ -4,6 +4,8 @@ import com.mojang.realmsclient.util.Pair;
 import de.cowtipper.cowlection.Cowlection;
 import de.cowtipper.cowlection.config.MooConfig;
 import de.cowtipper.cowlection.config.gui.MooConfigGui;
+import de.cowtipper.cowlection.data.DataHelper;
+import de.cowtipper.cowlection.data.XpTables;
 import de.cowtipper.cowlection.util.GuiHelper;
 import de.cowtipper.cowlection.util.MooChatComponent;
 import de.cowtipper.cowlection.util.Utils;
@@ -51,6 +53,7 @@ public class SkyBlockListener {
     private static final Set<String> blackList = new HashSet<>(Arrays.asList("ENCHANTED_BOOK", "RUNE", "PET", "POTION")); // + minions (_GENERATOR_)
     private static final Pattern ITEM_COUNT_PREFIXED_PATTERN = Pattern.compile("^(?:§[0-9a-fl-or])*[\\d]+x ");
     private static final Pattern ITEM_COUNT_SUFFIXED_PATTERN = Pattern.compile(" (?:§[0-9a-fl-or])*x[\\d]+$");
+    private static final Pattern PET_NAME_PATTERN = Pattern.compile("^§7\\[Lvl (\\d+)] (§[0-9a-f])");
     private final NumberFormat numberFormatter;
     private final Cowlection main;
 
@@ -163,6 +166,59 @@ public class SkyBlockListener {
             }
         }
 
+        // show total pet exp
+        NBTTagCompound extraAttributes = e.itemStack.getSubCompound("ExtraAttributes", false);
+        if ((MooConfig.getTooltipPetExpDisplay() == MooConfig.Setting.ALWAYS
+                || MooConfig.getTooltipPetExpDisplay() == MooConfig.Setting.SPECIAL && MooConfig.isTooltipToggleKeyBindingPressed())
+                && e.itemStack.getItem() == Items.skull) {
+            if (extraAttributes != null && extraAttributes.hasKey("petInfo")) {
+                // pet in inventory, auction house or similar
+                String petInfo = extraAttributes.getString("petInfo");
+                String expSubstr = "\"exp\":";
+                int beginPetExp = petInfo.indexOf(expSubstr);
+                int endPetExp = petInfo.indexOf(',', beginPetExp);
+                if (beginPetExp > 0 && endPetExp > 0) {
+                    try {
+                        long petExp = (long) Double.parseDouble(petInfo.substring(beginPetExp + expSubstr.length(), endPetExp));
+                        int index = Math.max(0, e.toolTip.size() - (e.showAdvancedItemTooltips ? /* item name & nbt info */ 2 : 0));
+                        e.toolTip.add(index, EnumChatFormatting.GRAY + "Pet exp: " + EnumChatFormatting.GOLD + numberFormatter.format(petExp));
+                    } catch (NumberFormatException ignored) {
+                        // do nothing
+                    }
+                }
+            } else if (e.itemStack.getDisplayName().contains("[Lvl ")) {
+                // pet in pets menu
+                for (int i = e.toolTip.size() - 1; i >= 0; i--) {
+                    String loreLine = EnumChatFormatting.getTextWithoutFormattingCodes(e.toolTip.get(i));
+                    if (loreLine.startsWith("--------------------")) { // exp bar to next level
+                        int beginPetExp = loreLine.indexOf(' ');
+                        int endPetExp = loreLine.indexOf('/');
+                        if (beginPetExp < 0 || endPetExp < 0) {
+                            // didn't find pet exp, abort
+                            break;
+                        }
+                        try {
+                            int petExp = numberFormatter.parse(loreLine.substring(beginPetExp + 1, endPetExp)).intValue();
+
+                            Matcher petNameMatcher = PET_NAME_PATTERN.matcher(e.itemStack.getDisplayName());
+                            if (petNameMatcher.find()) {
+                                int petLevel = Integer.parseInt(petNameMatcher.group(1));
+                                DataHelper.SkyBlockRarity petRarity = DataHelper.SkyBlockRarity.getPetRarityByColorCode(petNameMatcher.group(2));
+                                if (petRarity == null) {
+                                    break;
+                                }
+                                int totalPetExp = XpTables.Pet.getTotalExp(petRarity, petLevel, petExp);
+                                e.toolTip.add(i + 1, EnumChatFormatting.GRAY + "Total pet exp: " + EnumChatFormatting.GOLD + numberFormatter.format(totalPetExp));
+                            }
+                        } catch (ParseException | NumberFormatException ignored) {
+                            // do nothing
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
         // remove unnecessary tooltip entries: dyed leather armor
         NBTTagCompound nbtDisplay = e.itemStack.getSubCompound("display", false);
         if (!Minecraft.getMinecraft().gameSettings.advancedItemTooltips
@@ -187,7 +243,6 @@ public class SkyBlockListener {
         MooConfig.Setting tooltipItemTimestampDisplay = MooConfig.getTooltipItemTimestampDisplay();
 
         // add item age to tooltip
-        NBTTagCompound extraAttributes = e.itemStack.getSubCompound("ExtraAttributes", false);
         if (extraAttributes != null && extraAttributes.hasKey("timestamp")
                 && (tooltipItemAgeDisplay != MooConfig.Setting.DISABLED || tooltipItemTimestampDisplay != MooConfig.Setting.DISABLED)) {
             LocalDateTime skyBlockDateTime;
@@ -198,7 +253,7 @@ public class SkyBlockListener {
                     skyBlockDateTime = LocalDateTime.parse(timestamp, DateTimeFormatter.ofPattern("M/d/yy h:mm a", Locale.US));
                 } else {
                     // format: day > month > year + 24 hour clock (very, very rare)
-                    skyBlockDateTime = LocalDateTime.parse(timestamp, DateTimeFormatter.ofPattern("d/M/yy hh:mm", Locale.US));
+                    skyBlockDateTime = LocalDateTime.parse(timestamp, DateTimeFormatter.ofPattern("d/M/yy HH:mm", Locale.US));
                 }
             } catch (DateTimeParseException ignored) {
                 // unknown/invalid timestamp format

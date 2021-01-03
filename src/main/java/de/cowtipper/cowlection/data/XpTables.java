@@ -249,6 +249,18 @@ public class XpTables {
                 return -1;
             }
         }
+
+        public static int getTotalExp(DataHelper.SkyBlockRarity rarity, int level, int exp) {
+            TreeSet<Integer> xpToLevels = PET_XP.get(rarity);
+            if (xpToLevels != null) {
+                for (int xpToLevel : xpToLevels) {
+                    if (level-- <= 1) {
+                        return xpToLevel + exp;
+                    }
+                }
+            }
+            return -1;
+        }
     }
 
     public enum Dungeoneering {
