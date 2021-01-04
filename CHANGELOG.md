@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [1.8.9-0.12.0] - 03.01.2020
+## [1.8.9-0.12.0] - 03.01.2021
 ### Added
 - New config options to change/adjust/deactivate some features:
   - Auto-replacement of `/r ` with `/w <last sender>`
