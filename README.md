@@ -1,4 +1,4 @@
-[![Cowlection](https://github.com/cow-mc/Cowlection/blob/master/cowlection.png?raw=true "Cowlection")](#readme)
+![Cowlection](https://github.com/cow-mc/Cowlection/blob/master/cowlection.png?raw=true)
 > Cow's collection ➔ Cowlection
 
 Cowlection is a client-side-only Forge mod by [Cow](https://namemc.com/profile/Cow) for Minecraft version 1.8.9.  
