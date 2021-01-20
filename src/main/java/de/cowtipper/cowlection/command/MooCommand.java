@@ -53,7 +53,6 @@ public class MooCommand extends CommandBase {
     @Override
     public List<String> getCommandAliases() {
         List<String> aliases = new ArrayList<>();
-        aliases.add(Cowlection.MODID);
         if (StringUtils.isNotEmpty(MooConfig.mooCmdAlias)) {
             aliases.add(MooConfig.mooCmdAlias);
         }

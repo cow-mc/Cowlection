@@ -109,6 +109,8 @@ public class HyStalkingData {
                         return "Gold Mine";
                     case "mining_2":
                         return "Deep Caverns";
+                    case "mining_3":
+                        return "Dwarven Mines";
                     default:
                         // fall-through
                         break;

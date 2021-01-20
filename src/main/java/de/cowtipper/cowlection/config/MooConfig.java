@@ -241,7 +241,7 @@ public class MooConfig {
                 "  ‣ Online best friends (if the best friend online checker is enabled)");
 
         propTabCompletableNamesCommands = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "tabCompletableNamesCommands", new String[]{"party", "p", "invite", "visit", "ah", "ignore", "msg", "tell", "w", "boop", "profile", "friend", "friends"}, "List of commands with a Tab-completable username argument.")
+                "tabCompletableNamesCommands", new String[]{"p", "ah", "ignore", "msg", "tell", "w", "boop", "profile", "friend", "friends"}, "List of commands with a Tab-completable username argument.")
                 .setValidationPattern(Pattern.compile("^[A-Za-z]+$")));
 
         // Sub-Category: Other settings

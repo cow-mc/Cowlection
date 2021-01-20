@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.8.9-0.13.0] - unreleased
+### Added
+- SkyBlock Dwarven Mines update:
+  - Added new minions to `/m analyzeIslands` (Mithril + t12)
+
 ## [1.8.9-0.12.0] - 03.01.2021
 ### Added
 - New config options to change/adjust/deactivate some features:
@@ -271,6 +276,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 *Note:* The 'best friends' list is currently available via <kbd>ESC</kbd> > Mod Options > Cowlection > Config > bestFriends.
 
+[1.8.9-0.13.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.12.0...master
 [1.8.9-0.12.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.11.0...v1.8.9-0.12.0
 [1.8.9-0.11.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.10.2...v1.8.9-0.11.0
 [1.8.9-0.10.2]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.10.1...v1.8.9-0.10.2

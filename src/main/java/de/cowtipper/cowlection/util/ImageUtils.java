@@ -36,7 +36,8 @@ public class ImageUtils {
         VIII(-907953, -7208930),
         IX(-31330, -7208930),
         X(-5046235, -20031),
-        XI(-15426142, -1769477);
+        XI(-15426142, -1769477),
+        XII(-1769477, -5767181);
 
         private final int color1;
         private final int color2;

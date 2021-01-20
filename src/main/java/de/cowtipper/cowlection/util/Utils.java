@@ -252,6 +252,9 @@ public final class Utils {
             case 11:
                 tierColor = EnumChatFormatting.AQUA;
                 break;
+            case 12:
+                tierColor = EnumChatFormatting.DARK_AQUA;
+                break;
             default:
                 tierColor = EnumChatFormatting.OBFUSCATED;
         }

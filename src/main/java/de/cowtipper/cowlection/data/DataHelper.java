@@ -176,6 +176,7 @@ public final class DataHelper {
         minions.put("ccf546584428b5385bc0c1a0031aa87e98e85875e4d6104e1be06cef8bd74fe4", "Cobblestone IX");
         minions.put("989db0a9c97f0e0b5bb9ec7b3e32f8d63c648d4608cfd5be9adbe8825d4e6a94", "Cobblestone X");
         minions.put("ebcc099f3a00ece0e5c4b31d31c828e52b06348d0a4eac11f3fcbef3c05cb407", "Cobblestone XI");
+        minions.put("b88d5a7db53d90488257859ee664539e13a0ff3a29e857de7db88df077479dae", "Cobblestone XII");
 
         minions.put("320c29ab966637cb9aecc34ee76d5a0130461e0c4fdb08cdaf80939fa1209102", "Obsidian I");
         minions.put("58348315724fb1409142dda1cab2e45be34ead373d4a1ecdae6cb4143cd2bd25", "Obsidian II");
@@ -188,6 +189,7 @@ public final class DataHelper {
         minions.put("15a45b66c8e21b515ea25abf47c9c27d995fe79b128844a0c8bf7777f3badee5", "Obsidian IX");
         minions.put("1731be266b727b49ad135b4ea7b94843f7b322f873888da9fe037edea2984324", "Obsidian X");
         minions.put("4d36910bcbb3fc0b7dedaae85ff052967ad74f3f4c2fb6f7dd2bed5bcfd0992b", "Obsidian XI");
+        minions.put("d80c2415787ef06c5aee6df1d60b91283cbf02dc22c48a7cd28e652b45f21d32", "Obsidian XII");
 
         minions.put("20f4d7c26b0310990a7d3a3b45948b95dd4ab407a16a4b6d3b7cb4fba031aeed", "Glowstone I");
         minions.put("c0418cf84d91171f2cd67cbaf827c5b99ce4c1eeba76e77eab241e61e865a89f", "Glowstone II");
@@ -272,6 +274,7 @@ public final class DataHelper {
         minions.put("29f5b3c25dd013c4b1630746b7f6ee88c73c0bacf22a970a2331818c225a0620", "Coal IX");
         minions.put("46bb54a946802ebce2f00760639b2bf484faed76cbb284eb2efaa5796d771e6", "Coal X");
         minions.put("641ffadeaa22c8d97a72036cbd5d934ca454032a81957052e85f3f95b79d3169", "Coal XI");
+        minions.put("dd3ca06a86ce32da480403c9b5e0f77b8cfa26dac68c30224ddc2d056fffea7", "Coal XII");
 
         minions.put("af435022cb3809a68db0fccfa8993fc1954dc697a7181494905b03fdda035e4a", "Iron I");
         minions.put("5573adc1a442b2bad0bafd4415603e821d56a20201c1e7abd259cc0790baa7bf", "Iron II");
@@ -284,6 +287,7 @@ public final class DataHelper {
         minions.put("3679a748d40754d4e5bc418d152064c7aeee4121a2b1d8e058d0b0326f8bff3", "Iron IX");
         minions.put("ac48b4758211fd0e4713ad0b6ea9d13a29eb9f523d3911dcff945197b8bc1a56", "Iron X");
         minions.put("1b22b582b750dbdb0b7599c786d39f2efedfe64b5ae32656020295b57f2fcf7", "Iron XI");
+        minions.put("9fcff36d3a7717a8aaa337562423b0d884fef6aab12a467fa360e55975972c62", "Iron XII");
 
         minions.put("f6da04ed8c810be29bba53c62e712d65cfb25238117b94d7e85a4615775bf14f", "Gold I");
         minions.put("761bcdb7251638f757cd70fd0fd21a2a05f41cbdc78ad3e50f64ecf38aa3220c", "Gold II");
@@ -296,6 +300,7 @@ public final class DataHelper {
         minions.put("5bf721e5d5403e11d176dd33d54458332195667e89d88bbf402c6d0307ec442c", "Gold IX");
         minions.put("3d236e1e3ef0dea06e3be72f0980767c5aea41b882f8b9b58838298ace64dc9d", "Gold X");
         minions.put("936a5712543dde0a3c7dc54063178cb69179dfd5cd75cb1de4fe8771b53dd03f", "Gold XI");
+        minions.put("26c39ce1b9574bfbb5c6a6a2684d262e62a15f12d235276e4fffc1ab4cdc85b3", "Gold XII");
 
         minions.put("2354bbe604dfe58bf92e7729730d0c8e37844e831ee3816d7e8427c27a1824a2", "Diamond I");
         minions.put("5138692abccf0cebd0d99b4a59a26d41f779acfd35a07b2b527593356bc8ece6", "Diamond II");
@@ -308,6 +313,7 @@ public final class DataHelper {
         minions.put("d6cc4e3241c518aeb8e64e32a0b6f536d7684c8b5fe6bc9699db9ee6332cf70f", "Diamond IX");
         minions.put("f024c9b17c2b4a84fe503726df57b7cd7a77827f530c6b93d2e94e7cc0b515f9", "Diamond X");
         minions.put("537643ca84a56411f676a11eceab6d96fc7877ae3402c6083b69ee97ab95e700", "Diamond XI");
+        minions.put("a59c8a65014721b7dc612cefcadf263f0496c41430937d1802d6cfad9947c87b", "Diamond XII");
 
         minions.put("64fd97b9346c1208c1db3957530cdfc5789e3e65943786b0071cf2b2904a6b5c", "Lapis I");
         minions.put("65be0e9684b28a2531bec6186f75171c1111c3133b8ea944f32c34f247ea6923", "Lapis II");
@@ -320,6 +326,7 @@ public final class DataHelper {
         minions.put("e5a93254f20364b7117f606fd6745769994acd3b5c057d3382e5dd828f9ebfd4", "Lapis IX");
         minions.put("6fe5c4ceb6e66e7e0c357014be3d58f052a38c040be62f26af5fb9bed437541", "Lapis X");
         minions.put("736cd50c9e8cf786646960734b5e23e4d2e3112f4494d5ddb3c1e45033324a0e", "Lapis XI");
+        minions.put("edc594af5a8391c59001582b274864cf0701505609ece652c2a356de4617c28e", "Lapis XII");
 
         minions.put("1edefcf1a89d687a0a4ecf1589977af1e520fc673c48a0434be426612e8faa67", "Redstone I");
         minions.put("4ebdbf0aca7d245f6d54c91c37ec7102a55dd0f3b0cfe3c2485f3a99b3e53aa0", "Redstone II");
@@ -332,6 +339,7 @@ public final class DataHelper {
         minions.put("85d61b9d0b8ad786e8e1ff1dbbde1221a8691fda1daf93c8605cbc2e4fdea63", "Redstone IX");
         minions.put("6588bed4136c95dd961b54a06307b2489726bbfe4fda41cee8ab2c57fa36f291", "Redstone X");
         minions.put("6670498256b1cbae7c8463bc2d65036cf07447b146f7d3f69bfa2dc07e9fd8cf", "Redstone XI");
+        minions.put("968eaaaba0cd0a75228fa399a786584125cf431a6a910c34dda891dd64a6693b", "Redstone XII");
 
         minions.put("9bf57f3401b130c6b53808f2b1e119cc7b984622dac7077bbd53454e1f65bbf0", "Emerald I");
         minions.put("5e2d440d6c2300d94e7d5c44906d73a5cde521dfe516698513dd8c02ffdd5a82", "Emerald II");
@@ -344,6 +352,7 @@ public final class DataHelper {
         minions.put("db81f7229ad141b925ad3ff0f121c14686478a35f4777c73d3416505343d3811", "Emerald IX");
         minions.put("c2ba3b81576024cbde5dade239ad7603e1fe5f9d8b1fe4716cfc68a9bcb2d324", "Emerald X");
         minions.put("67a5b0b9839081488ffde6d0cd74b540cf23a505c95e521f77e337775c49b431", "Emerald XI");
+        minions.put("d4101619e77eed74b94b40a8d95ef2ac7eb827954ed87c85253435433f49b877", "Emerald XII");
 
         minions.put("d270093be62dfd3019f908043db570b5dfd366fd5345fccf9da340e75c701a60", "Quartz I");
         minions.put("c305506b47609d71488a793c12479ad8b990f7f39fd7de53a45f4c50874d1051", "Quartz II");
@@ -368,6 +377,19 @@ public final class DataHelper {
         minions.put("13f379728f8cbb88300e8de137d9b576205cde2c5e36607ad8d3bb558f533d68", "End Stone IX");
         minions.put("1fbd102a90e2a19a9d2f5fcc98da00b4addbfb02593b34367fe4c2339c37eff0", "End Stone X");
         minions.put("35fc7b11e32ead79f7d110d3efb6447a66b387fce79f70fa4ceaaa0e0fe717f5", "End Stone XI");
+
+        minions.put("c62fa670ff8599b32ab344195ba15f3ef64c3a8aa8a37821c08375950cb74cd0", "Mithril I");
+        minions.put("a17035b9d12e07ca8e1ef1e0ed419787363c9ae7cd35f4dd092f4f0c54d841bc", "Mithril II");
+        minions.put("246cab4c33e2132dbedb1205fabe28ba7f13c7f7b0101f252c69460325f7179d", "Mithril III");
+        minions.put("ca61d14dbaedc3e758f6fc3b7c5e7df2b5b11cb027fc4351226d39cbf5695928", "Mithril IV");
+        minions.put("89224b56ea053a952a8044415874b63e4813e9118a56c4fe7027464438783044", "Mithril V");
+        minions.put("6d7416596bb1acc5864f18d6e9f08fde7406b53017c460a30ea2da6472f8e75f", "Mithril VI");
+        minions.put("eeb1bef854222bee8ca543478c30cb6068a1cb80ce68d756513d5fa26ccc56a3", "Mithril VII");
+        minions.put("b522693f95a8fc95179d3dd3d41ae045cb8502362f3c8d70c53d7819b4ab5010", "Mithril VIII");
+        minions.put("6d35c0c2a1e1e09f75f1e7695a6757014f4fa601bdd1b7a0b6a64ce529fd29eb", "Mithril IX");
+        minions.put("420f70ad97f1dade93ce1d560de9ea61313966cf9ef09bf4fe5fbbbff6085405", "Mithril X");
+        minions.put("3ca2b317a1fd2c15fce3f477182babb3c09b9933afc83d5cdb2bcb091e60f0e3", "Mithril XI");
+        minions.put("2939c105c2eedbf04600b07de5801e42ec9329054feef89cb0b6a956034e6ee4", "Mithril XII");
 
         minions.put("bbc571c5527336352e2fee2b40a9edfa2e809f64230779aa01253c6aa535881b", "Wheat I");
         minions.put("c62b0508b3fef406833d519da8b08ee078604c78b8ca6e9c138760041fa861bf", "Wheat II");
