@@ -12,9 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -22,7 +20,14 @@ import java.util.stream.Collectors;
 public final class Utils {
     public static final Pattern VALID_UUID_PATTERN = Pattern.compile("^(\\w{8})-(\\w{4})-(\\w{4})-(\\w{4})-(\\w{12})$");
     private static final Pattern VALID_USERNAME = Pattern.compile("^[\\w]{1,16}$");
-    private static final char[] LARGE_NUMBERS = new char[]{'k', 'm', 'b', 't'};
+    private static final NavigableMap<Double, Character> NUMBER_SUFFIXES = new TreeMap<>();
+
+    static {
+        NUMBER_SUFFIXES.put(1_000d, 'k');
+        NUMBER_SUFFIXES.put(1_000_000d, 'm');
+        NUMBER_SUFFIXES.put(1_000_000_000d, 'b');
+        NUMBER_SUFFIXES.put(1_000_000_000_000d, 't');
+    }
 
     private Utils() {
     }
@@ -105,27 +110,19 @@ public final class Utils {
     }
 
     /**
-     * Formats a large number with abbreviations for each factor of a thousand (k, m, ...)
-     *
-     * @param number the number to format
-     * @return a String representing the number n formatted in a cool looking way.
-     * @see <a href="https://stackoverflow.com/a/4753866">Source</a>
+     * Formats a large number with abbreviations for each factor of a thousand (k, m, b, t)
      */
     public static String formatNumberWithAbbreviations(double number) {
-        return formatNumberWithAbbreviations(number, 0);
-    }
+        if (number == Double.MIN_VALUE) return formatNumberWithAbbreviations(Double.MIN_VALUE + 1);
+        if (number < 0) return "-" + formatNumberWithAbbreviations(-number);
+        if (number < 1000) return "" + (long) number;
 
-    private static String formatNumberWithAbbreviations(double number, int iteration) {
-        @SuppressWarnings("IntegerDivisionInFloatingPointContext") double d = ((long) number / 100) / 10.0;
-        boolean isRound = (d * 10) % 10 == 0; // true if the decimal part is equal to 0 (then it's trimmed anyway)
-        // this determines the class, i.e. 'k', 'm' etc
-        // this decides whether to trim the decimals
-        // (int) d * 10 / 10 drops the decimal
-        return d < 1000 ? // this determines the class, i.e. 'k', 'm' etc
-                (d > 99.9 || isRound || d > 9.99 ? // this decides whether to trim the decimals
-                        (int) d * 10 / 10 : d + "" // (int) d * 10 / 10 drops the decimal
-                ) + "" + LARGE_NUMBERS[iteration]
-                : formatNumberWithAbbreviations(d, iteration + 1);
+        Map.Entry<Double, Character> e = NUMBER_SUFFIXES.floorEntry(number);
+        Double divideBy = e.getKey();
+        Character suffix = e.getValue();
+
+        DecimalFormat df = new DecimalFormat("#,##0.#");
+        return df.format(number / divideBy) + suffix;
     }
 
     /**

@@ -16,6 +16,7 @@ public class HyPlayerData {
     private long lastLogin;
     private long lastLogout;
     private String mostRecentGameType;
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private Map<String, Integer> achievements;
 
     /**

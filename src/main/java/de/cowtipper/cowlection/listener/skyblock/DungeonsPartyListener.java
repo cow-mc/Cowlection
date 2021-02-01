@@ -244,13 +244,16 @@ public class DungeonsPartyListener {
                     continue;
                 }
                 DataHelper.DungeonClass selectedClass = dungeons.getSelectedClass();
-                int selectedClassLevel = dungeons.getSelectedClassLevel();
 
-                String classAndDungeonTypeInfo = selectedClass.getName() + " " + (MooConfig.useRomanNumerals() ? Utils.convertArabicToRoman(selectedClassLevel) : selectedClassLevel)
-                        + dungeons.getDungeonTypesLevels();
+                String noClassSelected = EnumChatFormatting.ITALIC + "no class selected";
+                String classAndDungeonTypeInfo = noClassSelected;
+                if (selectedClass != null) {
+                    int selectedClassLevel = dungeons.getSelectedClassLevel();
+                    classAndDungeonTypeInfo = selectedClass.getName() + " " + (MooConfig.useRomanNumerals() ? Utils.convertArabicToRoman(selectedClassLevel) : selectedClassLevel);
+                }
+                classAndDungeonTypeInfo += dungeons.getDungeonTypesLevels();
                 playerEntry.append(classAndDungeonTypeInfo);
                 // insert class + dungeon type data into str:
-                String noClassSelected = EnumChatFormatting.ITALIC + "no class selected";
                 int start = playerTooltip.indexOf(noClassSelected);
                 playerTooltip.replace(start, start + noClassSelected.length(), classAndDungeonTypeInfo);
 

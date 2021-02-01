@@ -126,6 +126,7 @@ public class HySkyBlockStats {
             private double experience_skill_taming = -1;
             private Map<String, SlayerBossDetails> slayer_bosses;
             private List<Pet> pets;
+            private JacobData jacob2;
             private Dungeons dungeons;
 
             /**
@@ -136,6 +137,10 @@ public class HySkyBlockStats {
 
             public Pair<String, String> getFancyFirstJoined() {
                 return Utils.getDurationAsWords(first_join);
+            }
+
+            public Pair<String, String> getFancyLastSave() {
+                return Utils.getDurationAsWords(last_save);
             }
 
             public double getCoinPurse() {
@@ -149,10 +154,10 @@ public class HySkyBlockStats {
             public Map<XpTables.Skill, Integer> getSkills() {
                 Map<XpTables.Skill, Integer> skills = new TreeMap<>();
                 if (experience_skill_farming >= 0) {
-                    skills.put(XpTables.Skill.FARMING, XpTables.Skill.FARMING.getLevel(experience_skill_farming));
+                    skills.put(XpTables.Skill.FARMING, XpTables.Skill.FARMING.getLevel(experience_skill_farming, getMaxFarmingLevel()));
                 }
                 if (experience_skill_mining >= 0) {
-                    skills.put(XpTables.Skill.MINING, XpTables.Skill.MINING.getLevel(experience_skill_mining));
+                    skills.put(XpTables.Skill.MINING, XpTables.Skill.MINING.getLevel(experience_skill_mining, 60));
                 }
                 if (experience_skill_combat >= 0) {
                     skills.put(XpTables.Skill.COMBAT, XpTables.Skill.COMBAT.getLevel(experience_skill_combat));
@@ -164,7 +169,7 @@ public class HySkyBlockStats {
                     skills.put(XpTables.Skill.FISHING, XpTables.Skill.FISHING.getLevel(experience_skill_fishing));
                 }
                 if (experience_skill_enchanting >= 0) {
-                    skills.put(XpTables.Skill.ENCHANTING, XpTables.Skill.ENCHANTING.getLevel(experience_skill_enchanting));
+                    skills.put(XpTables.Skill.ENCHANTING, XpTables.Skill.ENCHANTING.getLevel(experience_skill_enchanting, 60));
                 }
                 if (experience_skill_alchemy >= 0) {
                     skills.put(XpTables.Skill.ALCHEMY, XpTables.Skill.ALCHEMY.getLevel(experience_skill_alchemy));
@@ -207,6 +212,14 @@ public class HySkyBlockStats {
                     }
                 }
                 return null;
+            }
+
+            public int getMaxFarmingLevel() {
+                int farmingLevelCap = 50;
+                if (jacob2 != null && jacob2.perks != null) {
+                    farmingLevelCap += jacob2.perks.getOrDefault("farming_level_cap", 0);
+                }
+                return farmingLevelCap;
             }
 
             public List<String> getArmor() {
@@ -268,6 +281,10 @@ public class HySkyBlockStats {
             private int getLevel() {
                 return XpTables.Pet.getLevel(tier, exp);
             }
+        }
+
+        private static class JacobData {
+            private Map<String, Integer> perks;
         }
 
         public static class Dungeons {

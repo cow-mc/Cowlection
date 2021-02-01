@@ -158,7 +158,7 @@ public class DungeonsListener {
                             hasCustomGearScore = true;
                         }
                         if (!hasCustomGearScore) {
-                            customGearScore.append("―");
+                            customGearScore.append(EnumChatFormatting.LIGHT_PURPLE).append("100%").append(EnumChatFormatting.DARK_GRAY).append(" (never has randomized stats)");
                         }
                         if (showItemQualityAndFloor) {
                             if (MooConfig.isDungItemQualityAtTop()) {

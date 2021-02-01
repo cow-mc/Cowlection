@@ -481,11 +481,15 @@ public class MooCommand extends CommandBase {
                 HySkyBlockStats.Profile.Dungeons dungeons = member.getDungeons();
                 boolean hasPlayedDungeons = dungeons != null && dungeons.hasPlayed();
                 if (hasPlayedDungeons) {
-                    DataHelper.DungeonClass selectedClass = dungeons.getSelectedClass();
-
                     MooChatComponent dungeonHover = new MooChatComponent("Dungeoneering").gold().bold();
-                    int selectedClassLevel = dungeons.getSelectedClassLevel();
-                    dungeonsComponent = new MooChatComponent.KeyValueChatComponent("Dungeoneering", selectedClass.getName() + " " + (MooConfig.useRomanNumerals() ? Utils.convertArabicToRoman(selectedClassLevel) : selectedClassLevel))
+
+                    DataHelper.DungeonClass selectedClass = dungeons.getSelectedClass();
+                    String selectedDungClass = "" + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + "no class selected";
+                    if (selectedClass != null) {
+                        int selectedClassLevel = dungeons.getSelectedClassLevel();
+                        selectedDungClass = selectedClass.getName() + " " + (MooConfig.useRomanNumerals() ? Utils.convertArabicToRoman(selectedClassLevel) : selectedClassLevel);
+                    }
+                    dungeonsComponent = new MooChatComponent.KeyValueChatComponent("Dungeoneering", selectedDungClass)
                             .setHover(dungeonHover);
 
 
@@ -616,6 +620,10 @@ public class MooCommand extends CommandBase {
                 sbStats.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Fairy Souls", (member.getFairySoulsCollected() >= 0) ? String.valueOf(member.getFairySoulsCollected()) : "API access disabled"));
                 // profile age:
                 sbStats.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Profile age", fancyFirstJoined.first()).setHover(new MooChatComponent.KeyValueTooltipComponent("Join date", (fancyFirstJoined.second() == null ? "today" : fancyFirstJoined.second()))));
+                // last save:
+                Pair<String, String> fancyLastSave = member.getFancyLastSave();
+                sbStats.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Last save", fancyLastSave.first() + " ago").setHover(new MooChatComponent.KeyValueTooltipComponent("Last save", (fancyLastSave.second() == null ? "today" : fancyLastSave.second()))
+                        .appendFreshSibling(new MooChatComponent("= last time " + stalkedPlayer.getName() + " has played SkyBlock.").white())));
 
                 main.getChatHelper().sendMessage(sbStats);
             } else {

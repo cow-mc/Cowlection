@@ -62,6 +62,16 @@ public class XpTables {
             XP_TO_LEVEL.put(47472425, 48);
             XP_TO_LEVEL.put(51172425, 49);
             XP_TO_LEVEL.put(55172425, 50);
+            XP_TO_LEVEL.put(59472425, 51);
+            XP_TO_LEVEL.put(64072425, 52);
+            XP_TO_LEVEL.put(68972425, 53);
+            XP_TO_LEVEL.put(74172425, 54);
+            XP_TO_LEVEL.put(79672425, 55);
+            XP_TO_LEVEL.put(85472425, 56);
+            XP_TO_LEVEL.put(91572425, 57);
+            XP_TO_LEVEL.put(97972425, 58);
+            XP_TO_LEVEL.put(104672425, 59);
+            XP_TO_LEVEL.put(111672425, 60);
 
             XP_TO_LEVEL_ALTERNATIVE.put(0, 0);
             XP_TO_LEVEL_ALTERNATIVE.put(50, 1);
@@ -88,7 +98,7 @@ public class XpTables {
             XP_TO_LEVEL_ALTERNATIVE.put(47850, 22);
             XP_TO_LEVEL_ALTERNATIVE.put(60100, 23);
             XP_TO_LEVEL_ALTERNATIVE.put(75400, 24);
-
+            XP_TO_LEVEL_ALTERNATIVE.put(94450, 25);
         }
 
         Skill() {
@@ -101,9 +111,17 @@ public class XpTables {
 
         public int getLevel(double exp) {
             if (alternativeXpFormula) {
-                return XP_TO_LEVEL_ALTERNATIVE.floorEntry((int) exp).getValue();
+                return getLevel(exp, 25);
             } else {
-                return XP_TO_LEVEL.floorEntry((int) exp).getValue();
+                return getLevel(exp, 50);
+            }
+        }
+
+        public int getLevel(double exp, int maxLevel) {
+            if (alternativeXpFormula) {
+                return Math.min(XP_TO_LEVEL_ALTERNATIVE.floorEntry((int) exp).getValue(), maxLevel);
+            } else {
+                return Math.min(XP_TO_LEVEL.floorEntry((int) exp).getValue(), maxLevel);
             }
         }
 

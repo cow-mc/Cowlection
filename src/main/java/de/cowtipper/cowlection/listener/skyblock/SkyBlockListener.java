@@ -309,12 +309,13 @@ public class SkyBlockListener {
         if ((tooltipAuctionHousePriceEachDisplay == MooConfig.Setting.ALWAYS || tooltipAuctionHousePriceEachDisplay == MooConfig.Setting.SPECIAL && MooConfig.isTooltipToggleKeyBindingPressed())
                 && (e.entityPlayer.openContainer instanceof ContainerChest || Minecraft.getMinecraft().currentScreen instanceof MooConfigGui)) {
             int stackSize = e.itemStack.stackSize;
-            if ((stackSize == 1 && !isSubmitBidItem(e.itemStack)) || e.toolTip.size() < 4) {
+            boolean isSubmitBidItem = isSubmitBidItem(e.itemStack);
+            if ((stackSize == 1 && !isSubmitBidItem) || e.toolTip.size() < 4) {
                 // only 1 item or irrelevant tooltip - nothing to do here, abort!
                 return;
             }
 
-            if (isSubmitBidItem(e.itemStack)) {
+            if (isSubmitBidItem) {
                 // special case: "place bid on an item" interface ("Auction View")
                 ItemStack auctionedItem = e.entityPlayer.openContainer.getInventory().get(13);
                 if (auctionedItem == null || auctionedItem.stackSize == 1) {

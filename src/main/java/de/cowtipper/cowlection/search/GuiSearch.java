@@ -26,7 +26,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.lwjgl.input.Keyboard;
-import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
 import java.io.File;
@@ -416,7 +415,7 @@ public class GuiSearch extends GuiScreen {
                         drawString(fontRendererObj, "Log file: ", 2, 2, 0xff888888);
                         GlStateManager.pushMatrix();
                         float scaleFactor = 0.75f;
-                        GL11.glScalef(scaleFactor, scaleFactor, scaleFactor);
+                        GlStateManager.scale(scaleFactor, scaleFactor, 0);
                         fontRendererObj.drawSplitString(EnumChatFormatting.GRAY + Utils.toRealPath(hoveredEntry.getFilePath()), 5, (int) ((4 + fontRendererObj.FONT_HEIGHT) * (1 / scaleFactor)), (int) ((GuiSearch.this.fieldSearchQuery.xPosition - 8) * (1 / scaleFactor)), 0xff888888);
                         GlStateManager.popMatrix();
                         drawString(fontRendererObj, "Result: " + EnumChatFormatting.WHITE + (hoveredSearchResultId + 1) + EnumChatFormatting.RESET + "/" + EnumChatFormatting.WHITE + this.rawResults.size(), 8, 48, 0xff888888);

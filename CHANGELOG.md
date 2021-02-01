@@ -7,6 +7,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - SkyBlock Dwarven Mines update:
   - Added new minions to `/m analyzeIslands` (Mithril + t12)
+- `/moo stalkskyblock` additions:
+  - Added 'last profile save'
+  - Added Enchanting, Farming and Mining 51-60
+  - Added missing Runecrafting 25
+
+### Changed
+- Refined the comma representation of large numbers abbreviated with k, m, b
+
+### Fixed
+- Fixed issue with 'no dung class selected'
 
 ## [1.8.9-0.12.0] - 03.01.2021
 ### Added
