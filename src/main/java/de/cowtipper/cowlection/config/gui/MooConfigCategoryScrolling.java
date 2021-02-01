@@ -134,7 +134,12 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
                                         EnumChatFormatting.GOLD + "Press Done to save changes. " + EnumChatFormatting.RED + "Requires a game restart to take effect!"))));
                         continue;
                     } else if (configEntry.getValidValues() != null && configEntry.getValidValues().length > 0) {
-                        this.listEntries.add(new CycleConfigEntry(configEntry));
+                        if ("dungOverlayTextBorder".equals(configEntry.getName())) {
+                            // special case: Dung Performance Overlay: show preview on button click
+                            this.listEntries.add(new DungCycleConfigEntry(configEntry));
+                        } else {
+                            this.listEntries.add(new CycleConfigEntry(configEntry));
+                        }
                         continue;
                     }
                 }
@@ -668,6 +673,18 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
 
         @Override
         protected void updateConfigEntryButtonText() {
+        }
+    }
+
+    private class DungCycleConfigEntry extends CycleConfigEntry {
+        private DungCycleConfigEntry(Property property) {
+            super(property);
+        }
+
+        @Override
+        protected void changeConfigEntryButtonPressed() {
+            super.changeConfigEntryButtonPressed();
+            MooConfigGui.showDungeonPerformanceOverlayUntil = System.currentTimeMillis() + 3000;
         }
     }
 

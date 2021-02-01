@@ -1,5 +1,7 @@
 package de.cowtipper.cowlection.config.gui;
 
+import de.cowtipper.cowlection.config.MooConfig;
+import de.cowtipper.cowlection.data.DataHelper;
 import de.cowtipper.cowlection.util.MooChatComponent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -40,6 +42,11 @@ public class MooConfigPreview {
         this.items = items;
     }
 
+    public MooConfigPreview(PreviewChatRunnable previewRunnable) {
+        this.type = Type.RUNNABLE;
+        this.previewRunnable = previewRunnable;
+    }
+
     public MooConfigPreview(String sound, float volume, float pitch) {
         this.type = Type.RUNNABLE_ON_HOVER;
         previewRunnable = () -> {
@@ -47,6 +54,26 @@ public class MooConfigPreview {
                 Minecraft.getMinecraft().thePlayer.playSound(sound, volume, pitch);
             }
         };
+    }
+
+    public MooConfigPreview(DataHelper.DungeonClass dungeonClass) {
+        this(new MooConfigPreview.PreviewChatRunnable() {
+            @Override
+            public IChatComponent getText() {
+                String markWith;
+                switch (MooConfig.filterDungPartiesWithDupes(dungeonClass)) {
+                    case ALWAYS:
+                        markWith = "" + EnumChatFormatting.WHITE + dungeonClass.getShortName();
+                        break;
+                    case SPECIAL:
+                        markWith = EnumChatFormatting.GOLD + "²⁺" + EnumChatFormatting.YELLOW + dungeonClass.getShortName();
+                        break;
+                    default: // disabled/"do not mark":
+                        markWith = "" + EnumChatFormatting.DARK_GRAY + EnumChatFormatting.ITALIC + "not marked";
+                }
+                return new MooChatComponent("Marked with: " + markWith).gray();
+            }
+        });
     }
 
     public void drawPreview(int x, int y, int mouseX, int mouseY, boolean enablePreview) {
@@ -57,8 +84,11 @@ public class MooConfigPreview {
             case CHAT:
                 drawChatPreview(x, y, mouseX, mouseY, enablePreview);
                 break;
+            case RUNNABLE:
+                drawButtonWithRunnablePreview(x, y, mouseX, mouseY, false);
+                break;
             case RUNNABLE_ON_HOVER:
-                drawButtonWithRunnablePreview(x, y, mouseX, mouseY, enablePreview);
+                drawButtonWithRunnablePreview(x, y, mouseX, mouseY, true);
                 break;
             default:
                 // do nothing
@@ -187,22 +217,48 @@ public class MooConfigPreview {
         return new MooChatComponent(name).darkGreen().setHover(new MooChatComponent(gameMode).yellow().appendFreshSibling(new MooChatComponent("Online for " + onlineTime).white()));
     }
 
-    private void drawButtonWithRunnablePreview(int x, int y, int mouseX, int mouseY, boolean enablePreview) {
+    private void drawButtonWithRunnablePreview(int x, int y, int mouseX, int mouseY, boolean checkHover) {
         FontRenderer fontRenderer = Minecraft.getMinecraft().fontRendererObj;
         int currentX = x + 15;
         int chatY = y + 20 / 2 - fontRenderer.FONT_HEIGHT / 2;
 
-        String previewText = "(hover me to preview)";
-        fontRenderer.drawStringWithShadow(previewText, currentX, chatY, 0xffffffff);
-        if (nextPreviewAt < Minecraft.getSystemTime()
-                && mouseY >= chatY && mouseY <= chatY + fontRenderer.FONT_HEIGHT
-                && mouseX > currentX && mouseX < currentX + fontRenderer.getStringWidth(previewText)) {
-            nextPreviewAt = Minecraft.getSystemTime() + 3000;
+        if (previewRunnable instanceof PreviewChatRunnable) {
+            ((PreviewChatRunnable) previewRunnable).setPos(x, y);
             previewRunnable.run();
+        } else {
+            String previewText = "(hover me to preview)";
+            fontRenderer.drawStringWithShadow(previewText, currentX, chatY, 0xffffffff);
+            if (checkHover && nextPreviewAt < Minecraft.getSystemTime()
+                    && mouseY >= chatY && mouseY <= chatY + fontRenderer.FONT_HEIGHT
+                    && mouseX > currentX && mouseX < currentX + fontRenderer.getStringWidth(previewText)) {
+                nextPreviewAt = Minecraft.getSystemTime() + 3000;
+                previewRunnable.run();
+            }
+        }
+    }
+
+    public abstract static class PreviewChatRunnable implements Runnable {
+        private int x;
+        private int y;
+
+        public void setPos(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        public abstract IChatComponent getText();
+
+        @Override
+        public void run() {
+            FontRenderer fontRenderer = Minecraft.getMinecraft().fontRendererObj;
+            int currentX = x + 15;
+            int chatY = y + 20 / 2 - fontRenderer.FONT_HEIGHT / 2;
+
+            fontRenderer.drawStringWithShadow(getText().getFormattedText(), currentX, chatY, 0xffffffff);
         }
     }
 
     private enum Type {
-        CHAT, ITEM, RUNNABLE_ON_HOVER
+        CHAT, ITEM, RUNNABLE, RUNNABLE_ON_HOVER
     }
 }

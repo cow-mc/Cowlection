@@ -64,7 +64,7 @@ public class Cowlection {
 
         friendsHandler = new FriendsHandler(this, new File(configDir, "friends.json"));
         moo = new CredentialStorage(new Configuration(new File(configDir, "do-not-share-me-with-other-players.cfg")));
-        config = new MooConfig(this, new Configuration(new File(configDir, MODID + ".cfg"), "1"));
+        config = new MooConfig(this, new Configuration(new File(configDir, MODID + ".cfg"), "0.12.0"));
     }
 
     @EventHandler

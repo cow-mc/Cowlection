@@ -90,7 +90,7 @@ public class MooConfig {
     public static int dungOverlayPositionX;
     public static int dungOverlayPositionY;
     public static int dungOverlayGuiScale;
-    public static boolean dungOverlayTextShadow;
+    private static String dungOverlayTextBorder;
     private static String dungPartyFinderPlayerLookup;
     public static boolean dungPartyFullLookup;
     public static boolean dungPartyFinderPartyLookup;
@@ -98,11 +98,11 @@ public class MooConfig {
     public static int dungClassMin;
     private static String dungMarkPartiesWithCarry;
     private static String dungMarkPartiesWithHyperion;
-    private static boolean dungFilterPartiesWithArcherDupes;
-    private static boolean dungFilterPartiesWithBerserkDupes;
-    private static boolean dungFilterPartiesWithHealerDupes;
-    private static boolean dungFilterPartiesWithMageDupes;
-    private static boolean dungFilterPartiesWithTankDupes;
+    private static String dungMarkPartiesWithArcher;
+    private static String dungMarkPartiesWithBerserk;
+    private static String dungMarkPartiesWithHealer;
+    private static String dungMarkPartiesWithMage;
+    private static String dungMarkPartiesWithTank;
 
     private static Configuration cfg = null;
     private static final List<MooConfigCategory> configCategories = new ArrayList<>();
@@ -115,14 +115,18 @@ public class MooConfig {
         this.main = main;
         cfg = configuration;
 
-        if (cfg.getLoadedConfigVersion() == null || !cfg.getLoadedConfigVersion().equals(cfg.getDefinedConfigVersion())) {
-            updateConfig(cfg.getLoadedConfigVersion());
+        String oldLoadedConfigVersion = cfg.getLoadedConfigVersion();
+        boolean configVersionChanged = oldLoadedConfigVersion == null || !oldLoadedConfigVersion.equals(cfg.getDefinedConfigVersion());
+        if (configVersionChanged) {
+            updateConfigPreInit(oldLoadedConfigVersion);
         }
-
         initConfig();
+        if (configVersionChanged) {
+            updateConfigPostInit(oldLoadedConfigVersion);
+        }
     }
 
-    private void updateConfig(String oldVersion) {
+    private void updateConfigPreInit(String oldVersion) {
         if (oldVersion == null) {
             // config of Cowlection v1.8.9-0.10.2 and older
 
@@ -143,6 +147,34 @@ public class MooConfig {
                 cfg.removeCategory(oldClientCategory);
             }
             cfg.save();
+        }
+    }
+
+    private void updateConfigPostInit(String oldVersion) {
+        if ("1".equals(oldVersion)) {
+            // config of Cowlection v1.8.9-0.12.0 and older
+            ConfigCategory sbDungCategory = cfg.getCategory("skyblockdungeons");
+            if (sbDungCategory.containsKey("dungOverlayTextShadow")) {
+                boolean dungOverlayTextShadow = sbDungCategory.get("dungOverlayTextShadow").getBoolean();
+                if (!dungOverlayTextShadow) {
+                    sbDungCategory.get("dungOverlayTextBorder").set("no border");
+                }
+                sbDungCategory.remove("dungOverlayTextShadow");
+            }
+
+            for (String dungClass : new String[]{"Archer", "Berserk", "Healer", "Mage", "Tank"}) {
+                String configKey = "dungFilterPartiesWith" + dungClass + "Dupes";
+                if (sbDungCategory.containsKey(configKey)) {
+                    boolean filterPartiesWithX = sbDungCategory.get(configKey).getBoolean();
+                    String configKeyNew = "dungMarkPartiesWith" + dungClass;
+                    if (filterPartiesWithX) {
+                        sbDungCategory.get(configKeyNew).set("if duplicated");
+                    }
+                    sbDungCategory.remove(configKey);
+                }
+            }
+            cfg.save();
+            syncFromFile();
         }
     }
 
@@ -456,8 +488,8 @@ public class MooConfig {
                     MooConfigGui.showDungeonPerformanceOverlayUntil = System.currentTimeMillis() + 500;
                 });
 
-        Property propDungOverlayTextShadow = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungOverlayTextShadow", true, "Dungeon performance overlay GUI scale"));
+        Property propDungOverlayTextBorder = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "dungOverlayTextBorder", "drop shadow", "Dungeon performance overlay text border", new String[]{"drop shadow", "full outline", "no border"}));
 
         // Sub-Category: Party Finder
         subCat = configCat.addSubCategory("Dungeon Party Finder");
@@ -500,25 +532,25 @@ public class MooConfig {
                 new String[]{"suitable " + EnumChatFormatting.GREEN + "⬛", "unideal " + EnumChatFormatting.GOLD + "⬛", "block " + EnumChatFormatting.RED + "⬛", "do not mark"}),
                 new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.AQUA + "hyper").gray()));
 
-        Property propDungFilterPartiesWithArcherDupes = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungFilterPartiesWithArcherDupes", true, "Mark parties with duplicated Archer class?"),
-                new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.GOLD + "²⁺" + EnumChatFormatting.YELLOW + "A").gray()));
+        Property propDungMarkPartiesWithArcher = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "dungMarkPartiesWithArcher", "if duplicated", "Mark parties with Archer class?", new String[]{"always", "if duplicated", "do not mark"}),
+                new MooConfigPreview(DataHelper.DungeonClass.ARCHER));
 
-        Property propDungFilterPartiesWithBerserkDupes = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungFilterPartiesWithBerserkDupes", false, "Mark parties with duplicated Berserk class?"),
-                new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.GOLD + "²⁺" + EnumChatFormatting.YELLOW + "B").gray()));
+        Property propDungMarkPartiesWithBerserk = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "dungMarkPartiesWithBerserk", "do not mark", "Mark parties with Berserk class?", new String[]{"always", "if duplicated", "do not mark"}),
+                new MooConfigPreview(DataHelper.DungeonClass.BERSERK));
 
-        Property propDungFilterPartiesWithHealerDupes = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungFilterPartiesWithHealerDupes", false, "Mark parties with duplicated Healer class?"),
-                new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.GOLD + "²⁺" + EnumChatFormatting.YELLOW + "H").gray()));
+        Property propDungMarkPartiesWithHealer = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "dungMarkPartiesWithHealer", "do not mark", "Mark parties with Healer class?", new String[]{"always", "if duplicated", "do not mark"}),
+                new MooConfigPreview(DataHelper.DungeonClass.HEALER));
 
-        Property propDungFilterPartiesWithMageDupes = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungFilterPartiesWithMageDupes", false, "Mark parties with duplicated Mage class?"),
-                new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.GOLD + "²⁺" + EnumChatFormatting.YELLOW + "M").gray()));
+        Property propDungMarkPartiesWithMage = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "dungMarkPartiesWithMage", "do not mark", "Mark parties with Mage class?", new String[]{"always", "if duplicated", "do not mark"}),
+                new MooConfigPreview(DataHelper.DungeonClass.MAGE));
 
-        Property propDungFilterPartiesWithTankDupes = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungFilterPartiesWithTankDupes", false, "Mark parties with duplicated Tank class?"),
-                new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.GOLD + "²⁺" + EnumChatFormatting.YELLOW + "T").gray()));
+        Property propDungMarkPartiesWithTank = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "dungMarkPartiesWithTank", "do not mark", "Mark parties with Tank class?", new String[]{"always", "if duplicated", "do not mark"}),
+                new MooConfigPreview(DataHelper.DungeonClass.TANK));
 
         boolean modifiedMooCmdAlias = false;
         String mooCmdAliasPreChange = mooCmdAlias;
@@ -566,7 +598,7 @@ public class MooConfig {
             dungOverlayPositionX = propDungOverlayPositionX.getInt();
             dungOverlayPositionY = propDungOverlayPositionY.getInt();
             dungOverlayGuiScale = propDungOverlayGuiScale.getInt();
-            dungOverlayTextShadow = propDungOverlayTextShadow.getBoolean();
+            dungOverlayTextBorder = propDungOverlayTextBorder.getString();
             dungPartyFinderPlayerLookup = propDungPartyFinderPlayerLookup.getString();
             dungPartyFullLookup = propDungPartyFullLookup.getBoolean();
             dungPartyFinderPartyLookup = propDungPartyFinderPartyLookup.getBoolean();
@@ -574,11 +606,11 @@ public class MooConfig {
             dungClassMin = propDungClassMin.getInt();
             dungMarkPartiesWithCarry = propDungMarkPartiesWithCarry.getString();
             dungMarkPartiesWithHyperion = propDungMarkPartiesWithHyperion.getString();
-            dungFilterPartiesWithArcherDupes = propDungFilterPartiesWithArcherDupes.getBoolean();
-            dungFilterPartiesWithBerserkDupes = propDungFilterPartiesWithBerserkDupes.getBoolean();
-            dungFilterPartiesWithHealerDupes = propDungFilterPartiesWithHealerDupes.getBoolean();
-            dungFilterPartiesWithMageDupes = propDungFilterPartiesWithMageDupes.getBoolean();
-            dungFilterPartiesWithTankDupes = propDungFilterPartiesWithTankDupes.getBoolean();
+            dungMarkPartiesWithArcher = propDungMarkPartiesWithArcher.getString();
+            dungMarkPartiesWithBerserk = propDungMarkPartiesWithBerserk.getString();
+            dungMarkPartiesWithHealer = propDungMarkPartiesWithHealer.getString();
+            dungMarkPartiesWithMage = propDungMarkPartiesWithMage.getString();
+            dungMarkPartiesWithTank = propDungMarkPartiesWithTank.getString();
 
 
             if (!StringUtils.equals(mooCmdAliasPreChange, mooCmdAlias)) {
@@ -630,7 +662,7 @@ public class MooConfig {
         propDungOverlayPositionX.set(dungOverlayPositionX);
         propDungOverlayPositionY.set(dungOverlayPositionY);
         propDungOverlayGuiScale.set(dungOverlayGuiScale);
-        propDungOverlayTextShadow.set(dungOverlayTextShadow);
+        propDungOverlayTextBorder.set(dungOverlayTextBorder);
         propDungPartyFinderPlayerLookup.set(dungPartyFinderPlayerLookup);
         propDungPartyFullLookup.set(dungPartyFullLookup);
         propDungPartyFinderPartyLookup.set(dungPartyFinderPartyLookup);
@@ -638,11 +670,11 @@ public class MooConfig {
         propDungClassMin.set(dungClassMin);
         propDungMarkPartiesWithCarry.set(dungMarkPartiesWithCarry);
         propDungMarkPartiesWithHyperion.set(dungMarkPartiesWithHyperion);
-        propDungFilterPartiesWithArcherDupes.set(dungFilterPartiesWithArcherDupes);
-        propDungFilterPartiesWithBerserkDupes.set(dungFilterPartiesWithBerserkDupes);
-        propDungFilterPartiesWithHealerDupes.set(dungFilterPartiesWithHealerDupes);
-        propDungFilterPartiesWithMageDupes.set(dungFilterPartiesWithMageDupes);
-        propDungFilterPartiesWithTankDupes.set(dungFilterPartiesWithTankDupes);
+        propDungMarkPartiesWithArcher.set(dungMarkPartiesWithArcher);
+        propDungMarkPartiesWithBerserk.set(dungMarkPartiesWithBerserk);
+        propDungMarkPartiesWithHealer.set(dungMarkPartiesWithHealer);
+        propDungMarkPartiesWithMage.set(dungMarkPartiesWithMage);
+        propDungMarkPartiesWithTank.set(dungMarkPartiesWithTank);
 
         if (saveToFile && cfg.hasChanged()) {
             boolean isPlayerIngame = Minecraft.getMinecraft().thePlayer != null;
@@ -793,6 +825,18 @@ public class MooConfig {
         return dungItemToolTipToggleKeyBinding > 0 && Keyboard.isKeyDown(dungItemToolTipToggleKeyBinding);
     }
 
+    public static Setting getDungOverlayTextBorder() {
+        switch (dungOverlayTextBorder) {
+            case "drop shadow":
+                return Setting.TEXT;
+            case "full outline":
+                return Setting.ALWAYS;
+            default:
+                // everything else: "no border"
+                return Setting.DISABLED;
+        }
+    }
+
     public static Setting getDungPartyFinderPlayerLookupDisplay() {
         return Setting.get(dungPartyFinderPlayerLookup);
     }
@@ -819,20 +863,35 @@ public class MooConfig {
         }
     }
 
-    public static boolean filterDungPartiesWithDupes(DataHelper.DungeonClass dungeonClass) {
+    public static Setting filterDungPartiesWithDupes(DataHelper.DungeonClass dungeonClass) {
+        String setting;
         switch (dungeonClass) {
             case ARCHER:
-                return dungFilterPartiesWithArcherDupes;
+                setting = dungMarkPartiesWithArcher;
+                break;
             case BERSERK:
-                return dungFilterPartiesWithBerserkDupes;
+                setting = dungMarkPartiesWithBerserk;
+                break;
             case HEALER:
-                return dungFilterPartiesWithHealerDupes;
+                setting = dungMarkPartiesWithHealer;
+                break;
             case MAGE:
-                return dungFilterPartiesWithMageDupes;
+                setting = dungMarkPartiesWithMage;
+                break;
             case TANK:
-                return dungFilterPartiesWithTankDupes;
+                setting = dungMarkPartiesWithTank;
+                break;
             default:
-                return false;
+                setting = "do not mark";
+                break;
+        }
+        switch (setting) {
+            case "always":
+                return Setting.ALWAYS;
+            case "if duplicated":
+                return Setting.SPECIAL;
+            default: // do not mark
+                return Setting.DISABLED;
         }
     }
 

@@ -359,22 +359,40 @@ public class DungeonsListener {
                     font.drawStringWithShadow(EnumChatFormatting.BOLD + "ᐯ", x + 1, y + 8, new Color(220, 20, 20, 255).getRGB());
                     GlStateManager.popMatrix();
                 }
+                StringBuilder unwantedClasses = new StringBuilder();
                 StringBuilder dupedClasses = new StringBuilder();
                 for (Map.Entry<DungeonClass, AtomicInteger> partyClassInfo : dungClassesInParty.entrySet()) {
-                    if (partyClassInfo.getValue().get() > 1 && MooConfig.filterDungPartiesWithDupes(partyClassInfo.getKey())) {
-                        dupedClasses.append(partyClassInfo.getKey().getShortName());
+                    switch (MooConfig.filterDungPartiesWithDupes(partyClassInfo.getKey())) {
+                        case ALWAYS:
+                            unwantedClasses.append(partyClassInfo.getKey().getShortName());
+                            break;
+                        case SPECIAL:
+                            if (partyClassInfo.getValue().get() > 1) {
+                                // 2+ class
+                                dupedClasses.append(partyClassInfo.getKey().getShortName());
+                            }
+                            break;
+                        default: // DISABLED
+                            // do nothing
                     }
                 }
+                StringBuilder badClasses = new StringBuilder();
+                if (unwantedClasses.length() > 0) {
+                    badClasses.append(EnumChatFormatting.WHITE).append(unwantedClasses);
+                }
                 if (dupedClasses.length() > 0) {
-                    // party has class duplicates
+                    badClasses.append(EnumChatFormatting.GOLD).append("²⁺").append(EnumChatFormatting.YELLOW).append(dupedClasses); // 2+
+                }
+
+                if (badClasses.length() > 0) {
+                    // party has unwanted classes or class duplicates
                     partyType = DataHelper.PartyType.UNIDEAL;
-                    dupedClasses.insert(0, EnumChatFormatting.YELLOW).insert(0, "²⁺"); // 2+
 
                     GlStateManager.pushMatrix();
                     GlStateManager.translate(0, 0, 280);
                     double scaleFactor = 0.8;
                     GlStateManager.scale(scaleFactor, scaleFactor, 0);
-                    font.drawStringWithShadow(dupedClasses.toString(), (float) (x / scaleFactor), (float) (y / scaleFactor), new Color(255, 170, 0, 255).getRGB());
+                    font.drawStringWithShadow(badClasses.toString(), (float) (x / scaleFactor), (float) (y / scaleFactor), new Color(255, 170, 0, 255).getRGB());
                     GlStateManager.popMatrix();
                 } else if (!memberTooLowLevel && middleText == null) {
                     // party matches our criteria!
@@ -624,9 +642,20 @@ public class DungeonsListener {
                     String dungeonPerformanceEntry = dungeonPerformanceEntries.get(line);
                     int xPos = (int) ((e.resolution.getScaledWidth() * (MooConfig.dungOverlayPositionX / 1000d)) / scaleFactor);
                     int yPos = (int) ((e.resolution.getScaledHeight() * (MooConfig.dungOverlayPositionY / 1000d) + 2) / scaleFactor + fontRenderer.FONT_HEIGHT * line + 2);
-                    if (MooConfig.dungOverlayTextShadow) {
+                    MooConfig.Setting dungOverlayTextBorder = MooConfig.getDungOverlayTextBorder();
+                    if (dungOverlayTextBorder == MooConfig.Setting.TEXT) {
+                        // normal mc text shadow (drop shadow)
                         fontRenderer.drawStringWithShadow(dungeonPerformanceEntry, xPos, yPos, 0xffFFAA00);
+                    } else if (dungOverlayTextBorder == MooConfig.Setting.ALWAYS) {
+                        // full outline
+                        String dungeonPerformanceEntryShadow = EnumChatFormatting.getTextWithoutFormattingCodes(dungeonPerformanceEntry);
+                        fontRenderer.drawString(dungeonPerformanceEntryShadow, xPos + 1, yPos, 0xff3F2A00);
+                        fontRenderer.drawString(dungeonPerformanceEntryShadow, xPos - 1, yPos, 0xff3F2A00);
+                        fontRenderer.drawString(dungeonPerformanceEntryShadow, xPos, yPos + 1, 0xff3F2A00);
+                        fontRenderer.drawString(dungeonPerformanceEntryShadow, xPos, yPos - 1, 0xff3F2A00);
+                        fontRenderer.drawString(dungeonPerformanceEntry, xPos, yPos, 0xffFFAA00);
                     } else {
+                        // no border, just plain text
                         fontRenderer.drawString(dungeonPerformanceEntry, xPos, yPos, 0xffFFAA00);
                     }
                 }
