@@ -29,7 +29,7 @@ It is a collection of different features mainly focused on Hypixel SkyBlock. üê
 | Dungeon interfaces enhancements (normalize dungeon item stats, improved party finder) | Hold <kbd>shift</kbd> (configurable) while viewing a dungeon item tooltip |
 | Dungeon performance tracker and overlay: Skill score calculation, class milestone tracker, destroyed crypts tracker, and elapsed time indicator | automatically; or with `/moo dungeon` |
 | Check how long current world has been loaded (‚âà when the server was last restarted) | `/moo worldage` + `/moo config` &rarr; SkyBlock |
-| Additional info in various tooltips (e.g. show item age, display pet exp, price per item in an auction) | `/moo config` &rarr; SkyBlock &rarr; Tooltip enhancements |
+| Additional info in various tooltips (e.g. show item age, display pet exp, price per item in an auction, Bestiary overview) | `/moo config` &rarr; SkyBlock &rarr; Tooltip enhancements |
 | Quick lookup for item prices and wiki articles                          | Wiki: <kbd>I</kbd> *(= Info)*, Prices: <kbd>P</kbd> |
 
 ## Download

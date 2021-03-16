@@ -160,7 +160,7 @@ public class HySkyBlockStats {
                     skills.put(XpTables.Skill.MINING, XpTables.Skill.MINING.getLevel(experience_skill_mining, 60));
                 }
                 if (experience_skill_combat >= 0) {
-                    skills.put(XpTables.Skill.COMBAT, XpTables.Skill.COMBAT.getLevel(experience_skill_combat));
+                    skills.put(XpTables.Skill.COMBAT, XpTables.Skill.COMBAT.getLevel(experience_skill_combat, 60));
                 }
                 if (experience_skill_foraging >= 0) {
                     skills.put(XpTables.Skill.FORAGING, XpTables.Skill.FORAGING.getLevel(experience_skill_foraging));
@@ -428,26 +428,12 @@ public class HySkyBlockStats {
 
         public static class Banking {
             private double balance;
-            // private List<Transaction> transactions;
 
             /**
              * No-args constructor for GSON
              */
             private Banking() {
             }
-
-            //  private class Transaction {
-            //      private int amount;
-            //      private long timestamp;
-            //      private Transaction.Action action;
-            //      private String initiator_name;
-            //
-            //      /**
-            //       * No-args constructor for GSON
-            //       */
-            //      private Transaction() {
-            //      }
-            //  }
         }
     }
 }

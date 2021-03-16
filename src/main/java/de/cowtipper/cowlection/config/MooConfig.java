@@ -78,6 +78,8 @@ public class MooConfig {
     private static String tooltipAuctionHousePriceEach;
     private static String bazaarConnectGraphsNodes;
     public static int bazaarConnectGraphsLineWidth;
+    public static String bestiaryOverviewOrder;
+    private String[] bestiaryOverviewOrderDefaultValues;
     private static int lookupWikiKeyBinding;
     private static int lookupPriceKeyBinding;
     public static boolean lookupItemDirectly;
@@ -387,7 +389,7 @@ public class MooConfig {
                 "numeralSystem", "Arabic: 1, 4, 10", "Use Roman or Arabic numeral system?", new String[]{"Arabic: 1, 4, 10", "Roman: I, IV, X"}));
 
         Map<String, NBTBase> demoAhItemExtraAttributes = new HashMap<>();
-        demoItemExtraAttributes.put("id", new NBTTagString("BEACON"));
+        demoAhItemExtraAttributes.put("id", new NBTTagString("BEACON"));
         ItemStack demoAhItem = MooConfigPreview.createDemoItem("beacon", "§764x §fB§8e§facon Block", new String[]{"§f§lCOMMON", "§8§m-----------------", "§7Seller: §6[MVP§0++§6] Enlightener", "§7Buy it now: §63,900,000 coins", "", "§7Ends in: §e13h 33m 37s", "", "§eDon't click to inspect!"}, demoAhItemExtraAttributes);
         demoAhItem.stackSize = 64;
         MooConfigPreview ahItemPreview = new MooConfigPreview(demoAhItem);
@@ -408,6 +410,16 @@ public class MooConfig {
 
         Property propBazaarConnectGraphsLineWidth = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "bazaarConnectGraphsLineWidth", 3, "Line width of bazaar graph", 1, 10));
+
+        bestiaryOverviewOrderDefaultValues = new String[]{"fewest kills", "lowest %", "hidden"};
+        MooConfigPreview bestiaryOverviewPreview = new MooConfigPreview(MooConfigPreview.createDemoItem("wheat", "§a§3The Barn", new String[]{
+                "§7View all of the mobs that you've",
+                "§7found and killed in §3The Barn§7.",
+                "",
+                "§7Families Found: §e75§6%", "§3---------------§f----- §b3§3/§b4"}, Maps.newHashMap()));
+        Property propBestiaryOverviewOrder = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "bestiaryOverviewOrder", "fewest kills", "Order of the Bestiary overview?", bestiaryOverviewOrderDefaultValues),
+                bestiaryOverviewPreview);
 
         // Sub-Category: Item lookup
         subCat = configCat.addSubCategory("Item lookup");
@@ -586,6 +598,7 @@ public class MooConfig {
             tooltipAuctionHousePriceEach = propTooltipAuctionHousePriceEach.getString();
             bazaarConnectGraphsNodes = propBazaarConnectGraphsNodes.getString();
             bazaarConnectGraphsLineWidth = propBazaarConnectGraphsLineWidth.getInt();
+            bestiaryOverviewOrder = propBestiaryOverviewOrder.getString();
             lookupWikiKeyBinding = propLookupWikiKeyBinding.getInt();
             lookupPriceKeyBinding = propLookupPriceKeyBinding.getInt();
             lookupItemDirectly = propLookupItemDirectly.getBoolean();
@@ -650,6 +663,7 @@ public class MooConfig {
         propTooltipAuctionHousePriceEach.set(tooltipAuctionHousePriceEach);
         propBazaarConnectGraphsNodes.set(bazaarConnectGraphsNodes);
         propBazaarConnectGraphsLineWidth.set(bazaarConnectGraphsLineWidth);
+        propBestiaryOverviewOrder.set(bestiaryOverviewOrder);
         propLookupWikiKeyBinding.set(lookupWikiKeyBinding);
         propLookupPriceKeyBinding.set(lookupPriceKeyBinding);
         propLookupItemDirectly.set(lookupItemDirectly);
@@ -798,6 +812,19 @@ public class MooConfig {
 
     public static boolean useRomanNumerals() {
         return numeralSystem.startsWith("Roman");
+    }
+
+    public void cycleBestiaryOverviewOrder() {
+        String oldValue = bestiaryOverviewOrder;
+        int currentIndex = -1;
+        for (int i = 0; i < bestiaryOverviewOrderDefaultValues.length; i++) {
+            if (oldValue.equals(bestiaryOverviewOrderDefaultValues[i])) {
+                currentIndex = i;
+                break;
+            }
+        }
+        bestiaryOverviewOrder = bestiaryOverviewOrderDefaultValues[(currentIndex + 1) % bestiaryOverviewOrderDefaultValues.length];
+        syncFromFields();
     }
 
     public static boolean isTooltipToggleKeyBindingPressed() {

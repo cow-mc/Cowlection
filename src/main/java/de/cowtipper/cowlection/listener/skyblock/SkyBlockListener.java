@@ -4,34 +4,41 @@ import com.mojang.realmsclient.util.Pair;
 import de.cowtipper.cowlection.Cowlection;
 import de.cowtipper.cowlection.config.MooConfig;
 import de.cowtipper.cowlection.config.gui.MooConfigGui;
+import de.cowtipper.cowlection.data.BestiaryEntry;
 import de.cowtipper.cowlection.data.DataHelper;
 import de.cowtipper.cowlection.data.XpTables;
 import de.cowtipper.cowlection.util.GuiHelper;
 import de.cowtipper.cowlection.util.MooChatComponent;
 import de.cowtipper.cowlection.util.Utils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundCategory;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.command.NumberInvalidException;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
+import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StatCollector;
+import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 
 import java.awt.*;
 import java.io.UnsupportedEncodingException;
@@ -54,6 +61,8 @@ public class SkyBlockListener {
     private static final Pattern ITEM_COUNT_PREFIXED_PATTERN = Pattern.compile("^(?:§[0-9a-fl-or])*[\\d]+x ");
     private static final Pattern ITEM_COUNT_SUFFIXED_PATTERN = Pattern.compile(" (?:§[0-9a-fl-or])*x[\\d]+$");
     private static final Pattern PET_NAME_PATTERN = Pattern.compile("^§7\\[Lvl (\\d+)] (§[0-9a-f])");
+    private static final Pattern TIER_SUFFIX_PATTERN = Pattern.compile(" [IVX0-9]+$");
+    List<BestiaryEntry> bestiaryOverview = null;
     private final NumberFormat numberFormatter;
     private final Cowlection main;
 
@@ -304,6 +313,88 @@ public class SkyBlockListener {
             }
         }
 
+        // bestiary overview:
+        String bestiaryOverviewOrder = MooConfig.bestiaryOverviewOrder;
+        boolean isBestiaryOverviewVisible = !"hidden".equals(bestiaryOverviewOrder);
+        // either use cached bestiary overview or generate overview if trigger item is different
+        boolean isDifferentTriggerItem = BestiaryEntry.isDifferentTriggerItem(e.itemStack);
+        GuiScreen currentScreen = Minecraft.getMinecraft().currentScreen;
+        if (currentScreen instanceof GuiChest && isBestiaryOverviewVisible && isBestiaryGui((GuiChest) currentScreen, e.itemStack)) {
+            if (isDifferentTriggerItem) {
+                BestiaryEntry.reinitialize(e.itemStack);
+                bestiaryOverview = new ArrayList<>();
+
+                ContainerChest chestContainer = (ContainerChest) ((GuiChest) currentScreen).inventorySlots;
+                IInventory inventory = chestContainer.getLowerChestInventory();
+                for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
+                    ItemStack item = inventory.getStackInSlot(slot);
+                    if (item != null) {
+                        // slot + item
+                        NBTTagCompound itemNbtDisplay = item.getSubCompound("display", false);
+                        if (itemNbtDisplay != null && itemNbtDisplay.hasKey("Lore", Constants.NBT.TAG_LIST)) {
+                            NBTTagList loreList = itemNbtDisplay.getTagList("Lore", Constants.NBT.TAG_STRING);
+
+                            if (loreList.tagCount() < 10 || !"§eClick to view!".equals(loreList.getStringTagAt(loreList.tagCount() - 1))) {
+                                if (item.getItem() == Items.dye && item.getMetadata() == EnumDyeColor.GRAY.getDyeDamage()) {
+                                    // mob hasn't been killed yet
+                                    bestiaryOverview.add(new BestiaryEntry(item.getDisplayName()));
+                                }
+                                // not a bestiary icon with additional data
+                                continue;
+                            }
+
+                            for (int loreLineNr = 0; loreLineNr < loreList.tagCount(); ++loreLineNr) {
+                                String loreLineFormatted = loreList.getStringTagAt(loreLineNr);
+                                String loreLine = EnumChatFormatting.getTextWithoutFormattingCodes(loreLineFormatted);
+                                if (loreLine.startsWith("-------------------- ")) {
+                                    try {
+                                        String progress = loreLine.substring("-------------------- ".length());
+                                        int divider = progress.indexOf('/');
+                                        if (divider > 0) {
+                                            bestiaryOverview.add(new BestiaryEntry(TIER_SUFFIX_PATTERN.matcher(item.getDisplayName()).replaceFirst(""),
+                                                    abbreviatedToLongNumber(progress.substring(0, divider)),
+                                                    abbreviatedToLongNumber(progress.substring(divider + 1))));
+                                            break;
+                                        }
+                                    } catch (NumberInvalidException ignored) {
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } else if (currentScreen instanceof MooConfigGui && isBestiaryOverviewVisible && e.itemStack.getItem() == Items.wheat) {
+            if (isDifferentTriggerItem) {
+                // bestiary overview preview in config gui
+                BestiaryEntry.reinitialize(e.itemStack);
+                bestiaryOverview = new ArrayList<>();
+                bestiaryOverview.add(new BestiaryEntry(EnumChatFormatting.GREEN + "Cow", 1, 2));
+                bestiaryOverview.add(new BestiaryEntry(EnumChatFormatting.GREEN + "Pig", 1163, 2500));
+                bestiaryOverview.add(new BestiaryEntry(EnumChatFormatting.GREEN + "Chicken", 10800, 15000));
+                bestiaryOverview.add(new BestiaryEntry(EnumChatFormatting.RED + "Farmhand"));
+            }
+        } else {
+            isBestiaryOverviewVisible = false;
+        }
+        if (bestiaryOverview != null && isBestiaryOverviewVisible) {
+            e.toolTip.add("");
+            e.toolTip.add("" + EnumChatFormatting.GOLD + EnumChatFormatting.BOLD + EnumChatFormatting.UNDERLINE + "Bestiary Overview:" + EnumChatFormatting.RESET + EnumChatFormatting.YELLOW + " (ordered by: " + bestiaryOverviewOrder + " to next tier)");
+
+            if (bestiaryOverview.size() == 0) {
+                e.toolTip.add(EnumChatFormatting.GREEN + "All mobs max tier " + EnumChatFormatting.DARK_GREEN + "✔");
+            } else {
+                boolean sortBestiaryOverviewByKills = "fewest kills".equals(bestiaryOverviewOrder);
+                // sort by <kills|percentage> left, then alphabetically by mob name
+                bestiaryOverview.sort(Comparator.<BestiaryEntry>comparingInt(entry -> (sortBestiaryOverviewByKills) ? entry.getKillsToGo() : entry.getPercentageToGo()).thenComparing(BestiaryEntry::getMobName));
+                BestiaryEntry.calculateWidestEntries();
+
+                for (BestiaryEntry bestiaryEntry : bestiaryOverview) {
+                    e.toolTip.add(bestiaryEntry.getFormattedOutput(sortBestiaryOverviewByKills));
+                }
+            }
+        }
+
         // for auction house: show price for each item if multiple items are sold at once
         MooConfig.Setting tooltipAuctionHousePriceEachDisplay = MooConfig.getTooltipAuctionHousePriceEachDisplay();
         if ((tooltipAuctionHousePriceEachDisplay == MooConfig.Setting.ALWAYS || tooltipAuctionHousePriceEachDisplay == MooConfig.Setting.SPECIAL && MooConfig.isTooltipToggleKeyBindingPressed())
@@ -352,6 +443,75 @@ public class SkyBlockListener {
         }
     }
 
+    @SubscribeEvent
+    public void onGuiClose(GuiOpenEvent e) {
+        if (e.gui == null && this.bestiaryOverview != null) {
+            this.bestiaryOverview = null;
+            BestiaryEntry.reinitialize(null);
+        }
+    }
+
+    @SubscribeEvent
+    public void onMouseInteractionInGui(GuiScreenEvent.MouseInputEvent.Pre e) {
+        int clickedMouseButton = Mouse.getEventButton();
+        if (clickedMouseButton < 0) {
+            // no button press, just mouse-hover
+            return;
+        }
+        if (Mouse.getEventButtonState() && e.gui instanceof GuiChest) {
+            GuiChest guiChest = (GuiChest) e.gui;
+            Slot hoveredSlot = GuiHelper.getSlotUnderMouse(guiChest);
+            if (hoveredSlot != null && hoveredSlot.getHasStack() && hoveredSlot.getStack().hasDisplayName()) {
+                if (clickedMouseButton == 0 && isBestiaryGui(guiChest, hoveredSlot.getStack())) {
+                    // cycle bestiary order on left click
+                    main.getConfig().cycleBestiaryOverviewOrder();
+                    Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("gui.button.press"), 1.0F));
+                } else if (this.bestiaryOverview != null && clickedMouseButton <= 3 && hoveredSlot.getStack().getItem() == Items.arrow) {
+                    // reset bestiary overview cache on page switch via left, middle or right click on arrow
+                    this.bestiaryOverview = null;
+                    BestiaryEntry.reinitialize(null);
+                }
+            }
+        }
+    }
+
+    private boolean isBestiaryGui(GuiChest guiChest, ItemStack hoveredItem) {
+        IInventory inventory = guiChest.inventorySlots.getSlot(0).inventory;
+        String inventoryName = (inventory.hasCustomName() ? EnumChatFormatting.getTextWithoutFormattingCodes(inventory.getDisplayName().getUnformattedTextForChat()) : inventory.getName());
+        String hoveredItemName = EnumChatFormatting.getTextWithoutFormattingCodes(hoveredItem.getDisplayName());
+        if (inventoryName.startsWith("Bestiary ➜ ") && inventoryName.endsWith(hoveredItemName)) {
+            // bestiary overview is enabled and mouse is hovering over bestiary category item (with same name as category)
+            BestiaryEntry.triggerItem = hoveredItem;
+            return true;
+        } else if (inventoryName.equals("Search Results") && hoveredItem.getItem() == Items.sign && "Search Results".equals(hoveredItemName)) {
+            NBTTagCompound itemNbtDisplay = hoveredItem.getSubCompound("display", false);
+            if (itemNbtDisplay != null && itemNbtDisplay.hasKey("Lore", Constants.NBT.TAG_LIST)) {
+                NBTTagList loreList = itemNbtDisplay.getTagList("Lore", Constants.NBT.TAG_STRING);
+                if (loreList.tagCount() >= 2
+                        && loreList.getStringTagAt(0).startsWith("§7Query: §a")
+                        && loreList.getStringTagAt(1).startsWith("§7Results: §a")) {
+                    // hovering over bestiary search result item
+                    BestiaryEntry.triggerItem = hoveredItem;
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private int abbreviatedToLongNumber(String number) throws NumberInvalidException {
+        try {
+            number = number.replace(",", "");
+            if (number.endsWith("k")) {
+                return (int) (Double.parseDouble(number.substring(0, number.length() - 1)) * 1000);
+            } else {
+                return Integer.parseInt(number);
+            }
+        } catch (NumberFormatException | IndexOutOfBoundsException e) {
+            throw new NumberInvalidException("commands.generic.num.invalid", number);
+        }
+    }
+
     private String buildLink(String itemName, ItemLookupType itemLookupType) {
         try {
             return itemLookupType.getBaseUrl() + URLEncoder.encode(itemName, "UTF-8");
@@ -371,7 +531,7 @@ public class SkyBlockListener {
     }
 
     private boolean isSubmitBidItem(ItemStack itemStack) {
-        return ((itemStack.getItem().equals(Items.gold_nugget) || itemStack.getItem().equals(Item.getItemFromBlock(Blocks.gold_block)))
+        return ((itemStack.getItem() == Items.gold_nugget || itemStack.getItem() == Item.getItemFromBlock(Blocks.gold_block))
                 && (itemStack.hasDisplayName() && (itemStack.getDisplayName().endsWith("Submit Bid") || itemStack.getDisplayName().endsWith("Collect Auction"))))
                 || (/* green hardened clay + */ itemStack.hasDisplayName() && (itemStack.getDisplayName().endsWith("Create BIN Auction") || itemStack.getDisplayName().endsWith("Create Auction")));
     }

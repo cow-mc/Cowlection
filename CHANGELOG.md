@@ -5,11 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [1.8.9-0.13.0] - unreleased
 ### Added
+- Bestiary Overview: enhances tooltips of `/bestiary` ⬌ `/be`
+  - hover over one of the area/location-items in a *sub*-category of the Bestiary to see an overview of the tiers upgrades you are closest to
+  - can be ordered by fewest kills or lowest % to next tier by clicking on the area/location item
 - SkyBlock Dwarven Mines update:
   - Added new minions to `/m analyzeIslands` (Mithril + t12)
 - `/moo stalkskyblock` additions:
-  - Added 'last profile save'
-  - Added Enchanting, Farming and Mining 51-60
+  - Added 'last profile save' (= last time user played SkyBlock)
+  - Added Enchanting, Farming, Mining, and Combat 51-60
   - Added missing Runecrafting 25
 
 ### Changed

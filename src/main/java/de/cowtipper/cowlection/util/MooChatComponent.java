@@ -165,12 +165,6 @@ public class MooChatComponent extends ChatComponentText {
         return this;
     }
 
-    @Deprecated
-    public MooChatComponent appendKeyValue(String key, String value) {
-        appendSibling(new MooChatComponent("\n").appendFreshSibling(new KeyValueChatComponent(key, value)));
-        return this;
-    }
-
     public static class KeyValueChatComponent extends MooChatComponent {
         public KeyValueChatComponent(String key, String value) {
             this(key, value, ": ");
