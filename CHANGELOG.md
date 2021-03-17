@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Bestiary Overview: enhances tooltips of `/bestiary` ⬌ `/be`
   - hover over one of the area/location-items in a *sub*-category of the Bestiary to see an overview of the tiers upgrades you are closest to
   - can be ordered by fewest kills or lowest % to next tier by clicking on the area/location item
+- `/moo whatAmILookingAt` (or: `/m waila`)
+  - copy info of "the thing" you're looking at (NPC or mob + nearby "text-only" armor stands; armor stand, placed skull, dropped item, item in item frame, map on wall)
+  - automatically decodes base64 data (e.g. skin details) and unix timestamps
 - SkyBlock Dwarven Mines update:
   - Added new minions to `/m analyzeIslands` (Mithril + t12)
 - `/moo stalkskyblock` additions:
@@ -19,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Refined the comma representation of large numbers abbreviated with k, m, b
 - Dungeon Party Finder: Parties with specific classes can now *always* be marked as 'unideal' (additionally to the already existing option to mark a party when 2+ members use the same specific class)
 - Dungeon Performance Overlay: added an alternative text border option
+- "Copy inventories to clipboard"-feature now automatically decodes base64 data (e.g. skin details) and unix timestamps
 
 ### Fixed
 - Fixed issue with 'no dung class selected'

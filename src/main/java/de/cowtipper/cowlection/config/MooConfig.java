@@ -53,6 +53,7 @@ public class MooConfig {
     public static String mooCmdAlias;
     public static boolean fixReplyCmd;
     public static boolean enableCopyInventory;
+    private static String wailaLevelOfDetail;
     public static String[] tabCompletableNamesCommands;
     private static final String CATEGORY_LOGS_SEARCH = "logssearch";
     public static String[] logsDirs;
@@ -264,6 +265,8 @@ public class MooConfig {
                 "fixReplyCmd", true, "Auto-replace /r?"));
         Property propEnableCopyInventory = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "enableCopyInventory", false, "Enable copy inventory with CTRL + C?"));
+        Property propWailaLevelOfDetail = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "wailaLevelOfDetail", "main info", "Level of detail of /moo waila", new String[]{"main info", "all info"}));
 
         // Sub-Category: Tab-completable names in commands
         subCat = configCat.addSubCategory("Tab-completable usernames");
@@ -574,6 +577,7 @@ public class MooConfig {
             mooCmdAlias = propMooCmdAlias.getString();
             fixReplyCmd = propFixReplyCmd.getBoolean();
             enableCopyInventory = propEnableCopyInventory.getBoolean();
+            wailaLevelOfDetail = propWailaLevelOfDetail.getString();
             tabCompletableNamesCommands = propTabCompletableNamesCommands.getStringList();
             logsDirs = propLogsDirs.getStringList();
             defaultStartDate = propDefaultStartDate.getString().trim();
@@ -639,6 +643,7 @@ public class MooConfig {
         propMooCmdAlias.set(mooCmdAlias);
         propFixReplyCmd.set(fixReplyCmd);
         propEnableCopyInventory.set(enableCopyInventory);
+        propWailaLevelOfDetail.set(wailaLevelOfDetail);
         propTabCompletableNamesCommands.set(tabCompletableNamesCommands);
         propLogsDirs.set(logsDirs);
         propDefaultStartDate.set(defaultStartDate);
@@ -772,6 +777,10 @@ public class MooConfig {
     // Category: General
     public static Setting getConfigGuiExplanationsDisplay() {
         return Setting.get(configGuiExplanations);
+    }
+
+    public static boolean keepFullWailaInfo() {
+        return "all info".equals(wailaLevelOfDetail);
     }
 
     // Category: Notifications

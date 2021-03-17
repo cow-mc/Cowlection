@@ -1,5 +1,7 @@
 package de.cowtipper.cowlection.command;
 
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
 import com.mojang.realmsclient.util.Pair;
 import de.cowtipper.cowlection.Cowlection;
 import de.cowtipper.cowlection.command.exception.ApiContactException;
@@ -15,23 +17,32 @@ import de.cowtipper.cowlection.listener.skyblock.DungeonsPartyListener;
 import de.cowtipper.cowlection.search.GuiSearch;
 import de.cowtipper.cowlection.util.*;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.command.*;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.item.EntityArmorStand;
+import net.minecraft.entity.item.EntityItemFrame;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.event.HoverEvent;
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemMap;
 import net.minecraft.item.ItemSkull;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.*;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.tileentity.TileEntitySkull;
 import net.minecraft.util.*;
+import net.minecraft.world.storage.MapData;
 import net.minecraftforge.common.util.Constants;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 
 import java.awt.*;
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.*;
@@ -101,6 +112,16 @@ public class MooCommand extends CommandBase {
             handleStalkingSkyBlock(args);
         } else if (args[0].equalsIgnoreCase("analyzeIsland")) {
             handleAnalyzeIsland(sender);
+        } else if (args[0].equalsIgnoreCase("waila") || args[0].equalsIgnoreCase("whatAmILookingAt")) {
+            boolean showAllInfo = MooConfig.keepFullWailaInfo();
+            if (args.length == 2) {
+                if (args[1].equalsIgnoreCase("all")) {
+                    showAllInfo = true;
+                } else if (args[1].equalsIgnoreCase("main")) {
+                    showAllInfo = false;
+                }
+            }
+            handleWhatAmILookingAt(sender, showAllInfo);
         } else if (args[0].equalsIgnoreCase("dungeon") || args[0].equalsIgnoreCase("dung")
                 || /* dungeon party: */ args[0].equalsIgnoreCase("dp")) {
             handleDungeon(args);
@@ -717,6 +738,179 @@ public class MooCommand extends CommandBase {
         main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, analysisResults.toString());
     }
 
+    private void handleWhatAmILookingAt(ICommandSender sender, boolean showAllInfo) {
+        MovingObjectPosition lookingAt = Minecraft.getMinecraft().objectMouseOver;
+        if (lookingAt != null) {
+            switch (lookingAt.typeOfHit) {
+                case BLOCK: {
+                    TileEntity te = sender.getEntityWorld().getTileEntity(lookingAt.getBlockPos());
+                    if (te instanceof TileEntitySkull) {
+                        TileEntitySkull skull = (TileEntitySkull) te;
+                        if (skull.getSkullType() != 3) {
+                            // non-player skull, abort!
+                            break;
+                        }
+                        NBTTagCompound nbt = new NBTTagCompound();
+                        skull.writeToNBT(nbt);
+                        // is a player head!
+                        if (nbt.hasKey("Owner", Constants.NBT.TAG_COMPOUND)) {
+                            NBTTagCompound relevantNbt = tldrInfo(nbt, showAllInfo);
+                            BlockPos skullPos = skull.getPos();
+                            relevantNbt.setTag("__position", new NBTTagIntArray(new int[]{skullPos.getX(), skullPos.getY(), skullPos.getZ()}));
+                            GuiScreen.setClipboardString(GsonUtils.toJson(relevantNbt, true));
+                            main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Copied skull data to clipboard.");
+                            return;
+                        }
+                    }
+                    break;
+                }
+                case ENTITY: {
+                    Entity entity = lookingAt.entityHit;
+                    if (entity instanceof EntityArmorStand) {
+                        // looking at non-invisible armor stand (e.g. Minion)
+                        EntityArmorStand armorStand = (EntityArmorStand) entity;
+                        copyEntityInfoToClipboard(armorStand, showAllInfo);
+                        main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Copied armor stand '" + armorStand.getName() + EnumChatFormatting.GREEN + "' to clipboard.");
+                        return;
+                    } else if (entity instanceof EntityOtherPlayerMP) {
+                        // looking at NPC or another player
+                        EntityOtherPlayerMP otherPlayer = (EntityOtherPlayerMP) entity;
+                        copyEntityInfoToClipboard(otherPlayer, showAllInfo);
+                        main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Copied player/npc '" + otherPlayer.getDisplayNameString() + EnumChatFormatting.GREEN + "' to clipboard.");
+                        return;
+                    } else if (entity instanceof EntityItemFrame) {
+                        EntityItemFrame itemFrame = (EntityItemFrame) entity;
+                        copyEntityInfoToClipboard(itemFrame, showAllInfo);
+
+                        ItemStack displayedItem = itemFrame.getDisplayedItem();
+                        if (displayedItem != null) {
+
+                            NBTTagCompound nbt = new NBTTagCompound();
+                            if (displayedItem.getItem() == Items.filled_map) {
+                                // filled map
+                                MapData mapData = ItemMap.loadMapData(displayedItem.getItemDamage(), sender.getEntityWorld());
+                                File mapFile = ImageUtils.saveMapToFile(mapData);
+                                if (mapFile != null) {
+                                    main.getChatHelper().sendMessage(new MooChatComponent("Saved map as " + mapFile.getName() + " ").green().setOpenFile(mapFile).appendSibling(new MooChatComponent("[open file]").gold())
+                                            .appendSibling(new MooChatComponent(" [open folder]").darkAqua().setOpenFile(mapFile.getParentFile())));
+                                } else {
+                                    main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Couldn't save map for some reason");
+                                }
+                                return;
+                            } else {
+                                displayedItem.writeToNBT(nbt);
+                            }
+                            GuiScreen.setClipboardString(GsonUtils.toJson(nbt, true));
+                            main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Copied item in item frame '" + displayedItem.getDisplayName() + EnumChatFormatting.GREEN + "' to clipboard.");
+                            return;
+                        }
+                    } else if (entity instanceof EntityLiving) {
+                        EntityLiving living = (EntityLiving) entity;
+                        copyEntityInfoToClipboard(living, showAllInfo);
+                        main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Copied mob '" + living.getName() + EnumChatFormatting.GREEN + "' to clipboard.");
+                        return;
+                    }
+                    break;
+                }
+                default:
+                    // didn't find anything...
+            }
+        }
+        // didn't find anything special; search for all nearby entities
+        double maxDistance = 5; // default 4
+        Entity self = sender.getCommandSenderEntity();
+        Vec3 selfLook = self.getLook(1);
+        float searchRadius = 1.0F;
+        List<Entity> nearbyEntities = sender.getEntityWorld().getEntitiesInAABBexcluding(self, self.getEntityBoundingBox().addCoord(selfLook.xCoord * maxDistance, selfLook.yCoord * maxDistance, selfLook.zCoord * maxDistance).expand(searchRadius, searchRadius, searchRadius), entity1 -> true);
+
+        if (nearbyEntities.size() > 0) {
+            NBTTagList entities = new NBTTagList();
+            for (Entity entity : nearbyEntities) {
+                NBTTagCompound relevantNbt = extractEntityInfo(entity, showAllInfo);
+                // add additional info to make it easier to find the correct entity in the list of entities
+                relevantNbt.setTag("_entityType", new NBTTagString(entity.getClass().getSimpleName()));
+                NBTTagList position = new NBTTagList();
+                position.appendTag(new NBTTagDouble(entity.posX));
+                position.appendTag(new NBTTagDouble(entity.posY));
+                position.appendTag(new NBTTagDouble(entity.posZ));
+                relevantNbt.setTag("_position", position);
+                entities.appendTag(relevantNbt);
+            }
+
+            GuiScreen.setClipboardString(GsonUtils.toJson(entities, true));
+            main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Copied " + nearbyEntities.size() + " nearby entities to clipboard.");
+        } else {
+            main.getChatHelper().sendMessage(EnumChatFormatting.RED, "You stare into the void... and see nothing of interest.");
+        }
+    }
+
+    private NBTTagCompound extractEntityInfo(Entity entity, boolean showAllInfo) {
+        NBTTagCompound nbt = new NBTTagCompound();
+        entity.writeToNBT(nbt);
+        NBTTagCompound relevantNbt = tldrInfo(nbt, showAllInfo);
+
+        if (entity instanceof EntityOtherPlayerMP) {
+            EntityOtherPlayerMP otherPlayer = (EntityOtherPlayerMP) entity;
+            relevantNbt.setString("__name", otherPlayer.getName());
+            if (otherPlayer.hasCustomName()) {
+                relevantNbt.setString("__customName", otherPlayer.getCustomNameTag());
+            }
+            GameProfile gameProfile = otherPlayer.getGameProfile();
+            for (Property property : gameProfile.getProperties().get("textures")) {
+                relevantNbt.setString("_skin", property.getValue());
+            }
+        }
+        if (entity instanceof EntityLiving || entity instanceof EntityOtherPlayerMP) {
+            // either EntityLiving (any mob), or EntityOtherPlayerMP => find other nearby "name tag" EntityArmorStands
+            List<Entity> nearbyArmorStands = entity.getEntityWorld().getEntitiesInAABBexcluding(entity, entity.getEntityBoundingBox().expand(0.2d, 3, 0.2d), nearbyEntity -> {
+                if (nearbyEntity instanceof EntityArmorStand) {
+                    EntityArmorStand armorStand = (EntityArmorStand) nearbyEntity;
+                    if (armorStand.isInvisible() && armorStand.hasCustomName()) {
+                        for (ItemStack equipment : armorStand.getInventory()) {
+                            if (equipment != null) {
+                                // armor stand has equipment, abort!
+                                return false;
+                            }
+                        }
+                        // armor stand has a custom name, is invisible and has no equipment -> probably a "name tag"-armor stand
+                        return true;
+                    }
+                }
+                return false;
+            });
+            if (nearbyArmorStands.size() > 0) {
+                nearbyArmorStands.sort(Comparator.<Entity>comparingDouble(nearbyArmorStand -> nearbyArmorStand.posY).reversed());
+                NBTTagList nearbyText = new NBTTagList();
+                for (int i = 0, maxNearbyArmorStands = Math.min(10, nearbyArmorStands.size()); i < maxNearbyArmorStands; i++) {
+                    Entity nearbyArmorStand = nearbyArmorStands.get(i);
+                    nearbyText.appendTag(new NBTTagString(nearbyArmorStand.getCustomNameTag()));
+                }
+                relevantNbt.setTag("__nearbyText", nearbyText);
+            }
+        }
+        return relevantNbt;
+    }
+
+    private void copyEntityInfoToClipboard(Entity entity, boolean showAllInfo) {
+        NBTTagCompound relevantNbt = extractEntityInfo(entity, showAllInfo);
+        GuiScreen.setClipboardString(GsonUtils.toJson(relevantNbt, true));
+    }
+
+    private NBTTagCompound tldrInfo(NBTTagCompound nbt, boolean showAllInfo) {
+        if (showAllInfo) {
+            // don't tl;dr!
+            return nbt;
+        }
+        String[] importantTags = new String[]{"CustomName", "id", "Damage", "Count", "Equipment", "Item", "tag", "ExtraAttributes", "Owner"};
+        NBTTagCompound relevantNbt = new NBTTagCompound();
+        for (String tag : importantTags) {
+            if (nbt.hasKey(tag)) {
+                relevantNbt.setTag(tag, nbt.getTag(tag));
+            }
+        }
+        return relevantNbt;
+    }
+
     private void handleDungeon(String[] args) throws MooCommandException {
         DungeonCache dungeonCache = main.getDungeonCache();
         if (args.length == 2 && args[1].equalsIgnoreCase("enter")) {
@@ -851,6 +1045,7 @@ public class MooCommand extends CommandBase {
                 .appendSibling(createCmdHelpSection(2, "SkyBlock"))
                 .appendSibling(createCmdHelpEntry("stalkskyblock", "Get info of player's SkyBlock stats §d§l⚷"))
                 .appendSibling(createCmdHelpEntry("analyzeIsland", "Analyze a SkyBlock private island"))
+                .appendSibling(createCmdHelpEntry("waila", "Copy the 'thing' you're looking at"))
                 .appendSibling(createCmdHelpEntry("dungeon", "SkyBlock Dungeons: display current dungeon performance"))
                 .appendSibling(createCmdHelpEntry("dungeon party", "SkyBlock Dungeons: Shows armor and dungeon info about current party members " + EnumChatFormatting.GRAY + "(alias: " + EnumChatFormatting.WHITE + "/" + getCommandName() + " dp" + EnumChatFormatting.GRAY + ") §d§l⚷"))
                 .appendSibling(createCmdHelpSection(3, "Miscellaneous"))
@@ -889,10 +1084,12 @@ public class MooCommand extends CommandBase {
             return getListOfStringsMatchingLastWord(args,
                     /* help */ "help",
                     /* Best friends, friends & other players */ "stalk", "add", "remove", "list", "online", "nameChangeCheck",
-                    /* SkyBlock */ "stalkskyblock", "skyblockstalk", "analyzeIsland", "dungeon",
+                    /* SkyBlock */ "stalkskyblock", "skyblockstalk", "analyzeIsland", "waila", "whatAmILookingAt", "dungeon",
                     /* miscellaneous */ "config", "search", "worldage", "serverage", "guiscale", "rr", "shrug", "apikey",
                     /* update mod */ "update", "updateHelp", "version", "directory",
                     /* rarely used aliases */ "askPolitelyWhereTheyAre", "askPolitelyAboutTheirSkyBlockProgress", "year", "whatyearisit");
+        } else if (args.length == 2 && (args[0].equalsIgnoreCase("waila") || args[0].equalsIgnoreCase("whatAmILookingAt"))) {
+            return getListOfStringsMatchingLastWord(args, "all", "main");
         } else if (args.length == 2 && args[0].equalsIgnoreCase("remove")) {
             return getListOfStringsMatchingLastWord(args, main.getFriendsHandler().getBestFriends());
         } else if (args.length == 2 && args[0].equalsIgnoreCase("dungeon")) {

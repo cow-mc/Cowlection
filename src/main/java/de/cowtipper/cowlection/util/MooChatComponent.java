@@ -6,6 +6,9 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
 
+import java.io.File;
+
+@SuppressWarnings("unused")
 public class MooChatComponent extends ChatComponentText {
     public MooChatComponent(String msg) {
         super(msg);
@@ -127,18 +130,22 @@ public class MooChatComponent extends ChatComponentText {
     }
 
     public MooChatComponent setUrl(String url) {
-        setUrl(url, new KeyValueTooltipComponent("Click to visit", url));
-        return this;
+        return setUrl(url, new KeyValueTooltipComponent("Click to visit", url));
     }
 
     public MooChatComponent setUrl(String url, String hover) {
-        setUrl(url, new MooChatComponent(hover).yellow());
-        return this;
+        return setUrl(url, new MooChatComponent(hover).yellow());
     }
 
     public MooChatComponent setUrl(String url, IChatComponent hover) {
         setChatStyle(getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url)));
         setHover(hover);
+        return this;
+    }
+
+    public MooChatComponent setOpenFile(File filePath) {
+        setChatStyle(getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, filePath.getAbsolutePath())));
+        setHover(new MooChatComponent(filePath.isFile() ? "Open " + filePath.getName() : "Open folder: " + filePath.toString()).yellow());
         return this;
     }
 
@@ -152,6 +159,12 @@ public class MooChatComponent extends ChatComponentText {
         if (addTooltip) {
             setHover(new KeyValueChatComponent("Run", command, " "));
         }
+        return this;
+    }
+
+    @Override
+    public MooChatComponent appendSibling(IChatComponent component) {
+        super.appendSibling(component);
         return this;
     }
 

@@ -50,7 +50,7 @@ public final class DataHelper {
         }
     }
 
-    // TODO replace with api request: https://github.com/HypixelDev/PublicAPI/blob/master/Documentation/misc/GameType.md
+    // GameTypes: https://api.hypixel.net/#section/Introduction/GameTypes
     @SuppressWarnings("unused")
     public enum GameType {
         QUAKECRAFT("Quakecraft"),
