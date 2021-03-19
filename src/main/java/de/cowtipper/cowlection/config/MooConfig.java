@@ -77,6 +77,8 @@ public class MooConfig {
     private static String showPetExp;
     private static String numeralSystem;
     private static String tooltipAuctionHousePriceEach;
+    public static String[] tooltipAuctionHousePriceEachEnchantments;
+    private static String auctionHouseMarkEndedAuctions;
     private static String bazaarConnectGraphsNodes;
     public static int bazaarConnectGraphsLineWidth;
     public static String bestiaryOverviewOrder;
@@ -112,6 +114,7 @@ public class MooConfig {
     private final Cowlection main;
     private Property propMooCmdAlias;
     private Property propTabCompletableNamesCommands;
+    private Property propTooltipAuctionHousePriceEachEnchantments;
     private List<Property> logSearchProperties;
 
     public MooConfig(Cowlection main, Configuration configuration) {
@@ -362,7 +365,7 @@ public class MooConfig {
                 "notifyServerAge", true, "Show server age notifications?"));
 
         // Sub-Category: Tooltip enhancements
-        subCat = configCat.addSubCategory("Tooltip enhancements");
+        subCat = configCat.addSubCategory("Tooltip & GUI enhancements");
 
         Property propTooltipToggleKeyBinding = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "tooltipToggleKeyBinding", Keyboard.KEY_LSHIFT, "Key to toggle tooltip"));
@@ -398,6 +401,13 @@ public class MooConfig {
         MooConfigPreview ahItemPreview = new MooConfigPreview(demoAhItem);
         Property propTooltipAuctionHousePriceEach = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "tooltipAuctionHousePriceEach", "always", "Add price per item if multiple items are bought or sold", new String[]{"always", "key press", "never"}), ahItemPreview);
+
+        propTooltipAuctionHousePriceEachEnchantments = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "tooltipAuctionHousePriceEachEnchantments", new String[]{"overload", "rejuvenate"}, "Price per lvl 1 book enchantment")
+                .setValidationPattern(Pattern.compile("^[A-Za-z_ -]+$")));
+
+        Property propAuctionHouseMarkEndedAuctions = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "auctionHouseMarkEndedAuctions", "a letter", "Mark ended auctions", new String[]{"a letter", "a word", "disabled"}));
 
         MooConfigPreview bazaarGraphPreview = new MooConfigPreview(MooConfigPreview.createDemoItem("paper", "§aBuy Price §731d §77d §e24h", new String[]{
                 "§7The price at which buy orders have been filled.", "",
@@ -571,6 +581,8 @@ public class MooConfig {
         String mooCmdAliasPreChange = mooCmdAlias;
         boolean modifiedTabCompletableCommandsList = false;
         String[] tabCompletableCommandsPreChange = tabCompletableNamesCommands != null ? tabCompletableNamesCommands.clone() : null;
+        boolean modifiedTooltipAuctionHousePriceEachEnchantments = false;
+        String[] tooltipAuctionHousePriceEachEnchantmentsPreChange = tooltipAuctionHousePriceEachEnchantments != null ? tooltipAuctionHousePriceEachEnchantments.clone() : null;
         if (readFieldsFromConfig) {
             // Category: General
             configGuiExplanations = propConfigGuiExplanations.getString();
@@ -600,6 +612,8 @@ public class MooConfig {
             showPetExp = propShowPetExp.getString();
             numeralSystem = propNumeralSystem.getString();
             tooltipAuctionHousePriceEach = propTooltipAuctionHousePriceEach.getString();
+            tooltipAuctionHousePriceEachEnchantments = propTooltipAuctionHousePriceEachEnchantments.getStringList();
+            auctionHouseMarkEndedAuctions = propAuctionHouseMarkEndedAuctions.getString();
             bazaarConnectGraphsNodes = propBazaarConnectGraphsNodes.getString();
             bazaarConnectGraphsLineWidth = propBazaarConnectGraphsLineWidth.getInt();
             bestiaryOverviewOrder = propBestiaryOverviewOrder.getString();
@@ -629,12 +643,14 @@ public class MooConfig {
             dungMarkPartiesWithMage = propDungMarkPartiesWithMage.getString();
             dungMarkPartiesWithTank = propDungMarkPartiesWithTank.getString();
 
-
             if (!StringUtils.equals(mooCmdAliasPreChange, mooCmdAlias)) {
                 modifiedMooCmdAlias = true;
             }
             if (!Arrays.equals(tabCompletableCommandsPreChange, tabCompletableNamesCommands)) {
                 modifiedTabCompletableCommandsList = true;
+            }
+            if (!Arrays.equals(tooltipAuctionHousePriceEachEnchantmentsPreChange, tooltipAuctionHousePriceEachEnchantments)) {
+                modifiedTooltipAuctionHousePriceEachEnchantments = true;
             }
         }
 
@@ -666,6 +682,8 @@ public class MooConfig {
         propShowPetExp.set(showPetExp);
         propNumeralSystem.set(numeralSystem);
         propTooltipAuctionHousePriceEach.set(tooltipAuctionHousePriceEach);
+        propTooltipAuctionHousePriceEachEnchantments.set(tooltipAuctionHousePriceEachEnchantments);
+        propAuctionHouseMarkEndedAuctions.set(auctionHouseMarkEndedAuctions);
         propBazaarConnectGraphsNodes.set(bazaarConnectGraphsNodes);
         propBazaarConnectGraphsLineWidth.set(bazaarConnectGraphsLineWidth);
         propBestiaryOverviewOrder.set(bestiaryOverviewOrder);
@@ -736,6 +754,15 @@ public class MooConfig {
                     propTabCompletableNamesCommands.set(tabCompletableNamesCommands);
                 }
             }
+            if (modifiedTooltipAuctionHousePriceEachEnchantments) {
+                for (int i = 0, enchantmentsLength = tooltipAuctionHousePriceEachEnchantments.length; i < enchantmentsLength; i++) {
+                    // standardize enchantment names to match their names in the NBT data
+                    String enchantmentName = tooltipAuctionHousePriceEachEnchantments[i];
+                    String standardizedEnchantmentName = enchantmentName.toLowerCase().replace(' ', '_');
+                    tooltipAuctionHousePriceEachEnchantments[i] = standardizedEnchantmentName;
+                }
+                propTooltipAuctionHousePriceEachEnchantments.set(tooltipAuctionHousePriceEachEnchantments);
+            }
 
             cfg.save();
         }
@@ -801,6 +828,10 @@ public class MooConfig {
 
     public static Setting getTooltipAuctionHousePriceEachDisplay() {
         return Setting.get(tooltipAuctionHousePriceEach);
+    }
+
+    public static Setting getMarkAuctionHouseEndedAuctions() {
+        return Setting.get(auctionHouseMarkEndedAuctions);
     }
 
     public static Setting getBazaarConnectGraphsNodes() {
@@ -965,6 +996,10 @@ public class MooConfig {
         return logSearchProperties;
     }
 
+    public Property getTooltipAuctionHousePriceEachEnchantmentsProperty() {
+        return propTooltipAuctionHousePriceEachEnchantments;
+    }
+
 
     public class ConfigEventHandler {
         @SubscribeEvent(priority = EventPriority.NORMAL)
@@ -989,6 +1024,7 @@ public class MooConfig {
                     return TOOLTIP;
                 case "in chat":
                 case "as text":
+                case "a word":
                     return TEXT;
                 case "hidden":
                 case "never":
@@ -997,6 +1033,7 @@ public class MooConfig {
                 case "on SkyBlock":
                 case "key press":
                 case "as tooltip ①§0⬛":
+                case "a letter":
                     return SPECIAL;
                 default:
                     return UNKNOWN;

@@ -41,7 +41,7 @@ public final class Utils {
     }
 
     public static String fancyCase(String string) {
-        return WordUtils.capitalizeFully(string.replace('_', ' '));
+        return WordUtils.capitalizeFully(string.replace('_', ' '), ' ', '-');
     }
 
     /**

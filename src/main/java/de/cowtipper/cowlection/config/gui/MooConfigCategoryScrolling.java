@@ -133,6 +133,13 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
                                         Cowlection.MODID, "cowlectionMooCmdAlias", false, false,
                                         EnumChatFormatting.GOLD + "Press Done to save changes. " + EnumChatFormatting.RED + "Requires a game restart to take effect!"))));
                         continue;
+                    } else if (configEntry.equals(Cowlection.getInstance().getConfig().getTooltipAuctionHousePriceEachEnchantmentsProperty())) {
+                        this.listEntries.add(new GuiSwitchEntry("tooltipAuctionHousePriceEachEnchantments", "➡ modify", () ->
+                                mc.displayGuiScreen(new GuiConfig(MooConfigCategoryScrolling.this.parent,
+                                        Lists.newArrayList(new ConfigElement(Cowlection.getInstance().getConfig().getTooltipAuctionHousePriceEachEnchantmentsProperty())),
+                                        Cowlection.MODID, "cowlectionTooltipAuctionHousePriceEachEnchantments", false, false,
+                                        EnumChatFormatting.GOLD + "Press 2x Done to save changes. " + EnumChatFormatting.LIGHT_PURPLE + EnumChatFormatting.BOLD + "Ultimate" + EnumChatFormatting.RESET + EnumChatFormatting.RED + " and " + EnumChatFormatting.YELLOW + "Turbo-Crop" + EnumChatFormatting.RED + " enchants are always included!"))));
+                        continue;
                     } else if (configEntry.getValidValues() != null && configEntry.getValidValues().length > 0) {
                         if ("dungOverlayTextBorder".equals(configEntry.getName())) {
                             // special case: Dung Performance Overlay: show preview on button click

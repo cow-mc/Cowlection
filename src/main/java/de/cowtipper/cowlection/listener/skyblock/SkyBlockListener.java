@@ -13,20 +13,25 @@ import de.cowtipper.cowlection.util.Utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundCategory;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.command.NumberInvalidException;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
+import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagInt;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.ResourceLocation;
@@ -36,6 +41,7 @@ import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -395,48 +401,179 @@ public class SkyBlockListener {
             }
         }
 
-        // for auction house: show price for each item if multiple items are sold at once
+        // for auction house: show price for each item if multiple items are sold at once or if higher tier ultimate enchantment books are sold
         MooConfig.Setting tooltipAuctionHousePriceEachDisplay = MooConfig.getTooltipAuctionHousePriceEachDisplay();
         if ((tooltipAuctionHousePriceEachDisplay == MooConfig.Setting.ALWAYS || tooltipAuctionHousePriceEachDisplay == MooConfig.Setting.SPECIAL && MooConfig.isTooltipToggleKeyBindingPressed())
                 && (e.entityPlayer.openContainer instanceof ContainerChest || Minecraft.getMinecraft().currentScreen instanceof MooConfigGui)) {
-            int stackSize = e.itemStack.stackSize;
-            boolean isSubmitBidItem = isSubmitBidItem(e.itemStack);
-            if ((stackSize == 1 && !isSubmitBidItem) || e.toolTip.size() < 4) {
-                // only 1 item or irrelevant tooltip - nothing to do here, abort!
-                return;
-            }
 
-            if (isSubmitBidItem) {
-                // special case: "place bid on an item" interface ("Auction View")
-                ItemStack auctionedItem = e.entityPlayer.openContainer.getInventory().get(13);
-                if (auctionedItem == null || auctionedItem.stackSize == 1) {
-                    // still only 1 item, abort!
+            int itemAmount = -1;
+            String superEnchant = null;
+            if (e.itemStack.getItem() == Items.enchanted_book && extraAttributes != null && extraAttributes.hasKey("enchantments", Constants.NBT.TAG_COMPOUND)) {
+                NBTTagCompound enchants = extraAttributes.getCompoundTag("enchantments");
+                try {
+                    Map<String, NBTBase> enchantmentsMap = ReflectionHelper.getPrivateValue(NBTTagCompound.class, enchants, "tagMap", "field_74784_a");
+
+                    if (enchantmentsMap.size() == 1) {
+                        for (Map.Entry<String, NBTBase> enchant : enchantmentsMap.entrySet()) {
+                            String enchantKey = enchant.getKey();
+                            if (enchantKey.startsWith("ultimate_") && enchant.getValue() instanceof NBTTagInt) {
+                                // enchanted book with 1 enchantment (which is an ultimate enchant)
+                                // enchantment tier => amount of books needed
+                                //    I = 2^0 = 1
+                                //   II = 2^1 = 2
+                                //  III = 2^2 = 4
+                                //   IV = 2^3 = 8
+                                //    V = 2^4 = 16
+                                itemAmount = (int) Math.pow(2, ((NBTTagInt) enchant.getValue()).getInt() - 1);
+                                superEnchant = Utils.fancyCase(enchantKey.substring("ultimate_".length()));
+                                break;
+                            } else if (enchantKey.startsWith("turbo_") && enchant.getValue() instanceof NBTTagInt) {
+                                itemAmount = (int) Math.pow(2, ((NBTTagInt) enchant.getValue()).getInt() - 1);
+                                superEnchant = "Turbo-" + Utils.fancyCase(enchantKey.substring("turbo_".length()));
+                                if (superEnchant.equals("Turbo-Cactus")) {
+                                    // (╯°□°）╯︵ ┻━┻
+                                    superEnchant = "Turbo-Cacti";
+                                }
+                                break;
+                            }
+                            for (String priceEachEnchantment : MooConfig.tooltipAuctionHousePriceEachEnchantments) {
+                                String priceEachEnchantKey = priceEachEnchantment;
+                                int dashInEnchantName = priceEachEnchantKey.indexOf('-');
+                                if (dashInEnchantName > 0) {
+                                    priceEachEnchantKey = priceEachEnchantKey.replace('-', '_');
+                                }
+                                if (enchantKey.equals(priceEachEnchantKey) && enchant.getValue() instanceof NBTTagInt) {
+                                    itemAmount = (int) Math.pow(2, ((NBTTagInt) enchant.getValue()).getInt() - 1);
+                                    superEnchant = Utils.fancyCase(priceEachEnchantment);
+                                }
+                            }
+                        }
+                    }
+                } catch (ReflectionHelper.UnableToAccessFieldException ignored) {
                     return;
                 }
-                stackSize = auctionedItem.stackSize;
+            } else {
+                itemAmount = e.itemStack.stackSize;
+                boolean isSubmitBidItem = isSubmitBidItem(e.itemStack);
+                if ((itemAmount == 1 && !isSubmitBidItem) || e.toolTip.size() < 4) {
+                    // only 1 item or irrelevant tooltip - nothing to do here, abort!
+                    return;
+                }
+
+                if (isSubmitBidItem) {
+                    // special case: "place bid on an item" interface ("Auction View")
+                    ItemStack auctionedItem = e.entityPlayer.openContainer.getInventory().get(13);
+                    if (auctionedItem == null || auctionedItem.stackSize == 1) {
+                        // still only 1 item, abort!
+                        return;
+                    }
+                    itemAmount = auctionedItem.stackSize;
+                }
             }
+            if (itemAmount > 1) {
+                List<String> toolTip = e.toolTip;
+                String superEnchantName = null;
 
-            List<String> toolTip = e.toolTip;
+                // starting with i=1 because first line is never the one we're looking for
+                for (int i = 1; i < toolTip.size(); i++) {
+                    String toolTipLine = toolTip.get(i);
+                    String toolTipLineUnformatted = EnumChatFormatting.getTextWithoutFormattingCodes(toolTipLine);
+                    if (superEnchant != null && superEnchantName == null && (toolTipLineUnformatted.startsWith(superEnchant) || toolTipLineUnformatted.startsWith("Ultimate " + superEnchant))) {
+                        int lastSpace = toolTipLine.lastIndexOf(' ');
+                        if (lastSpace > 0) {
+                            superEnchantName = toolTipLine.substring(0, lastSpace);
+                        }
+                    }
+                    if (toolTipLineUnformatted.startsWith("Top bid: ")
+                            || toolTipLineUnformatted.startsWith("Starting bid: ")
+                            || toolTipLineUnformatted.startsWith("Item price: ")
+                            || toolTipLineUnformatted.startsWith("Buy it now: ")
+                            || toolTipLineUnformatted.startsWith("Sold for: ")
+                            || toolTipLineUnformatted.startsWith("New bid: ") /* special case: 'Submit Bid' item */) {
 
-            // starting with i=1 because first line is never the one we're looking for
-            for (int i = 1; i < toolTip.size(); i++) {
-                String toolTipLineUnformatted = EnumChatFormatting.getTextWithoutFormattingCodes(toolTip.get(i));
-                if (toolTipLineUnformatted.startsWith("Top bid: ")
-                        || toolTipLineUnformatted.startsWith("Starting bid: ")
-                        || toolTipLineUnformatted.startsWith("Item price: ")
-                        || toolTipLineUnformatted.startsWith("Buy it now: ")
-                        || toolTipLineUnformatted.startsWith("Sold for: ")
-                        || toolTipLineUnformatted.startsWith("New bid: ") /* special case: 'Submit Bid' item */) {
+                        try {
+                            long price = numberFormatter.parse(StringUtils.substringBetween(toolTipLineUnformatted, ": ", " coins")).longValue();
+                            double priceEach = price / (double) itemAmount;
+                            String formattedPriceEach = priceEach < 5000 ? numberFormatter.format(priceEach) : Utils.formatNumberWithAbbreviations(priceEach);
+                            if (superEnchantName != null) {
+                                toolTip.add(i + 1, EnumChatFormatting.YELLOW + "  (≙ " + itemAmount + "x " + superEnchantName + " " + (MooConfig.useRomanNumerals() ? "I" : "1") + EnumChatFormatting.RESET + EnumChatFormatting.YELLOW + " for " + formattedPriceEach + " each)");
+                            } else {
+                                String pricePerItem = EnumChatFormatting.YELLOW + " (" + formattedPriceEach + " each)";
+                                toolTip.set(i, toolTipLine + pricePerItem);
+                            }
+                            return;
+                        } catch (ParseException ex) {
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    }
 
-                    try {
-                        long price = numberFormatter.parse(StringUtils.substringBetween(toolTipLineUnformatted, ": ", " coins")).longValue();
-                        double priceEach = price / (double) stackSize;
-                        String formattedPriceEach = priceEach < 5000 ? numberFormatter.format(priceEach) : Utils.formatNumberWithAbbreviations(priceEach);
-                        String pricePerItem = EnumChatFormatting.YELLOW + " (" + formattedPriceEach + " each)";
-                        toolTip.set(i, toolTip.get(i) + pricePerItem);
-                        return;
-                    } catch (ParseException ex) {
-                        return;
+    @SubscribeEvent
+    public void onRenderGuiBackground(GuiScreenEvent.DrawScreenEvent.Pre e) {
+        if (e.gui instanceof GuiChest) {
+            MooConfig.Setting markAuctionHouseEndedAuctions = MooConfig.getMarkAuctionHouseEndedAuctions();
+            if (markAuctionHouseEndedAuctions == MooConfig.Setting.DISABLED) {
+                return;
+            }
+            GuiChest guiChest = (GuiChest) e.gui;
+
+            Container inventorySlots = guiChest.inventorySlots;
+            IInventory inventory = inventorySlots.getSlot(0).inventory;
+            if (inventory.getName().contains("Auction")) {
+                // Auctions Browser, Auction: "<search term>", <player>'s Auctions, Auction View
+                FontRenderer fontRenderer = e.gui.mc.fontRendererObj;
+                // formulas from GuiContainer#initGui (guiLeft, guiTop) and GuiChest (ySize)
+                int guiLeft = (guiChest.width - 176) / 2;
+                int inventoryRows = inventory.getSizeInventory() / 9;
+                int ySize = 222 - 108 + inventoryRows * 18;
+                int guiTop = (guiChest.height - ySize) / 2;
+
+                for (Slot inventorySlot : inventorySlots.inventorySlots) {
+                    if (inventorySlot.getHasStack()) {
+                        int slotRow = inventorySlot.slotNumber / 9;
+                        int slotColumn = inventorySlot.slotNumber % 9;
+                        // check if slot is one of the middle slots with parties
+                        if (slotRow == 0 || slotRow == (inventoryRows - 1) || slotColumn == 0 || slotColumn == 8) {
+                            // one of the glass pane borders
+                            continue;
+                        }
+                        NBTTagCompound itemNbtDisplay = inventorySlot.getStack().getSubCompound("display", false);
+                        if (itemNbtDisplay != null && itemNbtDisplay.hasKey("Lore", Constants.NBT.TAG_LIST)) {
+                            NBTTagList loreList = itemNbtDisplay.getTagList("Lore", Constants.NBT.TAG_STRING);
+                            if (loreList.tagCount() < 5) {
+                                continue;
+                            }
+                            for (int loreLineNr = loreList.tagCount() - 1; loreLineNr >= 0; --loreLineNr) {
+                                String loreLineFormatted = loreList.getStringTagAt(loreLineNr);
+                                String loreLine = EnumChatFormatting.getTextWithoutFormattingCodes(loreLineFormatted);
+
+                                String auctionStatus;
+                                if (loreLine.startsWith("Ends in: ")) {
+                                    // auction is still going
+                                    break;
+                                } else if (loreLine.equals("Status: Expired!")) {
+                                    auctionStatus = EnumChatFormatting.RED + (markAuctionHouseEndedAuctions == MooConfig.Setting.TEXT ? "Expired" : "E");
+                                } else if (loreLine.equals("Status: Ended!")) {
+                                    auctionStatus = EnumChatFormatting.GREEN + (markAuctionHouseEndedAuctions == MooConfig.Setting.TEXT ? "Ended" : "E");
+                                } else if (loreLine.equals("Status: Sold!")) {
+                                    auctionStatus = EnumChatFormatting.GREEN + (markAuctionHouseEndedAuctions == MooConfig.Setting.TEXT ? "Sold" : "S");
+                                } else {
+                                    continue;
+                                }
+                                GlStateManager.pushMatrix();
+                                GlStateManager.translate(0, 0, 281);
+                                double scaleFactor = markAuctionHouseEndedAuctions == MooConfig.Setting.TEXT ? 0.4 : 0.5;
+                                GlStateManager.scale(scaleFactor, scaleFactor, 0);
+                                int slotX = guiLeft + inventorySlot.xDisplayPosition;
+                                int slotY = guiTop + inventorySlot.yDisplayPosition;
+                                fontRenderer.drawStringWithShadow(auctionStatus, (float) (slotX / scaleFactor), (float) (slotY / scaleFactor), 0xffcc00);
+                                GlStateManager.popMatrix();
+                                break;
+                            }
+                        }
                     }
                 }
             }

@@ -17,6 +17,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Added 'last profile save' (= last time user played SkyBlock)
   - Added Enchanting, Farming, Mining, and Combat 51-60
   - Added missing Runecrafting 25
+- Auction house: Mark sold/ended/expired auctions
+  - either one letter (S, E, E) or the full word
+- Auction house: show price for each lvl 1 enchantment book required to craft a higher tier book
+  - only works on enchanted books with *one* enchantment
+  - enabled for all ultimate and Turbo-crop enchantments
+  - additional enchantments can be added via `/moo config` *(Keep in mind that not all high-level enchantments can be created by combining lower level books!)*
 
 ### Changed
 - Refined the comma representation of large numbers abbreviated with k, m, b
