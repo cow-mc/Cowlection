@@ -307,6 +307,7 @@ public class DungeonsListener {
 
             int partySize = 5;
             boolean memberTooLowLevel = false;
+            boolean partyReqTooLowLevel = false;
             String middleText = null;
 
             for (String toolTipLine : itemTooltip) {
@@ -328,6 +329,7 @@ public class DungeonsListener {
                     String partyNote = toolTipLineWithoutFormatting.toLowerCase();
                     DataHelper.PartyType partyTypeCarry = MooConfig.getDungPartyFinderMarkCarry();
                     DataHelper.PartyType partyTypeHyperion = MooConfig.getDungPartyFinderMarkHyperion();
+                    // TODO make trigger words in party notes configurable
                     if (partyTypeCarry != DataHelper.PartyType.NONE && (partyNote.contains("carry") || partyNote.contains("carries"))) {
                         partyType = partyTypeCarry;
                         if (partyTypeCarry != DataHelper.PartyType.UNJOINABLE) {
@@ -338,6 +340,11 @@ public class DungeonsListener {
                         if (partyTypeHyperion != DataHelper.PartyType.UNJOINABLE) {
                             middleText = "hyper";
                         }
+                    }
+                } else if (toolTipLineWithoutFormatting.startsWith("Dungeon Level Required: ")) {
+                    int minDungLevelReq = MathHelper.parseIntWithDefault(toolTipLineWithoutFormatting.substring(toolTipLineWithoutFormatting.lastIndexOf(' ') + 1), 100);
+                    if (minDungLevelReq < MooConfig.dungDungeonReqMin) {
+                        partyReqTooLowLevel = true;
                     }
                 }
             }
@@ -351,12 +358,12 @@ public class DungeonsListener {
                 GlStateManager.popMatrix();
             }
             if (partyType != DataHelper.PartyType.UNJOINABLE) {
-                if (memberTooLowLevel) {
-                    // at least one party member is lower than the min class level
+                if (memberTooLowLevel || partyReqTooLowLevel) {
+                    // at least one party member is lower than the min class level or party min Dungeon level req is too low
                     partyType = DataHelper.PartyType.UNIDEAL;
                     GlStateManager.pushMatrix();
                     GlStateManager.translate(0, 0, 280);
-                    font.drawStringWithShadow(EnumChatFormatting.BOLD + "ᐯ", x + 1, y + 8, new Color(220, 20, 20, 255).getRGB());
+                    font.drawStringWithShadow(EnumChatFormatting.BOLD + "ᐯ", x + 1, y + 8, partyReqTooLowLevel ? new Color(170, 0, 0).getRGB() : new Color(220, 20, 20, 255).getRGB());
                     GlStateManager.popMatrix();
                 }
                 StringBuilder unwantedClasses = new StringBuilder();
@@ -394,7 +401,7 @@ public class DungeonsListener {
                     GlStateManager.scale(scaleFactor, scaleFactor, 0);
                     font.drawStringWithShadow(badClasses.toString(), (float) (x / scaleFactor), (float) (y / scaleFactor), new Color(255, 170, 0, 255).getRGB());
                     GlStateManager.popMatrix();
-                } else if (!memberTooLowLevel && middleText == null) {
+                } else if (!memberTooLowLevel && !partyReqTooLowLevel && middleText == null) {
                     // party matches our criteria!
                     partyType = DataHelper.PartyType.SUITABLE;
                 }

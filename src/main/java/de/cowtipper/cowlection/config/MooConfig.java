@@ -100,6 +100,7 @@ public class MooConfig {
     public static boolean dungPartyFullLookup;
     public static boolean dungPartyFinderPartyLookup;
     public static boolean dungPartiesSize;
+    public static int dungDungeonReqMin;
     public static int dungClassMin;
     private static String dungMarkPartiesWithCarry;
     private static String dungMarkPartiesWithHyperion;
@@ -524,8 +525,10 @@ public class MooConfig {
                 "Marks parties...",
                 "  ‣ you cannot join: " + EnumChatFormatting.RED + "⬛",
                 "  ‣ that do not meet all your criteria: " + EnumChatFormatting.GOLD + "⬛",
+                "    ‣ with \"Dungeon Level Required\" below a certain level " + EnumChatFormatting.GRAY + "(if present)" + EnumChatFormatting.RESET + ": " + EnumChatFormatting.DARK_RED + EnumChatFormatting.BOLD + "ᐯ" + EnumChatFormatting.RESET,
                 "    ‣ with someone below a certain class level: " + EnumChatFormatting.RED + EnumChatFormatting.BOLD + "ᐯ" + EnumChatFormatting.RESET,
-                "    ‣ with duplicated roles you specify below: " + EnumChatFormatting.GOLD + "²⁺",
+                "    ‣ with duplicated roles you specify: " + EnumChatFormatting.GOLD + "²⁺",
+                "    ‣ with someone with a role you specify: " + EnumChatFormatting.GRAY + "e.g. " + EnumChatFormatting.WHITE + "H " + EnumChatFormatting.GRAY + "(class' 1ˢᵗ letter)",
                 "  ‣ that match your criteria: " + EnumChatFormatting.GREEN + "⬛");
 
         Property propDungPartyFinderPlayerLookup = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
@@ -540,6 +543,11 @@ public class MooConfig {
         Property propDungPartiesSize = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "dungPartiesSize", true, "Show size of parties?"),
                 new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.WHITE + "1 - 4").gray()));
+
+        Property propDungDungeonReqMin = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "dungDungeonReqMin", 0, "Marks parties with lower Dungeon level req than this value")
+                        .setMinValue(0).setMaxValue(50),
+                new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.DARK_RED + EnumChatFormatting.BOLD + "ᐯ").gray()));
 
         Property propDungClassMin = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "dungClassMin", 0, "Marks parties with members with lower class level than this value")
@@ -634,6 +642,7 @@ public class MooConfig {
             dungPartyFullLookup = propDungPartyFullLookup.getBoolean();
             dungPartyFinderPartyLookup = propDungPartyFinderPartyLookup.getBoolean();
             dungPartiesSize = propDungPartiesSize.getBoolean();
+            dungDungeonReqMin = propDungDungeonReqMin.getInt();
             dungClassMin = propDungClassMin.getInt();
             dungMarkPartiesWithCarry = propDungMarkPartiesWithCarry.getString();
             dungMarkPartiesWithHyperion = propDungMarkPartiesWithHyperion.getString();
@@ -704,6 +713,7 @@ public class MooConfig {
         propDungPartyFullLookup.set(dungPartyFullLookup);
         propDungPartyFinderPartyLookup.set(dungPartyFinderPartyLookup);
         propDungPartiesSize.set(dungPartiesSize);
+        propDungDungeonReqMin.set(dungDungeonReqMin);
         propDungClassMin.set(dungClassMin);
         propDungMarkPartiesWithCarry.set(dungMarkPartiesWithCarry);
         propDungMarkPartiesWithHyperion.set(dungMarkPartiesWithHyperion);
