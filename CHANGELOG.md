@@ -11,12 +11,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `/moo whatAmILookingAt` (or: `/m waila`)
   - copy info of "the thing" you're looking at (NPC or mob + nearby "text-only" armor stands; armor stand, placed skull, dropped item, item in item frame, map on wall)
   - automatically decodes base64 data (e.g. skin details) and unix timestamps
-- SkyBlock Dwarven Mines update:
-  - Added new minions to `/m analyzeIslands` (Mithril + t12)
-- `/moo stalkskyblock` additions:
-  - Added 'last profile save' (= last time user played SkyBlock)
-  - Added Enchanting, Farming, Mining, and Combat 51-60
-  - Added missing Runecrafting 25
 - Auction house: Mark sold/ended/expired auctions
   - either one letter (S, E, E) or the full word
 - Auction house: show price for each lvl 1 enchantment book required to craft a higher tier book
@@ -25,6 +19,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - additional enchantments can be added via `/moo config` *(Keep in mind that not all high-level enchantments can be created by combining lower level books!)*
 - SkyBlock Dungeon Party Finder additions:
   - new `/moo config` option: `Minimum "Dungeon level required"`
+- SkyBlock Dwarven Mines update:
+  - Added new minions to `/m analyzeIslands` (Mithril + t12)
+- `/moo stalkskyblock` additions:
+  - Added 'last profile save' (= last time user played SkyBlock)
+  - Added Enchanting, Farming, Mining, and Combat 51-60
+  - Added missing Runecrafting 25
+- `/moo stalk`: Added "Game Master" rank
 
 ### Changed
 - Refined the comma representation of large numbers abbreviated with k, m, b

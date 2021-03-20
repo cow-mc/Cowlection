@@ -82,6 +82,8 @@ public class HyPlayerData {
                     return EnumChatFormatting.BLUE + "[HELPER]";
                 case "MODERATOR":
                     return EnumChatFormatting.DARK_GREEN + "[MOD]";
+                case "GAME_MASTER":
+                    return EnumChatFormatting.DARK_GREEN + "[GM]";
                 case "ADMIN":
                     return EnumChatFormatting.RED + "[ADMIN]";
                 case "YOUTUBER":
