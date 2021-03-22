@@ -301,9 +301,12 @@ public class DungeonsListener {
             partyType = DataHelper.PartyType.CURRENT;
         } else {
             Map<DungeonClass, AtomicInteger> dungClassesInParty = new LinkedHashMap<>();
-            AtomicInteger classCounter = new AtomicInteger();
-            classCounter.incrementAndGet();
-            dungClassesInParty.put(activeDungeonClass, classCounter); // add our own class
+            if (MooConfig.filterDungPartiesWithDupes(activeDungeonClass) == MooConfig.Setting.SPECIAL) {
+                // add our own class if we want to avoid dupes
+                AtomicInteger classCounter = new AtomicInteger();
+                classCounter.incrementAndGet();
+                dungClassesInParty.put(activeDungeonClass, classCounter);
+            }
 
             int partySize = 5;
             boolean memberTooLowLevel = false;
