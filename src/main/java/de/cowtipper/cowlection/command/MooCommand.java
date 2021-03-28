@@ -129,6 +129,7 @@ public class MooCommand extends CommandBase {
         //endregion
         //region sub-commands: miscellaneous
         else if (args[0].equalsIgnoreCase("config")) {
+            main.getConfig().theyOpenedTheConfigGui();
             displayGuiScreen(new MooConfigGui());
         } else if (args[0].equalsIgnoreCase("search")) {
             displayGuiScreen(new GuiSearch(main.getConfigDirectory(), CommandBase.buildString(args, 1)));

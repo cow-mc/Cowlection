@@ -642,6 +642,11 @@ public class DungeonsListener {
                 } else if (elapsedMinutes > 20) {
                     dungeonPerformanceEntries.add(EnumChatFormatting.GOLD + "  Time penalty: " + EnumChatFormatting.RED + ((int) (2.2 * (elapsedMinutes - 20))) + " points");
                 }
+                if (!MooConfig.hasOpenedConfigGui) {
+                    dungeonPerformanceEntries.add(EnumChatFormatting.RED + "Want to move me? " + EnumChatFormatting.LIGHT_PURPLE + "/moo config "
+                            + EnumChatFormatting.DARK_GRAY + "➡ " + EnumChatFormatting.WHITE + "SB Dungeons "
+                            + EnumChatFormatting.DARK_GRAY + "➡ " + EnumChatFormatting.WHITE + "Performance Overlay");
+                }
 
                 FontRenderer fontRenderer = Minecraft.getMinecraft().fontRendererObj;
                 GlStateManager.pushMatrix();

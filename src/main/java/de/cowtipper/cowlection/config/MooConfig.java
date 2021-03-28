@@ -50,6 +50,7 @@ import java.util.regex.Pattern;
 public class MooConfig {
     // Category: General
     private static String configGuiExplanations;
+    public static boolean hasOpenedConfigGui;
     public static String mooCmdAlias;
     public static boolean fixReplyCmd;
     public static boolean enableCopyInventory;
@@ -251,6 +252,12 @@ public class MooConfig {
         Property propConfigGuiExplanations = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "configGuiExplanations", "tooltip ① §0⬛", "Display config settings explanations",
                 new String[]{"as tooltip ①§0⬛", "as tooltip ②§f⬛", "as text", "hidden"}));
+
+
+        // (not visible in config gui: has opened config? or: knows how to move the dungeon overlay?)
+        Property propHasOpenedConfigGui = cfg.get(configCat.getConfigName(),
+                "hasOpenedConfigGui", false, "Already opened config gui?")
+                .setShowInGui(false);
 
         // Sub-Category: API settings
         subCat = configCat.addSubCategory("API settings");
@@ -594,6 +601,7 @@ public class MooConfig {
         if (readFieldsFromConfig) {
             // Category: General
             configGuiExplanations = propConfigGuiExplanations.getString();
+            hasOpenedConfigGui = propHasOpenedConfigGui.getBoolean();
             mooCmdAlias = propMooCmdAlias.getString();
             fixReplyCmd = propFixReplyCmd.getBoolean();
             enableCopyInventory = propEnableCopyInventory.getBoolean();
@@ -652,6 +660,10 @@ public class MooConfig {
             dungMarkPartiesWithMage = propDungMarkPartiesWithMage.getString();
             dungMarkPartiesWithTank = propDungMarkPartiesWithTank.getString();
 
+            if (!hasOpenedConfigGui && (!propDungOverlayEnabled.isDefault() || !propDungOverlayPositionX.isDefault() || !propDungOverlayPositionY.isDefault() || !propDungOverlayGuiScale.isDefault())) {
+                // player hasn't opened config gui yet and but already moved the dungeon overlay
+                hasOpenedConfigGui = true;
+            }
             if (!StringUtils.equals(mooCmdAliasPreChange, mooCmdAlias)) {
                 modifiedMooCmdAlias = true;
             }
@@ -665,6 +677,7 @@ public class MooConfig {
 
         // Category: General
         propConfigGuiExplanations.set(configGuiExplanations);
+        propHasOpenedConfigGui.set(hasOpenedConfigGui);
         propMooCmdAlias.set(mooCmdAlias);
         propFixReplyCmd.set(fixReplyCmd);
         propEnableCopyInventory.set(enableCopyInventory);
@@ -814,6 +827,17 @@ public class MooConfig {
     // Category: General
     public static Setting getConfigGuiExplanationsDisplay() {
         return Setting.get(configGuiExplanations);
+    }
+
+    public void theyOpenedTheConfigGui() {
+        if (!hasOpenedConfigGui) {
+            // opened config gui for the first time!
+            main.getChatHelper().sendMessage(new MooChatComponent(EnumChatFormatting.DARK_GREEN + " ❢ " + EnumChatFormatting.GREEN + "To configure " + EnumChatFormatting.GOLD + "Cowlection " + EnumChatFormatting.GREEN + "features use " + EnumChatFormatting.LIGHT_PURPLE + "/moo config").green()
+                    .setSuggestCommand("/moo config")
+                    .appendFreshSibling(new MooChatComponent("   (this message will be displayed only once)").gray()));
+            hasOpenedConfigGui = true;
+            syncFromFields();
+        }
     }
 
     public static boolean keepFullWailaInfo() {

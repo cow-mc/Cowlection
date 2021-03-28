@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Added Enchanting, Farming, Mining, and Combat 51-60
   - Added missing Runecrafting 25
 - `/moo stalk`: Added "Game Master" rank
+- Added mini-"tutorial" on how to open the config gui (to move the dungeon overlay)
 
 ### Changed
 - Refined the comma representation of large numbers abbreviated with k, m, b
