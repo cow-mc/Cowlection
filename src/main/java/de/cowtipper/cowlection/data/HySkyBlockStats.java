@@ -327,12 +327,17 @@ public class HySkyBlockStats {
                 StringBuilder output = new StringBuilder();
                 String spacer = indent ? "\n  " : "\n";
 
-                Map<String, Type> latestDungeonType = Utils.getLastNMapEntries(dungeon_types, 1);
+                // print detail of 4 latest dungeon types (cata + master cata + xx + master xx)
+                Map<String, Type> latestDungeonType = Utils.getLastNMapEntries(dungeon_types, 4);
                 for (Map.Entry<String, Type> dungeonTypeEntry : latestDungeonType.entrySet()) {
                     if (!indent) {
                         output.append(spacer);
                     }
                     if (dungeonTypeEntry != null) {
+                        if (!dungeonTypeEntry.getValue().hasPlayed()) {
+                            // never played this dungeon type
+                            continue;
+                        }
                         Map<String, Integer> highestFloorCompletions = Utils.getLastNMapEntries(dungeonTypeEntry.getValue().getTierCompletions(), nHighestFloors);
                         String latestDungeonTypeName = Utils.fancyCase(dungeonTypeEntry.getKey());
                         if (highestFloorCompletions != null) {
@@ -359,6 +364,10 @@ public class HySkyBlockStats {
                 StringBuilder dungeonTypesLevels = new StringBuilder();
                 if (dungeon_types != null && !dungeon_types.isEmpty()) {
                     for (Map.Entry<String, HySkyBlockStats.Profile.Dungeons.Type> dungeonType : dungeon_types.entrySet()) {
+                        if (dungeonType.getKey().startsWith("master_")) {
+                            // master floors don't have their own experience/levels, skip!
+                            continue;
+                        }
                         if (dungeonTypesLevels.length() == 0) {
                             dungeonTypesLevels.append(EnumChatFormatting.DARK_GRAY).append("  [").append(EnumChatFormatting.GRAY);
                         } else {
@@ -396,7 +405,7 @@ public class HySkyBlockStats {
                 }
 
                 public boolean hasPlayed() {
-                    return experience > 0;
+                    return experience > 0 || best_score != null;
                 }
 
                 /**
@@ -404,7 +413,7 @@ public class HySkyBlockStats {
                  *
                  * @return summary text
                  */
-                public String getSummary() {
+                public String getSummary(boolean isMasterFloor) {
                     String floorCompletion;
                     if (tier_completions != null) {
                         int highestTierCompletions = tier_completions.get(String.valueOf(highest_tier_completed));
@@ -413,7 +422,7 @@ public class HySkyBlockStats {
                         // played dungeons but never completed a floor
                         floorCompletion = "not a single floor...";
                     }
-                    return "Level " + getLevel() + EnumChatFormatting.GRAY + " (beaten " + EnumChatFormatting.YELLOW + floorCompletion + EnumChatFormatting.GRAY + ")";
+                    return (isMasterFloor ? "" : "Level " + getLevel()) + EnumChatFormatting.GRAY + " (beaten " + EnumChatFormatting.YELLOW + floorCompletion + EnumChatFormatting.GRAY + ")";
                 }
             }
 

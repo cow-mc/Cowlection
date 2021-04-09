@@ -532,15 +532,25 @@ public class MooCommand extends CommandBase {
                         for (Map.Entry<String, HySkyBlockStats.Profile.Dungeons.Type> dungeonTypeEntry : dungeonTypes.entrySet()) {
                             // dungeon type entry for chat
                             HySkyBlockStats.Profile.Dungeons.Type dungeonType = dungeonTypeEntry.getValue();
+                            if (!dungeonType.hasPlayed()) {
+                                // never played this dungeon type
+                                continue;
+                            }
                             String dungeonTypeName = Utils.fancyCase(dungeonTypeEntry.getKey());
-                            dungeonsComponent.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("   " + dungeonTypeName, dungeonType.getSummary()))
+                            boolean isMasterFloor = dungeonTypeName.startsWith("Master ");
+                            dungeonsComponent.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("   " + dungeonTypeName, dungeonType.getSummary(isMasterFloor)))
                                     .setHover(dungeonHover);
                             // dungeon type entry for tooltip
-                            int dungeonTypeLevel = dungeonTypeEntry.getValue().getLevel();
-                            dungeonHover.appendFreshSibling(new MooChatComponent.KeyValueChatComponent(dungeonTypeName, "Level " + (MooConfig.useRomanNumerals() ? Utils.convertArabicToRoman(dungeonTypeLevel) : dungeonTypeLevel)));
+                            if (isMasterFloor) {
+                                dungeonHover.appendFreshSibling(new MooChatComponent(dungeonTypeName).gold());
+                            } else {
+                                // non-master dungeon
+                                int dungeonTypeLevel = dungeonTypeEntry.getValue().getLevel();
+                                dungeonHover.appendFreshSibling(new MooChatComponent.KeyValueChatComponent(dungeonTypeName, "Level " + (MooConfig.useRomanNumerals() ? Utils.convertArabicToRoman(dungeonTypeLevel) : dungeonTypeLevel)));
+                            }
 
                             // for each floor
-                            Map<String, StringBuilder> floorStats = new LinkedHashMap<>();
+                            SortedMap<String, StringBuilder> floorStats = new TreeMap<>();
                             // ... add completed floors:
                             if (dungeonType.getTierCompletions() != null) {
                                 for (Map.Entry<String, Integer> floorCompletions : dungeonType.getTierCompletions().entrySet()) {
@@ -551,21 +561,31 @@ public class MooCommand extends CommandBase {
                                 }
                             }
                             // ... add played floors
-                            for (Map.Entry<String, Integer> floorPlayed : dungeonType.getTimesPlayed().entrySet()) {
-                                StringBuilder floorSummary = floorStats.get(floorPlayed.getKey());
-                                if (floorSummary == null) {
-                                    // hasn't beaten this floor, but already attempted it
-                                    floorSummary = new StringBuilder("0");
-                                    floorStats.put(floorPlayed.getKey(), floorSummary);
+                            Map<String, Integer> dungeonTypeTimesPlayed = dungeonType.getTimesPlayed();
+                            if (dungeonTypeTimesPlayed != null) {
+                                for (Map.Entry<String, Integer> floorPlayed : dungeonTypeTimesPlayed.entrySet()) {
+                                    StringBuilder floorSummary = floorStats.get(floorPlayed.getKey());
+                                    if (floorSummary == null) {
+                                        // hasn't beaten this floor, but already attempted it
+                                        floorSummary = new StringBuilder("0");
+                                        floorStats.put(floorPlayed.getKey(), floorSummary);
+                                    }
+                                    // played floor count:
+                                    floorSummary.append(EnumChatFormatting.DARK_GRAY).append(" / ").append(EnumChatFormatting.YELLOW).append(floorPlayed.getValue());
                                 }
-                                // played floor count:
-                                floorSummary.append(EnumChatFormatting.DARK_GRAY).append(" / ").append(EnumChatFormatting.YELLOW).append(floorPlayed.getValue());
+                            } else {
+                                // missing value for attempted floors, only show completed floors
+                                for (StringBuilder floorSummary : floorStats.values()) {
+                                    floorSummary.append(EnumChatFormatting.DARK_GRAY).append(" / ").append(EnumChatFormatting.YELLOW).append(EnumChatFormatting.OBFUSCATED).append("#");
+                                }
                             }
                             // ... add best scores
-                            for (Map.Entry<String, Integer> bestScores : dungeonType.getBestScore().entrySet()) {
-                                StringBuilder floorSummary = floorStats.getOrDefault(bestScores.getKey(), new StringBuilder());
-                                // best floor score:
-                                floorSummary.append(EnumChatFormatting.DARK_GRAY).append(" (").append(EnumChatFormatting.WHITE).append(bestScores.getValue()).append(EnumChatFormatting.DARK_GRAY).append(")");
+                            if (dungeonType.getBestScore() != null) {
+                                for (Map.Entry<String, Integer> bestScores : dungeonType.getBestScore().entrySet()) {
+                                    StringBuilder floorSummary = floorStats.getOrDefault(bestScores.getKey(), new StringBuilder());
+                                    // best floor score:
+                                    floorSummary.append(EnumChatFormatting.DARK_GRAY).append(" (").append(EnumChatFormatting.WHITE).append(bestScores.getValue()).append(EnumChatFormatting.DARK_GRAY).append(")");
+                                }
                             }
 
                             // add floor stats to dungeon type:

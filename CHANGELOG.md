@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Added 'last profile save' (= last time user played SkyBlock)
   - Added Enchanting, Farming, Mining, and Combat 51-60
   - Added missing Runecrafting 25
+  - Added Dungeons: Catacombs Master Mode support
 - `/moo stalk`: Added "Game Master" rank
 - Added mini-"tutorial" on how to open the config gui (to move the dungeon overlay)
 
@@ -36,6 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - Fixed issue with 'no dung class selected'
+- Unexpected API-related exceptions no longer void all chat output
 
 ## [1.8.9-0.12.0] - 03.01.2021
 ### Added
