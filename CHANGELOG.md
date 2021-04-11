@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - only works on enchanted books with *one* enchantment
   - enabled for all ultimate and Turbo-crop enchantments
   - additional enchantments can be added via `/moo config` *(Keep in mind that not all high-level enchantments can be created by combining lower level books!)*
+- Bazaar: Added order (sort) functionality to 'Sell Inventory/Sacks Now' tooltips
 - SkyBlock Dungeon Party Finder additions:
   - new `/moo config` option: `Minimum "Dungeon level required"`
 - SkyBlock Dwarven Mines update:

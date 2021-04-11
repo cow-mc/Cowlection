@@ -121,7 +121,18 @@ public final class Utils {
         Double divideBy = e.getKey();
         Character suffix = e.getValue();
 
-        DecimalFormat df = new DecimalFormat("#,##0.#");
+        String amountOfDecimals;
+        switch (suffix) {
+            case 'k':
+                amountOfDecimals = "#";
+                break;
+            case 'm':
+                amountOfDecimals = "##";
+                break;
+            default:
+                amountOfDecimals = "###";
+        }
+        DecimalFormat df = new DecimalFormat("#,##0." + amountOfDecimals);
         return df.format(number / divideBy) + suffix;
     }
 

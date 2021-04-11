@@ -1,5 +1,7 @@
 package de.cowtipper.cowlection.listener.skyblock;
 
+import com.google.common.collect.Ordering;
+import com.google.common.collect.TreeMultimap;
 import com.mojang.realmsclient.util.Pair;
 import de.cowtipper.cowlection.Cowlection;
 import de.cowtipper.cowlection.config.MooConfig;
@@ -68,6 +70,8 @@ public class SkyBlockListener {
     private static final Pattern ITEM_COUNT_SUFFIXED_PATTERN = Pattern.compile(" (?:§[0-9a-fl-or])*x[\\d]+$");
     private static final Pattern PET_NAME_PATTERN = Pattern.compile("^§7\\[Lvl (\\d+)] (§[0-9a-f])");
     private static final Pattern TIER_SUFFIX_PATTERN = Pattern.compile(" [IVX0-9]+$");
+    // example: " §a42§7x §fLeather §7for §6436.8 coins"
+    private static final Pattern BAZAAR_SELL_ALL_PATTERN = Pattern.compile("^(?:§[0-9a-fl-or])* (?:§[0-9a-fl-or])+([0-9,]+)(?:§[0-9a-fl-or])+x (?:§[0-9a-fl-or])+[A-Za-z ]+ (?:§[0-9a-fl-or])+for (?:§[0-9a-fl-or])+([0-9,.]+) coins$");
     List<BestiaryEntry> bestiaryOverview = null;
     private final NumberFormat numberFormatter;
     private final Cowlection main;
@@ -325,7 +329,15 @@ public class SkyBlockListener {
         // either use cached bestiary overview or generate overview if trigger item is different
         boolean isDifferentTriggerItem = BestiaryEntry.isDifferentTriggerItem(e.itemStack);
         GuiScreen currentScreen = Minecraft.getMinecraft().currentScreen;
-        if (currentScreen instanceof GuiChest && isBestiaryOverviewVisible && isBestiaryGui((GuiChest) currentScreen, e.itemStack)) {
+        if (currentScreen instanceof GuiChest && isBestiaryOverviewVisible && isBestiaryMainGui((GuiChest) currentScreen, e.itemStack)) {
+            e.toolTip.add("");
+            e.toolTip.add("" + EnumChatFormatting.GOLD + EnumChatFormatting.BOLD + EnumChatFormatting.UNDERLINE + "Cowlection: Bestiary overview");
+            e.toolTip.add(EnumChatFormatting.GRAY + "Select an area below, then hover");
+            e.toolTip.add(EnumChatFormatting.GRAY + "over the area icon at the top to see");
+            e.toolTip.add(EnumChatFormatting.GRAY + "the " + bestiaryOverviewOrder + " left to the next bestiary tier.");
+            e.toolTip.add(EnumChatFormatting.DARK_GRAY + "(Hypixel's bestiary shows " + EnumChatFormatting.ITALIC + "progress");
+            e.toolTip.add(EnumChatFormatting.DARK_GRAY + " & Cowlection tooltip shows kills " + EnumChatFormatting.ITALIC + "left" + EnumChatFormatting.RESET + EnumChatFormatting.DARK_GRAY + "!)");
+        } else if (currentScreen instanceof GuiChest && isBestiaryOverviewVisible && isBestiaryGui((GuiChest) currentScreen, e.itemStack)) {
             if (isDifferentTriggerItem) {
                 BestiaryEntry.reinitialize(e.itemStack);
                 bestiaryOverview = new ArrayList<>();
@@ -397,6 +409,62 @@ public class SkyBlockListener {
 
                 for (BestiaryEntry bestiaryEntry : bestiaryOverview) {
                     e.toolTip.add(bestiaryEntry.getFormattedOutput(sortBestiaryOverviewByKills));
+                }
+            }
+        }
+
+        // bazaar: sort "Sell <Inventory|Sacks> Now"
+        if ((e.itemStack.getItem() == Items.cauldron || e.itemStack.getItem() == Item.getItemFromBlock(Blocks.chest)) && !"unordered".equals(MooConfig.bazaarSellAllOrder)) {
+            String hoveredItemName = EnumChatFormatting.getTextWithoutFormattingCodes(e.itemStack.getDisplayName());
+            if ("Sell Inventory Now".equals(hoveredItemName) || "Sell Sacks Now".equals(hoveredItemName)) {
+                NumberFormat numberFormatter = NumberFormat.getNumberInstance(Locale.US);
+                numberFormatter.setMaximumFractionDigits(1);
+                List<String> toolTip = e.toolTip;
+                int startIndex = 1337;
+                TreeMultimap<Double, String> sellEntries = TreeMultimap.create(Ordering.natural().reverse(), Ordering.natural());
+                for (int i = 0; i < toolTip.size(); i++) {
+                    Matcher bazaarSellMatcher = BAZAAR_SELL_ALL_PATTERN.matcher(toolTip.get(i));
+                    if (bazaarSellMatcher.matches()) {
+                        if (i < startIndex) {
+                            startIndex = i;
+                        }
+                        String amountStr = bazaarSellMatcher.group(1);
+                        String priceStr = bazaarSellMatcher.group(2);
+                        try {
+                            double key;
+                            String suffix = "";
+                            switch (MooConfig.bazaarSellAllOrder) {
+                                case "price (sum)":
+                                    key = numberFormatter.parse(priceStr).doubleValue();
+                                    break;
+                                case "item amount":
+                                    key = numberFormatter.parse(amountStr).intValue();
+                                    break;
+                                case "price (each)":
+                                    key = numberFormatter.parse(priceStr).doubleValue() / numberFormatter.parse(amountStr).doubleValue();
+                                    suffix = EnumChatFormatting.DARK_GRAY + " (" + numberFormatter.format(key) + " each)";
+                                    break;
+                                default:
+                                    // invalid value, abort!
+                                    return;
+                            }
+                            sellEntries.put(key, toolTip.get(i) + suffix);
+                        } catch (ParseException ex) {
+                            // abort
+                            return;
+                        }
+                    } else if (startIndex < 1337) {
+                        // startIndex has been set; lore line no longer matches regex: reached end of tooltip's 'sell all'-section
+                        break;
+                    }
+                }
+                if (sellEntries.size() > 1) {
+                    int sellEntryIndex = 0;
+                    for (String sellEntry : sellEntries.values()) {
+                        e.toolTip.set(startIndex + sellEntryIndex, sellEntry);
+                        ++sellEntryIndex;
+                    }
+                    e.toolTip.add(startIndex + sellEntryIndex, EnumChatFormatting.DARK_GRAY + "  » ordered by " + MooConfig.bazaarSellAllOrder);
                 }
             }
         }
@@ -610,6 +678,13 @@ public class SkyBlockListener {
                 }
             }
         }
+    }
+
+    private boolean isBestiaryMainGui(GuiChest guiChest, ItemStack hoveredItem) {
+        IInventory inventory = guiChest.inventorySlots.getSlot(0).inventory;
+        String inventoryName = (inventory.hasCustomName() ? EnumChatFormatting.getTextWithoutFormattingCodes(inventory.getDisplayName().getUnformattedTextForChat()) : inventory.getName());
+        String hoveredItemName = EnumChatFormatting.getTextWithoutFormattingCodes(hoveredItem.getDisplayName());
+        return ("Bestiary".equals(inventoryName) && "Bestiary".equals(hoveredItemName) && hoveredItem.getItem() == Items.writable_book);
     }
 
     private boolean isBestiaryGui(GuiChest guiChest, ItemStack hoveredItem) {

@@ -80,6 +80,7 @@ public class MooConfig {
     private static String tooltipAuctionHousePriceEach;
     public static String[] tooltipAuctionHousePriceEachEnchantments;
     private static String auctionHouseMarkEndedAuctions;
+    public static String bazaarSellAllOrder;
     private static String bazaarConnectGraphsNodes;
     public static int bazaarConnectGraphsLineWidth;
     public static String bestiaryOverviewOrder;
@@ -417,6 +418,10 @@ public class MooConfig {
         Property propAuctionHouseMarkEndedAuctions = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "auctionHouseMarkEndedAuctions", "a letter", "Mark ended auctions", new String[]{"a letter", "a word", "disabled"}));
 
+        Property propBazaarSellAllOrder = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "bazaarSellAllOrder", "price (sum)", "Bazaar: sell all order", new String[]{"price (sum)", "item amount", "unordered", "price (each)"}),
+                new MooConfigPreview(MooConfigPreview.createDemoItem("chest", "§aSell Inventory Now", new String[]{"§7Instantly sell anything in", "§7your inventory that can be", "§7sold on the Bazaar.", "", " §a1§7x §aEnchanted Leather §7for §65,263.1 coins", " §a42§7x §fLeather §7for §6436.8 coins", " §a2§7x §fRabbit Hide §7for §642.0 coins", " §a79§7x §fRaw Beef §7for §6450.3 coins", " §a16§7x §aEnchanted Raw Beef §7for §69,867.2 coins", "", "§7You earn: §615,698 coins", "", "§eClick to sell!"}, Collections.emptyMap())));
+
         MooConfigPreview bazaarGraphPreview = new MooConfigPreview(MooConfigPreview.createDemoItem("paper", "§aBuy Price §731d §77d §e24h", new String[]{
                 "§7The price at which buy orders have been filled.", "",
                 "§r┌----------------------------------------------┐", "§r│§66. 1k§r+§bxxxxxx§8·································§bxx§r│",
@@ -630,6 +635,7 @@ public class MooConfig {
             tooltipAuctionHousePriceEach = propTooltipAuctionHousePriceEach.getString();
             tooltipAuctionHousePriceEachEnchantments = propTooltipAuctionHousePriceEachEnchantments.getStringList();
             auctionHouseMarkEndedAuctions = propAuctionHouseMarkEndedAuctions.getString();
+            bazaarSellAllOrder = propBazaarSellAllOrder.getString();
             bazaarConnectGraphsNodes = propBazaarConnectGraphsNodes.getString();
             bazaarConnectGraphsLineWidth = propBazaarConnectGraphsLineWidth.getInt();
             bestiaryOverviewOrder = propBestiaryOverviewOrder.getString();
@@ -706,6 +712,7 @@ public class MooConfig {
         propTooltipAuctionHousePriceEach.set(tooltipAuctionHousePriceEach);
         propTooltipAuctionHousePriceEachEnchantments.set(tooltipAuctionHousePriceEachEnchantments);
         propAuctionHouseMarkEndedAuctions.set(auctionHouseMarkEndedAuctions);
+        propBazaarSellAllOrder.set(bazaarSellAllOrder);
         propBazaarConnectGraphsNodes.set(bazaarConnectGraphsNodes);
         propBazaarConnectGraphsLineWidth.set(bazaarConnectGraphsLineWidth);
         propBestiaryOverviewOrder.set(bestiaryOverviewOrder);
