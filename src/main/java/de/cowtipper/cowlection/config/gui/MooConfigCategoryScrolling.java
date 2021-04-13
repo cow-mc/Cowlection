@@ -48,15 +48,25 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
      */
     private final NavigableMap<Integer, MooConfigPreview> listEntriesPreviews;
 
-    public MooConfigCategoryScrolling(MooConfigGui parent, Minecraft mc, MooConfigCategory currentConfigCategory, int marginLeft) {
+    private MooConfigCategoryScrolling(MooConfigGui parent, Minecraft mc, int marginLeft) {
         super(mc, parent.width - marginLeft, parent.height, 32, parent.height - 5, 20);
         this.parent = parent;
         setSlotXBoundsFromLeft(marginLeft);
         this.mc = mc;
+
         listEntriesPreviews = new TreeMap<>();
         explanations = new HashMap<>();
+        listEntries = new ArrayList<>();
+    }
 
-        this.listEntries = new ArrayList<>();
+    public MooConfigCategoryScrolling(MooConfigGui parent, Minecraft mc, String initialSearchQuery, int marginLeft) {
+        this(parent, mc, marginLeft);
+        showFilteredConfigEntries(initialSearchQuery);
+    }
+
+    public MooConfigCategoryScrolling(MooConfigGui parent, Minecraft mc, MooConfigCategory currentConfigCategory, int marginLeft) {
+        this(parent, mc, marginLeft);
+
         for (MooConfigCategory.SubCategory subCategory : currentConfigCategory.getSubCategories()) {
             int subCategoryStartIndex = this.listEntries.size();
             this.listEntries.add(new MooConfigCategoryScrolling.CategoryEntry(subCategory.getDisplayName(), !subCategory.getExplanations().isEmpty()));
@@ -93,69 +103,136 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
 
             // add config elements
             for (Property configEntry : subCategory.getConfigEntries()) {
-                int labelWidth = mc.fontRendererObj.getStringWidth(I18n.format(configEntry.getLanguageKey()));
-
-                if (labelWidth > this.maxListLabelWidth) {
-                    this.maxListLabelWidth = labelWidth;
-                }
-
-                Property.Type type = configEntry.getType();
-                if (configEntry.isList() && type == Property.Type.STRING && configEntry.equals(Cowlection.getInstance().getConfig().getTabCompletableNamesCommandsProperty())) {
-                    this.listEntries.add(new GuiSwitchEntry("tabCompletableNamesCommands", "➡ modify", () ->
-                            mc.displayGuiScreen(new GuiConfig(MooConfigCategoryScrolling.this.parent,
-                                    Lists.newArrayList(new ConfigElement(Cowlection.getInstance().getConfig().getTabCompletableNamesCommandsProperty())),
-                                    Cowlection.MODID, "cowlectionTabCompletableCommands", false, false,
-                                    EnumChatFormatting.GOLD + "Press 2x Done to save changes. " + EnumChatFormatting.RED + "Requires a game restart to take effect!"))));
-                    continue;
-                } else if (type == Property.Type.BOOLEAN) {
-                    this.listEntries.add(new BooleanConfigEntry(configEntry));
-                    continue;
-                } else if (type == Property.Type.INTEGER) {
-                    if (configEntry.getLanguageKey() != null && configEntry.getLanguageKey().endsWith("KeyBinding")) {
-                        // special case: key binding
-                        this.listEntries.add(new KeyBindingConfigEntry(configEntry));
-                        continue;
-                    } else if (configEntry.isIntValue() && configEntry.getMinValue() != null && configEntry.getMaxValue() != null) {
-                        // generic special case: int value with min & max value
-                        this.listEntries.add(new NumberSliderConfigEntry(configEntry,
-                                subCategory.getGuiSliderExtra(configEntry.getLanguageKey())));
-                        continue;
-                    }
-                } else if (type == Property.Type.STRING) {
-                    if (configEntry.getLanguageKey().equals(Cowlection.MODID + ".config.isMooValid")) {
-                        // special case: moo!
-                        this.listEntries.add(new BooleanConfigEntry(configEntry));
-                        continue;
-                    } else if (configEntry.equals(Cowlection.getInstance().getConfig().getMooCmdAliasProperty())) {
-                        this.listEntries.add(new GuiSwitchEntry("mooCmdAlias", "➡ modify", () ->
-                                mc.displayGuiScreen(new GuiConfig(MooConfigCategoryScrolling.this.parent,
-                                        Lists.newArrayList(new ConfigElement(Cowlection.getInstance().getConfig().getMooCmdAliasProperty())),
-                                        Cowlection.MODID, "cowlectionMooCmdAlias", false, false,
-                                        EnumChatFormatting.GOLD + "Press Done to save changes. " + EnumChatFormatting.RED + "Requires a game restart to take effect!"))));
-                        continue;
-                    } else if (configEntry.equals(Cowlection.getInstance().getConfig().getTooltipAuctionHousePriceEachEnchantmentsProperty())) {
-                        this.listEntries.add(new GuiSwitchEntry("tooltipAuctionHousePriceEachEnchantments", "➡ modify", () ->
-                                mc.displayGuiScreen(new GuiConfig(MooConfigCategoryScrolling.this.parent,
-                                        Lists.newArrayList(new ConfigElement(Cowlection.getInstance().getConfig().getTooltipAuctionHousePriceEachEnchantmentsProperty())),
-                                        Cowlection.MODID, "cowlectionTooltipAuctionHousePriceEachEnchantments", false, false,
-                                        EnumChatFormatting.GOLD + "Press 2x Done to save changes. " + EnumChatFormatting.LIGHT_PURPLE + EnumChatFormatting.BOLD + "Ultimate" + EnumChatFormatting.RESET + EnumChatFormatting.RED + " and " + EnumChatFormatting.YELLOW + "Turbo-Crop" + EnumChatFormatting.RED + " enchants are always included!"))));
-                        continue;
-                    } else if (configEntry.getValidValues() != null && configEntry.getValidValues().length > 0) {
-                        if ("dungOverlayTextBorder".equals(configEntry.getName())) {
-                            // special case: Dung Performance Overlay: show preview on button click
-                            this.listEntries.add(new DungCycleConfigEntry(configEntry));
-                        } else {
-                            this.listEntries.add(new CycleConfigEntry(configEntry));
-                        }
-                        continue;
-                    }
-                }
-                // type == Property.Type.DOUBLE
-                // type == Property.Type.COLOR // => ChatColorEntry#drawEntry
-                // type == Property.Type.MOD_ID
-                // + some other cases
-                throw new NotImplementedException("Unsupported config entry of type " + configEntry.getType() + " (" + configEntry.getName() + ")");
+                addConfigEntryToGui(subCategory, configEntry);
             }
+        }
+    }
+
+    private void addConfigEntryToGui(MooConfigCategory.SubCategory subCategory, Property configEntry) {
+        int labelWidth = mc.fontRendererObj.getStringWidth(I18n.format(configEntry.getLanguageKey()));
+
+        if (labelWidth > this.maxListLabelWidth) {
+            this.maxListLabelWidth = labelWidth;
+        }
+
+        Property.Type type = configEntry.getType();
+        if (configEntry.isList() && type == Property.Type.STRING && configEntry.equals(Cowlection.getInstance().getConfig().getTabCompletableNamesCommandsProperty())) {
+            this.listEntries.add(new GuiSwitchEntry("tabCompletableNamesCommands", "➡ modify", () ->
+                    mc.displayGuiScreen(new GuiConfig(MooConfigCategoryScrolling.this.parent,
+                            Lists.newArrayList(new ConfigElement(Cowlection.getInstance().getConfig().getTabCompletableNamesCommandsProperty())),
+                            Cowlection.MODID, "cowlectionTabCompletableCommands", false, false,
+                            EnumChatFormatting.GOLD + "Press 2x Done to save changes. " + EnumChatFormatting.RED + "Requires a game restart to take effect!"))));
+            return;
+        } else if (type == Property.Type.BOOLEAN) {
+            this.listEntries.add(new BooleanConfigEntry(configEntry));
+            return;
+        } else if (type == Property.Type.INTEGER) {
+            if (configEntry.getLanguageKey() != null && configEntry.getLanguageKey().endsWith("KeyBinding")) {
+                // special case: key binding
+                this.listEntries.add(new KeyBindingConfigEntry(configEntry));
+                return;
+            } else if (configEntry.isIntValue() && configEntry.getMinValue() != null && configEntry.getMaxValue() != null) {
+                // generic special case: int value with min & max value
+                this.listEntries.add(new NumberSliderConfigEntry(configEntry,
+                        subCategory.getGuiSliderExtra(configEntry.getLanguageKey())));
+                return;
+            }
+        } else if (type == Property.Type.STRING) {
+            if (configEntry.getLanguageKey().equals(Cowlection.MODID + ".config.isMooValid")) {
+                // special case: moo!
+                this.listEntries.add(new BooleanConfigEntry(configEntry));
+                return;
+            } else if (configEntry.equals(Cowlection.getInstance().getConfig().getMooCmdAliasProperty())) {
+                this.listEntries.add(new GuiSwitchEntry("mooCmdAlias", "➡ modify", () ->
+                        mc.displayGuiScreen(new GuiConfig(MooConfigCategoryScrolling.this.parent,
+                                Lists.newArrayList(new ConfigElement(Cowlection.getInstance().getConfig().getMooCmdAliasProperty())),
+                                Cowlection.MODID, "cowlectionMooCmdAlias", false, false,
+                                EnumChatFormatting.GOLD + "Press Done to save changes. " + EnumChatFormatting.RED + "Requires a game restart to take effect!"))));
+                return;
+            } else if (configEntry.equals(Cowlection.getInstance().getConfig().getTooltipAuctionHousePriceEachEnchantmentsProperty())) {
+                this.listEntries.add(new GuiSwitchEntry("tooltipAuctionHousePriceEachEnchantments", "➡ modify", () ->
+                        mc.displayGuiScreen(new GuiConfig(MooConfigCategoryScrolling.this.parent,
+                                Lists.newArrayList(new ConfigElement(Cowlection.getInstance().getConfig().getTooltipAuctionHousePriceEachEnchantmentsProperty())),
+                                Cowlection.MODID, "cowlectionTooltipAuctionHousePriceEachEnchantments", false, false,
+                                EnumChatFormatting.GOLD + "Press 2x Done to save changes. " + EnumChatFormatting.LIGHT_PURPLE + EnumChatFormatting.BOLD + "Ultimate" + EnumChatFormatting.RESET + EnumChatFormatting.RED + " and " + EnumChatFormatting.YELLOW + "Turbo-Crop" + EnumChatFormatting.RED + " enchants are always included!"))));
+                return;
+            } else if (configEntry.getValidValues() != null && configEntry.getValidValues().length > 0) {
+                if ("dungOverlayTextBorder".equals(configEntry.getName())) {
+                    // special case: Dungeon Performance Overlay: show preview on button click
+                    this.listEntries.add(new DungCycleConfigEntry(configEntry));
+                } else {
+                    this.listEntries.add(new CycleConfigEntry(configEntry));
+                }
+                return;
+            }
+        }
+        // type == Property.Type.DOUBLE
+        // type == Property.Type.COLOR // => ChatColorEntry#drawEntry
+        // type == Property.Type.MOD_ID
+        // + some other cases
+        throw new NotImplementedException("Unsupported config entry of type " + configEntry.getType() + (configEntry.isList() ? "-list" : "") + " (" + configEntry.getName() + ")");
+    }
+
+    public void showFilteredConfigEntries(String searchQuery) {
+        listEntriesPreviews.clear();
+        explanations.clear();
+        listEntries.clear();
+        maxListLabelWidth = 0;
+
+        MooConfigCategory lastCategory = null;
+        MooConfigCategory.SubCategory lastSubCategory = null;
+        boolean hasLogSearchBeenAdded = false;
+        int entryNr = 0;
+        for (MooConfigCategory configCategory : MooConfig.getConfigCategories()) {
+            for (MooConfigCategory.SubCategory subCategory : configCategory.getSubCategories()) {
+                // add config elements
+                for (Property configEntry : subCategory.getConfigEntries()) {
+                    // search for search term in config property sub-category name, display name, tooltip
+                    if (StringUtils.containsIgnoreCase(subCategory.getDisplayName(), searchQuery)
+                            || StringUtils.containsIgnoreCase(I18n.format(configEntry.getLanguageKey()), searchQuery)
+                            || StringUtils.containsIgnoreCase(I18n.format(configEntry.getLanguageKey() + ".tooltip"), searchQuery)) {
+                        if (configCategory != lastCategory) {
+                            this.listEntries.add(new MooConfigCategoryScrolling.CategoryEntry("" + EnumChatFormatting.RESET + EnumChatFormatting.DARK_GRAY + "Config category: " + EnumChatFormatting.DARK_RED + EnumChatFormatting.BOLD + EnumChatFormatting.UNDERLINE + configCategory.getDisplayName(), false));
+                            lastCategory = configCategory;
+                            ++entryNr;
+                        }
+                        if (subCategory != lastSubCategory) {
+                            this.listEntries.add(new MooConfigCategoryScrolling.CategoryEntry(subCategory.getDisplayName(), !subCategory.getExplanations().isEmpty()));
+                            // add explanations
+                            this.explanations.put(entryNr, subCategory.getExplanations());
+
+                            // add preview spacer for sub category
+                            this.listEntriesPreviews.put(entryNr, null);
+
+                            lastSubCategory = subCategory;
+                            ++entryNr;
+                        }
+                        // add control buttons to navigate to other guis
+                        if ("Other settings".equals(subCategory.getDisplayName())) {
+                            if (!hasLogSearchBeenAdded && Cowlection.getInstance().getConfig().getLogSearchProperties().contains(configEntry)) {
+                                // don't add properties to main config gui, use this instead:
+                                this.listEntries.add(new GuiSwitchEntry("gotoLogSearchConfig", "Log Search", () -> mc.displayGuiScreen(new GuiSearch(Cowlection.getInstance().getConfigDirectory(), ""))));
+                                hasLogSearchBeenAdded = true;
+                            } else if (hasLogSearchBeenAdded) {
+                                // already added the replacement-entry, thus don't increase entry counter
+                                --entryNr;
+                            }
+                        } else {
+                            addConfigEntryToGui(subCategory, configEntry);
+                            // add preview for this entry
+                            MooConfigPreview preview = subCategory.getPreview(configEntry);
+                            if (preview != null) {
+                                this.listEntriesPreviews.put(entryNr, preview);
+                            }
+                        }
+                        ++entryNr;
+                    }
+                }
+            }
+        }
+        if (listEntries.isEmpty()) {
+            // no matching config entries found
+            this.listEntries.add(new ExplanationsEntry("" + EnumChatFormatting.RESET + EnumChatFormatting.RED + EnumChatFormatting.ITALIC + "no matching config entries found for '" + EnumChatFormatting.GOLD + searchQuery + EnumChatFormatting.RED + EnumChatFormatting.ITALIC + "'"));
         }
     }
 
@@ -385,7 +462,7 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
                 MooConfigCategoryScrolling.this.mc.fontRendererObj.drawString(EnumChatFormatting.DARK_GREEN + "❢", x + 2, yTextPos, 0xffffff);
             }
             // draw sub category label
-            int labelX = (int) (x + MooConfigCategoryScrolling.this.maxListLabelWidth * 0.75 - this.labelWidth / 2);
+            int labelX = Math.max((int) (x + MooConfigCategoryScrolling.this.maxListLabelWidth * 0.75 - this.labelWidth / 2), x + (hasExplanations ? 10 : 0));
             MooConfigCategoryScrolling.this.mc.fontRendererObj.drawString(this.labelText, labelX, yTextPos, 0xffffff);
         }
 

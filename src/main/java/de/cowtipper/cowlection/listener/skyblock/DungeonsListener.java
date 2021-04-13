@@ -645,7 +645,7 @@ public class DungeonsListener {
                 if (!MooConfig.hasOpenedConfigGui) {
                     dungeonPerformanceEntries.add(EnumChatFormatting.RED + "Want to move me? " + EnumChatFormatting.LIGHT_PURPLE + "/moo config "
                             + EnumChatFormatting.DARK_GRAY + "➡ " + EnumChatFormatting.WHITE + "SB Dungeons "
-                            + EnumChatFormatting.DARK_GRAY + "➡ " + EnumChatFormatting.WHITE + "Performance Overlay");
+                            + EnumChatFormatting.DARK_GRAY + "➡ " + EnumChatFormatting.WHITE + "Dungeon Performance Overlay");
                 }
 
                 FontRenderer fontRenderer = Minecraft.getMinecraft().fontRendererObj;

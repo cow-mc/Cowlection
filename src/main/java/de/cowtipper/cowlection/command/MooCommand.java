@@ -130,7 +130,7 @@ public class MooCommand extends CommandBase {
         //region sub-commands: miscellaneous
         else if (args[0].equalsIgnoreCase("config")) {
             main.getConfig().theyOpenedTheConfigGui();
-            displayGuiScreen(new MooConfigGui());
+            displayGuiScreen(new MooConfigGui(buildString(args, 1)));
         } else if (args[0].equalsIgnoreCase("search")) {
             displayGuiScreen(new GuiSearch(main.getConfigDirectory(), CommandBase.buildString(args, 1)));
         } else if (args[0].equalsIgnoreCase("guiscale")) {
@@ -1054,7 +1054,7 @@ public class MooCommand extends CommandBase {
     private void sendCommandUsage(ICommandSender sender) {
         IChatComponent usage = new MooChatComponent("➜ " + Cowlection.MODNAME + " commands:").gold().bold()
                 .appendSibling(createCmdHelpEntry("config", "Open mod's configuration"))
-                .appendSibling(new MooChatComponent("\n").reset().white().appendText(EnumChatFormatting.DARK_GREEN + "  ❢" + EnumChatFormatting.LIGHT_PURPLE + EnumChatFormatting.ITALIC + " To move the Dungeons overlay: " + EnumChatFormatting.WHITE + "/" + getCommandName() + " config " + EnumChatFormatting.GRAY + "➡ " + EnumChatFormatting.WHITE + "SB Dungeons " + EnumChatFormatting.GRAY + "➡ " + EnumChatFormatting.WHITE + "Performance Overlay"))
+                .appendSibling(new MooChatComponent("\n").reset().white().appendText(EnumChatFormatting.DARK_GREEN + "  ❢" + EnumChatFormatting.LIGHT_PURPLE + EnumChatFormatting.ITALIC + " To move the Dungeons overlay: " + EnumChatFormatting.WHITE + "/" + getCommandName() + " config " + EnumChatFormatting.GRAY + "➡ " + EnumChatFormatting.WHITE + "SB Dungeons " + EnumChatFormatting.GRAY + "➡ " + EnumChatFormatting.WHITE + "Dungeon Performance Overlay"))
                 .appendSibling(new MooChatComponent("\n").reset().gray().appendText(EnumChatFormatting.DARK_GREEN + "  ❢" + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + " Commands marked with §d§l⚷" + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + " require a valid API key"))
                 .appendSibling(createCmdHelpSection(1, "Best friends, friends & other players"))
                 .appendSibling(createCmdHelpEntry("stalk", "Get info of player's status §d§l⚷"))

@@ -114,6 +114,14 @@ public class MooConfigCategory {
             return guiSliderExtras.get(propertyKey);
         }
 
+        public MooConfigPreview getPreview(Property property) {
+            int propId = configEntries.indexOf(property);
+            if (propId > -1) {
+                return this.previews.get(propId + 1);
+            }
+            return null;
+        }
+
         public Map<Integer, MooConfigPreview> getPreviews() {
             return previews;
         }

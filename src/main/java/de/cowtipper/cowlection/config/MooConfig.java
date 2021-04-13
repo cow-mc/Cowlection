@@ -488,8 +488,8 @@ public class MooConfig {
         Property propDungItemToolTipToggleKeyBinding = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "dungItemToolTipToggleKeyBinding", Keyboard.KEY_LSHIFT, "Key to toggle dungeon item tooltip"));
 
-        // Sub-Category: Performance Overlay
-        subCat = configCat.addSubCategory("Performance Overlay");
+        // Sub-Category: Dungeon Performance Overlay
+        subCat = configCat.addSubCategory("Dungeon Performance Overlay");
         subCat.addExplanations(EnumChatFormatting.UNDERLINE + "Keeps track of:",
                 "  ‣ skill score " + EnumChatFormatting.GRAY + "(reduced by deaths and failed puzzles)",
                 "  ‣ speed score " + EnumChatFormatting.GRAY + "(-2.2 points/minute when over 20 minutes)",

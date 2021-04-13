@@ -29,6 +29,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Added Dungeons: Catacombs Master Mode support
 - `/moo stalk`: Added "Game Master" rank
 - Added mini-"tutorial" on how to open the config gui (to move the dungeon overlay)
+- Added a search to `/moo config`
 
 ### Changed
 - Refined the comma representation of large numbers abbreviated with k, m, b
