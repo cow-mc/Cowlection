@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - hover over one of the area/location-items in a *sub*-category of the Bestiary to see an overview of the tiers upgrades you are closest to
   - can be ordered by fewest kills or lowest % to next tier by clicking on the area/location item
 - `/moo whatAmILookingAt` (or: `/m waila`)
-  - copy info of "the thing" you're looking at (NPC or mob + nearby "text-only" armor stands; armor stand, placed skull, dropped item, item in item frame, map on wall)
+  - copy info of "the thing" you're looking at (NPC or mob + nearby "text-only" armor stands; armor stand, placed skull, banner, sign, dropped item, item in item frame, map on wall)
   - automatically decodes base64 data (e.g. skin details) and unix timestamps
 - Auction house: Mark sold/ended/expired auctions
   - either one letter (S, E, E) or the full word

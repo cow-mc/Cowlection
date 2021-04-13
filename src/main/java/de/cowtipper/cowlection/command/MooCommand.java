@@ -29,11 +29,14 @@ import net.minecraft.entity.item.EntityItemFrame;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.event.HoverEvent;
 import net.minecraft.init.Items;
+import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.ItemMap;
 import net.minecraft.item.ItemSkull;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.*;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.tileentity.TileEntityBanner;
+import net.minecraft.tileentity.TileEntitySign;
 import net.minecraft.tileentity.TileEntitySkull;
 import net.minecraft.util.*;
 import net.minecraft.world.storage.MapData;
@@ -782,6 +785,38 @@ public class MooCommand extends CommandBase {
                             main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Copied skull data to clipboard.");
                             return;
                         }
+                    } else if (te instanceof TileEntitySign) {
+                        TileEntitySign sign = (TileEntitySign) te;
+                        NBTTagCompound nbt = new NBTTagCompound();
+                        for (int lineNr = 0; lineNr < sign.signText.length; lineNr++) {
+                            nbt.setString("Text" + (lineNr + 1), sign.signText[lineNr].getFormattedText());
+                            nbt.setString("TextUnformatted" + (lineNr + 1), sign.signText[lineNr].getUnformattedText());
+                        }
+                        GuiScreen.setClipboardString(GsonUtils.toJson(nbt, true));
+                        main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Copied sign data to clipboard.");
+                        return;
+                    } else if (te instanceof TileEntityBanner) {
+                        List<String> possiblePatterns = Arrays.asList("b", "bl", "bo", "br", "bri", "bs", "bt", "bts", "cbo", "cr", "cre", "cs", "dls", "drs", "flo", "gra", "hh", "ld", "ls", "mc", "moj", "mr", "ms", "rd", "rs", "sc", "sku", "ss", "tl", "tr", "ts", "tt", "tts", "vh", "lud", "rud", "gru", "hhb", "vhr");
+                        String base64Alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/";
+
+                        TileEntityBanner banner = (TileEntityBanner) te;
+                        Iterator<TileEntityBanner.EnumBannerPattern> bannerPatterns = banner.getPatternList().iterator();
+                        Iterator<EnumDyeColor> bannerColors = banner.getColorList().iterator();
+                        try {
+                            // hash used by needcoolshoes.com
+                            StringBuilder bannerHash = new StringBuilder();
+                            while (bannerPatterns.hasNext() && bannerColors.hasNext()) {
+                                int patternId = possiblePatterns.indexOf(bannerPatterns.next().getPatternID());
+                                int color = bannerColors.next().getDyeDamage();
+                                int first = ((patternId >> 6) << 4) | (color & 0xF);
+                                int second = patternId & 0x3F;
+                                bannerHash.append(base64Alphabet.charAt(first)).append(base64Alphabet.charAt(second));
+                            }
+                            main.getChatHelper().sendMessage(new MooChatComponent("➡ View banner on needcoolshoes.com").green().setUrl("https://www.needcoolshoes.com/banner?=" + bannerHash));
+                        } catch (IndexOutOfBoundsException e) {
+                            main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Failed to parse banner data (unknown banner pattern).");
+                        }
+                        return;
                     }
                     break;
                 }
