@@ -101,6 +101,7 @@ public class MooConfig {
     private static String dungPartyFinderPlayerLookup;
     public static boolean dungPartyFullLookup;
     public static boolean dungPartyFinderPartyLookup;
+    public static boolean dungPartyFinderOverlayDrawBackground;
     public static boolean dungPartiesSize;
     public static int dungDungeonReqMin;
     public static int dungClassMin;
@@ -552,6 +553,9 @@ public class MooConfig {
         Property propDungPartyFinderPartyLookup = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "dungPartyFinderPartyLookup", true, "Lookup info when joining another party?"));
 
+        Property propDungPartyFinderOverlayDrawBackground = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "dungPartyFinderOverlayDrawBackground", true, "Party Finder: draw colored overlay?"));
+
         Property propDungPartiesSize = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "dungPartiesSize", true, "Show size of parties?"),
                 new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.WHITE + "1 - 4").gray()));
@@ -655,6 +659,7 @@ public class MooConfig {
             dungPartyFinderPlayerLookup = propDungPartyFinderPlayerLookup.getString();
             dungPartyFullLookup = propDungPartyFullLookup.getBoolean();
             dungPartyFinderPartyLookup = propDungPartyFinderPartyLookup.getBoolean();
+            dungPartyFinderOverlayDrawBackground = propDungPartyFinderOverlayDrawBackground.getBoolean();
             dungPartiesSize = propDungPartiesSize.getBoolean();
             dungDungeonReqMin = propDungDungeonReqMin.getInt();
             dungClassMin = propDungClassMin.getInt();
@@ -732,6 +737,7 @@ public class MooConfig {
         propDungPartyFinderPlayerLookup.set(dungPartyFinderPlayerLookup);
         propDungPartyFullLookup.set(dungPartyFullLookup);
         propDungPartyFinderPartyLookup.set(dungPartyFinderPartyLookup);
+        propDungPartyFinderOverlayDrawBackground.set(dungPartyFinderOverlayDrawBackground);
         propDungPartiesSize.set(dungPartiesSize);
         propDungDungeonReqMin.set(dungDungeonReqMin);
         propDungClassMin.set(dungClassMin);

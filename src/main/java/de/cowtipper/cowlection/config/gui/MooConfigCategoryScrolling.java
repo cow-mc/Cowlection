@@ -211,6 +211,10 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
                         if ("Other settings".equals(subCategory.getDisplayName())) {
                             if (!hasLogSearchBeenAdded && Cowlection.getInstance().getConfig().getLogSearchProperties().contains(configEntry)) {
                                 // don't add properties to main config gui, use this instead:
+                                int labelWidth = mc.fontRendererObj.getStringWidth(I18n.format("cowlection.config.gotoLogSearchConfig"));
+                                if (labelWidth > this.maxListLabelWidth) {
+                                    this.maxListLabelWidth = labelWidth;
+                                }
                                 this.listEntries.add(new GuiSwitchEntry("gotoLogSearchConfig", "Log Search", () -> mc.displayGuiScreen(new GuiSearch(Cowlection.getInstance().getConfigDirectory(), ""))));
                                 hasLogSearchBeenAdded = true;
                             } else if (hasLogSearchBeenAdded) {
