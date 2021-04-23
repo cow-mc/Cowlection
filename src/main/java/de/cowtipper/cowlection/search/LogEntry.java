@@ -1,4 +1,4 @@
-package de.cowtipper.cowlection.data;
+package de.cowtipper.cowlection.search;
 
 import net.minecraft.util.EnumChatFormatting;
 import org.apache.commons.lang3.builder.EqualsBuilder;

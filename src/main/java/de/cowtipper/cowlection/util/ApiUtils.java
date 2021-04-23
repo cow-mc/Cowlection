@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.mojang.util.UUIDTypeAdapter;
 import de.cowtipper.cowlection.Cowlection;
+import de.cowtipper.cowlection.chestTracker.HyBazaarData;
 import de.cowtipper.cowlection.command.exception.ThrowingConsumer;
 import de.cowtipper.cowlection.config.CredentialStorage;
 import de.cowtipper.cowlection.data.*;
@@ -27,6 +28,7 @@ public class ApiUtils {
     private static final String UUID_TO_NAME_URL = "https://api.mojang.com/user/profiles/%s/names";
     private static final String ONLINE_STATUS_URL = "https://api.hypixel.net/status?key=%s&uuid=%s";
     private static final String SKYBLOCK_STATS_URL = "https://api.hypixel.net/skyblock/profiles?key=%s&uuid=%s";
+    private static final String BAZAAR_URL = "https://api.hypixel.net/skyblock/bazaar";
     private static final String PLAYER_URL = "https://api.hypixel.net/player?key=%s&uuid=%s";
     private static final String API_KEY_URL = "https://api.hypixel.net/key?key=%s";
     private static final ExecutorService pool = Executors.newCachedThreadPool();
@@ -94,6 +96,21 @@ public class ApiUtils {
         try (BufferedReader reader = makeApiCall(String.format(SKYBLOCK_STATS_URL, CredentialStorage.moo, UUIDTypeAdapter.fromUUID(friend.getUuid())))) {
             if (reader != null) {
                 return GsonUtils.fromJson(reader, HySkyBlockStats.class);
+            }
+        } catch (IOException | JsonSyntaxException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static void fetchBazaarData(ThrowingConsumer<HyBazaarData> action) {
+        pool.execute(() -> action.accept(getBazaarData()));
+    }
+
+    private static HyBazaarData getBazaarData() {
+        try (BufferedReader reader = makeApiCall(BAZAAR_URL)) {
+            if (reader != null) {
+                return GsonUtils.fromJson(reader, HyBazaarData.class);
             }
         } catch (IOException | JsonSyntaxException e) {
             e.printStackTrace();

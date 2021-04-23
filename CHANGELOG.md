@@ -11,6 +11,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `/moo whatAmILookingAt` (or: `/m waila`)
   - copy info of "the thing" you're looking at (NPC or mob + nearby "text-only" armor stands; armor stand, placed skull, banner, sign, dropped item, item in item frame, map on wall)
   - automatically decodes base64 data (e.g. skin details) and unix timestamps
+- Chest Tracker & Analyzer: Evaluate Bazaar value of your chests
+  - Select chests on your island, then get an overview of all items in the selected chests and the Bazaar value of the items
+  - command: `/moo analyzeChests`
 - Auction house: Mark sold/ended/expired auctions
   - either one letter (S, E, E) or the full word
 - Auction house: show price for each lvl 1 enchantment book required to craft a higher tier book

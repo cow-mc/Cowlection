@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.realmsclient.util.Pair;
 import de.cowtipper.cowlection.Cowlection;
+import de.cowtipper.cowlection.chestTracker.ChestOverviewGui;
 import de.cowtipper.cowlection.command.exception.ApiContactException;
 import de.cowtipper.cowlection.command.exception.InvalidPlayerNameException;
 import de.cowtipper.cowlection.command.exception.MooCommandException;
@@ -113,7 +114,9 @@ public class MooCommand extends CommandBase {
                 || args[0].equalsIgnoreCase("stalksb") || args[0].equalsIgnoreCase("sbstalk")
                 || args[0].equalsIgnoreCase("askPolitelyAboutTheirSkyBlockProgress")) {
             handleStalkingSkyBlock(args);
-        } else if (args[0].equalsIgnoreCase("analyzeIsland")) {
+        } else if (args[0].equalsIgnoreCase("chestAnalyzer") || args[0].equalsIgnoreCase("chestAnalyser") || args[0].equalsIgnoreCase("analyzeChests") || args[0].equalsIgnoreCase("analyseChests")) {
+            handleAnalyzeChests(args);
+        } else if (args[0].equalsIgnoreCase("analyzeIsland") || args[0].equalsIgnoreCase("analyseIsland")) {
             handleAnalyzeIsland(sender);
         } else if (args[0].equalsIgnoreCase("waila") || args[0].equalsIgnoreCase("whatAmILookingAt")) {
             boolean showAllInfo = MooConfig.keepFullWailaInfo();
@@ -682,6 +685,42 @@ public class MooCommand extends CommandBase {
         });
     }
 
+    private void handleAnalyzeChests(String[] args) {
+        if (args.length == 1) {
+            boolean enabledChestTracker = main.enableChestTracker();
+            if (enabledChestTracker) {
+                // chest tracker wasn't enabled before, now it is
+                String analyzeCommand = "/" + getCommandName() + " analyzeChests";
+                if (MooConfig.chestAnalyzerShowCommandUsage) {
+                    main.getChatHelper().sendMessage(new MooChatComponent("Enabled chest tracker! You can now...").green()
+                            .appendFreshSibling(new MooChatComponent(EnumChatFormatting.GREEN + "  ❶ " + EnumChatFormatting.YELLOW + "add chests on your island by opening them; deselect chests by Sneaking + Right Click.").yellow())
+                            .appendFreshSibling(new MooChatComponent(EnumChatFormatting.GREEN + "  ❷ " + EnumChatFormatting.YELLOW + "use " + EnumChatFormatting.GOLD + analyzeCommand + EnumChatFormatting.YELLOW + " again to run the chest analysis.").yellow().setSuggestCommand(analyzeCommand))
+                            .appendFreshSibling(new MooChatComponent(EnumChatFormatting.GREEN + "  ❸ " + EnumChatFormatting.YELLOW + "use " + EnumChatFormatting.GOLD + analyzeCommand + " stop" + EnumChatFormatting.YELLOW + " to stop the chest tracker and clear current results.").yellow().setSuggestCommand(analyzeCommand + " stop")));
+                } else {
+                    main.getChatHelper().sendMessage(new MooChatComponent("Enabled chest tracker! " + EnumChatFormatting.GRAY + "Run " + analyzeCommand + " again to run the chest analysis.").green().setSuggestCommand(analyzeCommand));
+                }
+            } else {
+                // chest tracker was already enabled, open analysis GUI
+                main.getChestTracker().analyzeResults();
+                new TickDelay(() -> Minecraft.getMinecraft().displayGuiScreen(new ChestOverviewGui(main)), 1);
+            }
+        } else if (args.length == 2 && args[1].equalsIgnoreCase("stop")) {
+            boolean disabledChestTracker = main.disableChestTracker();
+            if (disabledChestTracker) {
+                main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Disabled chest tracker and cleared chest cache!");
+            } else {
+                main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, "Chest tracker wasn't even enabled...");
+            }
+        } else {
+            String analyzeCommand = "/" + getCommandName() + " analyzeChests";
+            main.getChatHelper().sendMessage(new MooChatComponent(Cowlection.MODNAME + " chest tracker & analyzer").gold().bold()
+                    .appendFreshSibling(new MooChatComponent("Use " + EnumChatFormatting.GOLD + analyzeCommand + EnumChatFormatting.YELLOW + " to start tracking chests on your island! " + EnumChatFormatting.GREEN + "Then you can...").yellow().setSuggestCommand(analyzeCommand))
+                    .appendFreshSibling(new MooChatComponent(EnumChatFormatting.GREEN + "  ❶ " + EnumChatFormatting.YELLOW + "add chests by opening them; deselect chests by Sneaking + Right Click.").yellow())
+                    .appendFreshSibling(new MooChatComponent(EnumChatFormatting.GREEN + "  ❷ " + EnumChatFormatting.YELLOW + "use " + EnumChatFormatting.GOLD + analyzeCommand + EnumChatFormatting.YELLOW + " again to run the chest analysis.").yellow().setSuggestCommand(analyzeCommand))
+                    .appendFreshSibling(new MooChatComponent(EnumChatFormatting.GREEN + "  ❸ " + EnumChatFormatting.YELLOW + "use " + EnumChatFormatting.GOLD + analyzeCommand + " stop" + EnumChatFormatting.YELLOW + " to stop the chest tracker and clear current results.").yellow().setSuggestCommand(analyzeCommand + " stop")));
+        }
+    }
+
     private void handleAnalyzeIsland(ICommandSender sender) {
         Map<String, String> minions = DataHelper.getMinions();
 
@@ -1100,7 +1139,8 @@ public class MooCommand extends CommandBase {
                 .appendSibling(createCmdHelpEntry("nameChangeCheck", "Force a scan for a changed name of a best friend (is done automatically as well)"))
                 .appendSibling(createCmdHelpSection(2, "SkyBlock"))
                 .appendSibling(createCmdHelpEntry("stalkskyblock", "Get info of player's SkyBlock stats §d§l⚷"))
-                .appendSibling(createCmdHelpEntry("analyzeIsland", "Analyze a SkyBlock private island"))
+                .appendSibling(createCmdHelpEntry("analyzeChests", "Analyze chests' contents and evaluate potential Bazaar value"))
+                .appendSibling(createCmdHelpEntry("analyzeIsland", "Analyze a SkyBlock private island (inspect minions)"))
                 .appendSibling(createCmdHelpEntry("waila", "Copy the 'thing' you're looking at"))
                 .appendSibling(createCmdHelpEntry("dungeon", "SkyBlock Dungeons: display current dungeon performance"))
                 .appendSibling(createCmdHelpEntry("dungeon party", "SkyBlock Dungeons: Shows armor and dungeon info about current party members " + EnumChatFormatting.GRAY + "(alias: " + EnumChatFormatting.WHITE + "/" + getCommandName() + " dp" + EnumChatFormatting.GRAY + ") §d§l⚷"))
@@ -1138,10 +1178,10 @@ public class MooCommand extends CommandBase {
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args,
-                    /* help */ "help",
+                    /* main */ "help", "config",
                     /* Best friends, friends & other players */ "stalk", "add", "remove", "list", "online", "nameChangeCheck",
-                    /* SkyBlock */ "stalkskyblock", "skyblockstalk", "analyzeIsland", "waila", "whatAmILookingAt", "dungeon",
-                    /* miscellaneous */ "config", "search", "worldage", "serverage", "guiscale", "rr", "shrug", "apikey",
+                    /* SkyBlock */ "stalkskyblock", "skyblockstalk", "chestAnalyzer", "analyzeChests", "analyzeIsland", "waila", "whatAmILookingAt", "dungeon",
+                    /* miscellaneous */ "search", "worldage", "serverage", "guiscale", "rr", "shrug", "apikey",
                     /* update mod */ "update", "updateHelp", "version", "directory",
                     /* rarely used aliases */ "askPolitelyWhereTheyAre", "askPolitelyAboutTheirSkyBlockProgress", "year", "whatyearisit");
         } else if (args.length == 2 && (args[0].equalsIgnoreCase("waila") || args[0].equalsIgnoreCase("whatAmILookingAt"))) {
@@ -1152,6 +1192,8 @@ public class MooCommand extends CommandBase {
             return getListOfStringsMatchingLastWord(args, "party", "enter", "leave");
         } else if (args.length == 2 && (args[0].equalsIgnoreCase("worldage") || args[0].equalsIgnoreCase("serverage"))) {
             return getListOfStringsMatchingLastWord(args, "off", "on", "disable", "enable");
+        } else if (args.length == 2 && (args[0].equalsIgnoreCase("chestAnalyzer") || args[0].equalsIgnoreCase("chestAnalyser") || args[0].equalsIgnoreCase("analyzeChests") || args[0].equalsIgnoreCase("analyseChests"))) {
+            return getListOfStringsMatchingLastWord(args, "stop");
         }
         String commandArg = args[0].toLowerCase();
         if (args.length == 2 && (commandArg.equals("s") || commandArg.equals("ss") || commandArg.equals("namechangecheck") || commandArg.contains("stalk") || commandArg.contains("askpolitely"))) { // stalk & stalkskyblock + namechangecheck

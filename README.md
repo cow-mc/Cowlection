@@ -26,6 +26,7 @@ It is a collection of different features mainly focused on Hypixel SkyBlock. üê
 | Feature                                                                 | Command/Usage                           |
 |-------------------------------------------------------------------------|-----------------------------------------|
 | Stalk SkyBlock stats of a player                                        | `/moo stalkskyblock`                    |
+| Analyze chests and their Bazaar value on your private island            | `/moo analyzeChests`                    |
 | Analyze minions on a private island                                     | `/moo analyzeIsland`                    |
 | Dungeon interfaces enhancements (normalize dungeon item stats, improved party finder) | Hold <kbd>shift</kbd> (configurable) while viewing a dungeon item tooltip |
 | Dungeon performance tracker and overlay: Skill score calculation, class milestone tracker, destroyed crypts tracker, and elapsed time indicator | automatically; or with `/moo dungeon` |

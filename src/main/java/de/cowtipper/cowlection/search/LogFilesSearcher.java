@@ -2,7 +2,6 @@ package de.cowtipper.cowlection.search;
 
 import com.mojang.realmsclient.util.Pair;
 import de.cowtipper.cowlection.config.MooConfig;
-import de.cowtipper.cowlection.data.LogEntry;
 import net.minecraft.util.EnumChatFormatting;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutableTriple;

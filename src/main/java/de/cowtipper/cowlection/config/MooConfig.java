@@ -71,6 +71,9 @@ public class MooConfig {
     public static int notifyFreshServer;
     public static int notifyOldServer;
     public static boolean notifyServerAge;
+    public static boolean chestAnalyzerShowNonBazaarItems;
+    private static String chestAnalyzerUseBazaarPrices;
+    public static boolean chestAnalyzerShowCommandUsage;
     public static int tooltipToggleKeyBinding;
     private static String tooltipItemAge;
     public static boolean tooltipItemAgeShortened;
@@ -374,6 +377,20 @@ public class MooConfig {
         Property propNotifyServerAge = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "notifyServerAge", true, "Show server age notifications?"));
 
+        // Sub-Category: Chest Analyzer (Bazaar prices)
+        subCat = configCat.addSubCategory("Chest Tracker & Analyzer (Bazaar prices)");
+        String analyzeCommand = "/moo analyzeChests";
+        subCat.addExplanations("Use " + EnumChatFormatting.YELLOW + analyzeCommand + EnumChatFormatting.RESET + " to start tracking chests on your island! " + EnumChatFormatting.GREEN + "Then you can...",
+                EnumChatFormatting.GREEN + "  ❶ " + EnumChatFormatting.RESET + "add chests by opening them; deselect chests by Sneaking + Right Click.",
+                EnumChatFormatting.GREEN + "  ❷ " + EnumChatFormatting.RESET + "use " + EnumChatFormatting.YELLOW + analyzeCommand + EnumChatFormatting.RESET + " again to run the chest analysis.",
+                EnumChatFormatting.GREEN + "  ❸ " + EnumChatFormatting.RESET + "use " + EnumChatFormatting.YELLOW + analyzeCommand + " stop" + EnumChatFormatting.RESET + " to stop the chest tracker and clear current results.");
+        Property propChestAnalyzerShowNonBazaarItems = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "chestAnalyzerShowNonBazaarItems", false, "Show non-Bazaar items in Chest Tracker?"));
+        Property propChestAnalyzerUseBazaarPrices = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "chestAnalyzerUseBazaarPrices", "Instant-Sell", "Use Bazaar prices?", new String[]{"Instant-Sell", "Sell Offer"}));
+        Property propChestAnalyzerShowCommandUsage = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "chestAnalyzerShowCommandUsage", true, "Show command usage?"));
+
         // Sub-Category: Tooltip enhancements
         subCat = configCat.addSubCategory("Tooltip & GUI enhancements");
 
@@ -630,6 +647,9 @@ public class MooConfig {
             notifyFreshServer = propNotifyFreshServer.getInt();
             notifyOldServer = propNotifyOldServer.getInt();
             notifyServerAge = propNotifyServerAge.getBoolean();
+            chestAnalyzerShowNonBazaarItems = propChestAnalyzerShowNonBazaarItems.getBoolean();
+            chestAnalyzerUseBazaarPrices = propChestAnalyzerUseBazaarPrices.getString();
+            chestAnalyzerShowCommandUsage = propChestAnalyzerShowCommandUsage.getBoolean();
             tooltipToggleKeyBinding = propTooltipToggleKeyBinding.getInt();
             tooltipItemAge = propTooltipItemAge.getString();
             tooltipItemAgeShortened = propTooltipItemAgeShortened.getBoolean();
@@ -708,6 +728,9 @@ public class MooConfig {
         propNotifyFreshServer.set(notifyFreshServer);
         propNotifyOldServer.set(notifyOldServer);
         propNotifyServerAge.set(notifyServerAge);
+        propChestAnalyzerShowNonBazaarItems.set(chestAnalyzerShowNonBazaarItems);
+        propChestAnalyzerUseBazaarPrices.set(chestAnalyzerUseBazaarPrices);
+        propChestAnalyzerShowCommandUsage.set(chestAnalyzerShowCommandUsage);
         propTooltipToggleKeyBinding.set(tooltipToggleKeyBinding);
         propTooltipItemAge.set(tooltipItemAge);
         propTooltipItemAgeShortened.set(tooltipItemAgeShortened);
@@ -871,6 +894,10 @@ public class MooConfig {
     // Category: SkyBlock
     public static Setting getEnableSkyBlockOnlyFeatures() {
         return Setting.get(enableSkyBlockOnlyFeatures);
+    }
+
+    public static boolean useInstantSellBazaarPrices() {
+        return "Instant-Sell".equals(chestAnalyzerUseBazaarPrices);
     }
 
     public static Setting getTooltipAuctionHousePriceEachDisplay() {

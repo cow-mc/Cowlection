@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -21,6 +22,8 @@ public final class Utils {
     public static final Pattern VALID_UUID_PATTERN = Pattern.compile("^(\\w{8})-(\\w{4})-(\\w{4})-(\\w{4})-(\\w{12})$");
     private static final Pattern VALID_USERNAME = Pattern.compile("^[\\w]{1,16}$");
     private static final NavigableMap<Double, Character> NUMBER_SUFFIXES = new TreeMap<>();
+    private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#,##0.#", new DecimalFormatSymbols(Locale.ENGLISH));
+    private static final DecimalFormat NUMBER_FORMAT = new DecimalFormat("#,##0", new DecimalFormatSymbols(Locale.ENGLISH));
 
     static {
         NUMBER_SUFFIXES.put(1_000d, 'k');
@@ -90,10 +93,10 @@ public final class Utils {
         }
         double monthsPast = daysPast / 30.5d;
         if (monthsPast < 12) {
-            return new DecimalFormat("0.#").format(monthsPast) + " month" + (monthsPast >= 2 ? "s" : "");
+            return DECIMAL_FORMAT.format(monthsPast) + " month" + (monthsPast >= 2 ? "s" : "");
         }
         double yearsPast = monthsPast / 12d;
-        return new DecimalFormat("0.#").format(yearsPast) + " year" + (yearsPast >= 2 ? "s" : "");
+        return DECIMAL_FORMAT.format(yearsPast) + " year" + (yearsPast >= 2 ? "s" : "");
     }
 
     public static String toRealPath(Path path) {
@@ -107,6 +110,14 @@ public final class Utils {
 
     public static String toRealPath(File path) {
         return toRealPath(path.toPath());
+    }
+
+    public static String formatDecimal(double number) {
+        return DECIMAL_FORMAT.format(number);
+    }
+
+    public static String formatNumber(double number) {
+        return NUMBER_FORMAT.format(number);
     }
 
     /**
@@ -132,7 +143,7 @@ public final class Utils {
             default:
                 amountOfDecimals = "###";
         }
-        DecimalFormat df = new DecimalFormat("#,##0." + amountOfDecimals);
+        DecimalFormat df = new DecimalFormat("#,##0." + amountOfDecimals, new DecimalFormatSymbols(Locale.ENGLISH));
         return df.format(number / divideBy) + suffix;
     }
 

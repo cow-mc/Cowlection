@@ -4,7 +4,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mojang.realmsclient.util.Pair;
 import de.cowtipper.cowlection.Cowlection;
 import de.cowtipper.cowlection.config.MooConfig;
-import de.cowtipper.cowlection.data.LogEntry;
 import de.cowtipper.cowlection.util.GuiHelper;
 import de.cowtipper.cowlection.util.Utils;
 import net.minecraft.client.Minecraft;

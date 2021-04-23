@@ -1,5 +1,6 @@
 package de.cowtipper.cowlection;
 
+import de.cowtipper.cowlection.chestTracker.ChestTracker;
 import de.cowtipper.cowlection.command.MooCommand;
 import de.cowtipper.cowlection.command.ReplyCommand;
 import de.cowtipper.cowlection.command.ShrugCommand;
@@ -47,9 +48,10 @@ public class Cowlection {
     private ChatHelper chatHelper;
     private PlayerCache playerCache;
     private DungeonCache dungeonCache;
+    private ChestTracker chestTracker;
     private Logger logger;
 
-    @Mod.EventHandler
+    @EventHandler
     public void preInit(FMLPreInitializationEvent e) {
         instance = this;
         logger = e.getModLog();
@@ -121,6 +123,27 @@ public class Cowlection {
             dungeonCache = new DungeonCache(this);
         }
         return dungeonCache;
+    }
+
+    public boolean enableChestTracker() {
+        if (chestTracker == null) {
+            chestTracker = new ChestTracker(this);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean disableChestTracker() {
+        if (chestTracker != null) {
+            chestTracker.clear();
+            chestTracker = null;
+            return true;
+        }
+        return false;
+    }
+
+    public ChestTracker getChestTracker() {
+        return chestTracker;
     }
 
     public File getConfigDirectory() {
