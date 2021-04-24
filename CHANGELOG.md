@@ -36,10 +36,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Refined the comma representation of large numbers abbreviated with k, m, b
-- Dungeon Party Finder: Parties with specific classes can now *always* be marked as 'unideal' (additionally to the already existing option to mark a party when 2+ members use the same specific class)
-- Dungeon Performance Overlay: added an alternative text border option
 - "Copy inventories to clipboard"-feature now automatically decodes base64 data (e.g. skin details) and unix timestamps
-- Dungeon Party Finder: colored overlay is now also disable-able via config
+- Dungeon Party Finder:
+  - Parties with specific classes can now *always* be marked as 'unideal' (additionally to the already existing option to mark a party when 2+ members use the same specific class)
+  - colored overlay is now also disable-able via config
+  - Player lookup now shows - in addition to the active pet - a spirit pet
+- Dungeon Performance Overlay: added an alternative text border option
 
 ### Fixed
 - Fixed issue with 'no dung class selected'

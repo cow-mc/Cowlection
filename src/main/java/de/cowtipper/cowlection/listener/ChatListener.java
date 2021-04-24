@@ -224,6 +224,12 @@ public class ChatListener {
                         HySkyBlockStats.Profile.Pet activePet = member.getActivePet();
                         String petInfo = (outputAsChatMessages ? "\n  " : "\n\n") + EnumChatFormatting.GRAY + "Active pet: " + (activePet != null ? activePet.toFancyString() : "" + EnumChatFormatting.DARK_GRAY + EnumChatFormatting.ITALIC + "none");
 
+                        // spirit pet:
+                        HySkyBlockStats.Profile.Pet spiritPet = member.getPet("SPIRIT");
+                        if (spiritPet != null) {
+                            petInfo += EnumChatFormatting.GRAY + " (" + spiritPet.toFancyString() + EnumChatFormatting.GRAY + ")";
+                        }
+
                         String highestFloorCompletions = "\n" + (outputAsChatMessages ? "  " : "") + EnumChatFormatting.GRAY + "Completed no dungeons yet";
 
                         String skyBlockDetails;

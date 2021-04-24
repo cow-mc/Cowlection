@@ -214,6 +214,15 @@ public class HySkyBlockStats {
                 return null;
             }
 
+            public Pet getPet(String type) {
+                for (Pet pet : pets) {
+                    if (type.equals(pet.type)) {
+                        return pet;
+                    }
+                }
+                return null;
+            }
+
             public int getMaxFarmingLevel() {
                 int farmingLevelCap = 50;
                 if (jacob2 != null && jacob2.perks != null) {

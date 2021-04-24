@@ -237,6 +237,12 @@ public class DungeonsPartyListener {
                         .append("\n").append(String.join("\n", member.getArmor()))
                         .append("\n\n").append(EnumChatFormatting.GRAY).append("Active pet: ").append(activePet != null ? activePet.toFancyString() : "" + EnumChatFormatting.DARK_GRAY + EnumChatFormatting.ITALIC + "none");
 
+                // spirit pet:
+                HySkyBlockStats.Profile.Pet spiritPet = member.getPet("SPIRIT");
+                if (spiritPet != null) {
+                    playerTooltip.append(EnumChatFormatting.GRAY).append(" (").append(spiritPet.toFancyString()).append(EnumChatFormatting.GRAY).append(")");
+                }
+
                 HySkyBlockStats.Profile.Dungeons dungeons = member.getDungeons();
                 boolean hasNotPlayedDungeons = dungeons == null || !dungeons.hasPlayed();
                 if (hasNotPlayedDungeons) {
