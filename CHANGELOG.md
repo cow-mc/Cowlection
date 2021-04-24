@@ -23,8 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Bazaar: Added order (sort) functionality to 'Sell Inventory/Sacks Now' tooltips
 - SkyBlock Dungeon Party Finder additions:
   - new `/moo config` option: `Minimum "Dungeon level required"`
-- SkyBlock Dwarven Mines update:
-  - Added new minions to `/m analyzeIslands` (Mithril + t12)
+- Added new minions to `/m analyzeIslands` (Mining + Farming)
 - `/moo stalkskyblock` additions:
   - Added 'last profile save' (= last time user played SkyBlock)
   - Added Enchanting, Farming, Mining, and Combat 51-60
