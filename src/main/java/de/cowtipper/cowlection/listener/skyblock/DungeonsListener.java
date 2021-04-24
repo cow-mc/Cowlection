@@ -162,11 +162,20 @@ public class DungeonsListener {
                         }
                         if (showItemQualityAndFloor) {
                             if (MooConfig.isDungItemQualityAtTop()) {
-                                // replace gear score with item quality + obtained floor to top of tooltip
-                                tooltipIterator.set(customGearScore.toString());
+                                if (MooConfig.dungItemHideGearScore) {
+                                    // replace gear score with item quality + obtained floor to top of tooltip
+                                    tooltipIterator.set(customGearScore.toString());
+                                } else {
+                                    // add item quality + obtained floor
+                                    tooltipIterator.add(customGearScore.toString());
+                                }
                             } else {
                                 // add item quality + obtained floor to bottom
                                 itemQualityBottom = customGearScore.toString();
+                                if (MooConfig.dungItemHideGearScore) {
+                                    // remove gear score entry
+                                    tooltipIterator.remove();
+                                }
                             }
                         }
                         continue;

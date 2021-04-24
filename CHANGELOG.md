@@ -42,6 +42,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - colored overlay is now also disable-able via config
   - Player lookup now shows - in addition to the active pet - a spirit pet
 - Dungeon Performance Overlay: added an alternative text border option
+- Dungeon item tooltips: Gear Score can now be hidden separately (instead of getting replaced by Item Quality) 
 
 ### Fixed
 - Fixed issue with 'no dung class selected'

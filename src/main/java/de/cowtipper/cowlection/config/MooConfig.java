@@ -94,6 +94,7 @@ public class MooConfig {
     // Category: SkyBlock Dungeons
     private static String showItemQualityAndFloor;
     private static String dungItemQualityPos;
+    public static boolean dungItemHideGearScore;
     public static int dungItemToolTipToggleKeyBinding;
     public static boolean dungSendPerformanceOnDeath;
     public static boolean dungOverlayEnabled;
@@ -503,6 +504,9 @@ public class MooConfig {
                         MooConfigPreview.createDungeonItem("light", "7/17/20 7:22 PM", "§7Gear Score: §d336 §8(526)", "§7Crit Chance: §c+5% §9(Light +2%)", "§7Crit Damage: §c+30% §9(Light +4%) §8(+48.9%)", "§7Bonus Attack Speed: §c+4% §9(Light +4%)", "", "§7Health: §a+126 HP §9(Light +15 HP) §8(+205.38 HP)", "§7Defense: §a+76 §9(Light +4) §8(+123.88)", "§7Speed: §a+4 §9(Light +4) §8(+6.52)", "", "§9Growth V, §9Protection V", "§9Thorns III", "", "§7Increase the damage you deal", "§7with arrows by §c5%§7.", "", "§6Full Set Bonus: Skeleton Soldier", "§7Increase the damage you deal", "§7with arrows by an extra §c25%§7.", "", "§aPerfect 52500 / 52500", "§5§lEPIC DUNGEON LEGGINGS"),
                         MooConfigPreview.createDungeonItem("clean", "7/11/20 12:27 PM", "§7Gear Score: §d359 §8(561)", "§7Crit Chance: §c+11% §9(Clean +8%)", "§7Crit Damage: §c+26% §8(+42.38%)", "", "§7Health: §a+126 HP §9(Clean +15 HP) §8(+205.38 HP)", "§7Defense: §a+87 §9(Clean +15) §8(+141.81)", "", "§9Growth V, §9Protection V", "§9Thorns III", "", "§7Increase the damage you deal", "§7with arrows by §c5%§7.", "", "§6Full Set Bonus: Skeleton Soldier", "§7Increase the damage you deal", "§7with arrows by an extra §c25%§7.", "", "§aPerfect 52500 / 52500", "§5§lEPIC DUNGEON LEGGINGS")));
 
+        Property propDungItemHideGearScore = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "dungItemHideGearScore", false, "Hide Gear Score?"));
+
         Property propDungItemToolTipToggleKeyBinding = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "dungItemToolTipToggleKeyBinding", Keyboard.KEY_LSHIFT, "Key to toggle dungeon item tooltip"));
 
@@ -669,6 +673,7 @@ public class MooConfig {
             // Category: SkyBlock Dungeons
             showItemQualityAndFloor = propShowItemQualityAndFloor.getString();
             dungItemQualityPos = propDungItemQualityPos.getString();
+            dungItemHideGearScore = propDungItemHideGearScore.getBoolean();
             dungItemToolTipToggleKeyBinding = propDungItemToolTipToggleKeyBinding.getInt();
             dungSendPerformanceOnDeath = propDungSendPerformanceOnDeath.getBoolean();
             dungOverlayEnabled = propDungOverlayEnabled.getBoolean();
@@ -750,6 +755,7 @@ public class MooConfig {
         // Category: SkyBlock Dungeons
         propShowItemQualityAndFloor.set(showItemQualityAndFloor);
         propDungItemQualityPos.set(dungItemQualityPos);
+        propDungItemHideGearScore.set(dungItemHideGearScore);
         propDungItemToolTipToggleKeyBinding.set(dungItemToolTipToggleKeyBinding);
         propDungSendPerformanceOnDeath.set(dungSendPerformanceOnDeath);
         propDungOverlayEnabled.set(dungOverlayEnabled);
