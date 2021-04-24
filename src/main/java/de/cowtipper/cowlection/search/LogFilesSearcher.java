@@ -1,22 +1,23 @@
 package de.cowtipper.cowlection.search;
 
-import com.mojang.realmsclient.util.Pair;
 import de.cowtipper.cowlection.config.MooConfig;
 import net.minecraft.util.EnumChatFormatting;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 
 import java.io.*;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
 class LogFilesSearcher {
@@ -32,77 +33,100 @@ class LogFilesSearcher {
     private int analyzedFilesWithHits = 0;
 
     ImmutableTriple<Integer, Integer, List<LogEntry>> searchFor(String searchQuery, boolean chatOnly, boolean matchCase, boolean removeFormatting, LocalDate dateStart, LocalDate dateEnd) throws IOException {
-        List<Pair<Path, LocalDate>> files = new ArrayList<>();
+        AtomicInteger foundLogs = new AtomicInteger();
+        List<LogEntry> searchResults = Collections.synchronizedList(new ArrayList<>());
         for (String logsDirPath : MooConfig.logsDirs) {
             File logsDir = new File(logsDirPath);
-            if (logsDir.exists() && logsDir.isDirectory()) {
-                try {
-                    files.addAll(fileList(logsDir, dateStart, dateEnd));
-                } catch (IOException e) {
-                    throw new IOException(EnumChatFormatting.DARK_RED + "ERROR: An error occurred trying to read/parse '" + EnumChatFormatting.RED + logsDirPath + EnumChatFormatting.DARK_RED + "':\n"
-                            + EnumChatFormatting.GOLD + e.getLocalizedMessage(), e);
+            if (!logsDir.exists() || !logsDir.isDirectory()) {
+                continue;
+            }
+            try (Stream<Path> paths = Files.find(logsDir.toPath(), 1, (path, attr) -> {
+                if (!attr.isRegularFile()) {
+                    return false;
                 }
+                String fileName = path.getFileName().toString();
+                return fileName.endsWith(".log.gz") || "latest.log".equals(fileName);
+            }).collect(Collectors.toList()).parallelStream()) {
+                paths.forEach(path -> {
+                    String fileName = path.getFileName().toString();
+                    if (fileName.endsWith("z")) { // .log.gz
+                        Matcher fileNameMatcher = LOG_FILE_PATTERN.matcher(fileName);
+                        if (fileNameMatcher.matches()) {
+                            LocalDate fileLocalDate = LocalDate.of(Integer.parseInt(fileNameMatcher.group(1)),
+                                    Integer.parseInt(fileNameMatcher.group(2)), Integer.parseInt(fileNameMatcher.group(3)));
+                            if (!fileLocalDate.isBefore(dateStart) && !fileLocalDate.isAfter(dateEnd)) {
+                                foundLogs.incrementAndGet();
+                                searchResults.addAll(analyzeFile(path, true, fileLocalDate, searchQuery, chatOnly, matchCase, removeFormatting));
+                            }
+                        }
+                    } else if (fileName.equals("latest.log")) {
+                        LocalDate lastModified = Instant.ofEpochMilli(path.toFile().lastModified()).atZone(ZoneId.systemDefault()).toLocalDate();
+                        if (!lastModified.isBefore(dateStart) && !lastModified.isAfter(dateEnd)) {
+                            foundLogs.incrementAndGet();
+                            searchResults.addAll(analyzeFile(path, false, lastModified, searchQuery, chatOnly, matchCase, removeFormatting));
+                        }
+                    }
+                });
+            } catch (IOException e) {
+                throw new IOException(EnumChatFormatting.DARK_RED + "ERROR: An error occurred trying to read/parse '" + EnumChatFormatting.RED + logsDirPath + EnumChatFormatting.DARK_RED + "':\n"
+                        + EnumChatFormatting.GOLD + e.getLocalizedMessage(), e);
             }
         }
 
-        if (files.isEmpty()) {
+        if (foundLogs.get() == 0) {
             throw new FileNotFoundException(EnumChatFormatting.DARK_RED + "ERROR: No Minecraft log files could be found for the selected date range. Please check if the dates as well as the directories of the log files are set correctly (Log Search ➡ Settings).");
         } else {
-            List<LogEntry> searchResults = analyzeFiles(files, searchQuery, chatOnly, matchCase, removeFormatting)
+            List<LogEntry> sortedSearchResults = searchResults
                     .stream().sorted(Comparator.comparing(LogEntry::getTime)).collect(Collectors.toList());
-            return new ImmutableTriple<>(files.size(), analyzedFilesWithHits, searchResults);
+            return new ImmutableTriple<>(foundLogs.get(), analyzedFilesWithHits, sortedSearchResults);
         }
     }
 
-    private List<LogEntry> analyzeFiles(List<Pair<Path, LocalDate>> pathsData, String searchTerm, boolean chatOnly, boolean matchCase, boolean removeFormatting) {
+    private List<LogEntry> analyzeFile(Path path, boolean isGzipped, LocalDate date, String searchTerm, boolean chatOnly, boolean matchCase, boolean removeFormatting) {
         List<LogEntry> searchResults = new ArrayList<>();
-        for (Pair<Path, LocalDate> pathData : pathsData) {
-            Path path = pathData.first();
-            boolean foundSearchTermInFile = false;
-            try (BufferedReader in = (path.endsWith("latest.log")
-                    ? new BufferedReader(new InputStreamReader(new FileInputStream(path.toFile()))) // latest.log
-                    : new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(path.toFile())))))) { // ....log.gz
-                LocalDate date = pathData.second();
-                String content;
-                LogEntry logEntry = null;
-                while ((content = in.readLine()) != null) {
-                    Matcher logLineMatcher = LOG4J_PATTERN.matcher(content);
-                    if (logLineMatcher.matches()) { // current line is a new log entry
-                        if (logEntry != null) {
-                            // we had a previous log entry; analyze it!
-                            LogEntry result = analyzeLogEntry(logEntry, searchTerm, matchCase, removeFormatting);
-                            if (result != null) {
-                                searchResults.add(result);
-                                foundSearchTermInFile = true;
-                            }
-                            logEntry = null;
+        boolean foundSearchTermInFile = false;
+        try (BufferedReader in = (isGzipped
+                ? new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(path.toFile())))) // ....log.gz
+                : new BufferedReader(new InputStreamReader(new FileInputStream(path.toFile()))))) { // latest.log
+            String content;
+            LogEntry logEntry = null;
+            while ((content = in.readLine()) != null) {
+                Matcher logLineMatcher = LOG4J_PATTERN.matcher(content);
+                if (logLineMatcher.matches()) { // current line is a new log entry
+                    if (logEntry != null) {
+                        // we had a previous log entry; analyze it!
+                        LogEntry result = analyzeLogEntry(logEntry, searchTerm, matchCase, removeFormatting);
+                        if (result != null) {
+                            searchResults.add(result);
+                            foundSearchTermInFile = true;
                         }
-                        // handle first line of new log entry
-                        if (chatOnly && logLineMatcher.group("isChat") == null) {
-                            // not a chat log entry, although we're only searching for chat messages, abort!
-                            continue;
-                        }
-                        LocalDateTime dateTime = getDate(date, logLineMatcher);
-                        logEntry = new LogEntry(dateTime, path, logLineMatcher.group("message"));
-                    } else if (logEntry != null) {
-                        // multiline log entry
-                        logEntry.addLogLine(content);
+                        logEntry = null;
                     }
-                }
-                if (logEntry != null) {
-                    // end of file! analyze last log entry in file
-                    LogEntry result = analyzeLogEntry(logEntry, searchTerm, matchCase, removeFormatting);
-                    if (result != null) {
-                        searchResults.add(result);
-                        foundSearchTermInFile = true;
+                    // handle first line of new log entry
+                    if (chatOnly && logLineMatcher.group("isChat") == null) {
+                        // not a chat log entry, although we're only searching for chat messages, abort!
+                        continue;
                     }
+                    LocalDateTime dateTime = getDate(date, logLineMatcher);
+                    logEntry = new LogEntry(dateTime, path, logLineMatcher.group("message"));
+                } else if (logEntry != null) {
+                    // multiline log entry
+                    logEntry.addLogLine(content);
                 }
-                if (foundSearchTermInFile) {
-                    analyzedFilesWithHits++;
-                }
-            } catch (IOException ignored) {
-                // most likely corrupted .log.gz file - skip it.
             }
+            if (logEntry != null) {
+                // end of file! analyze last log entry in file
+                LogEntry result = analyzeLogEntry(logEntry, searchTerm, matchCase, removeFormatting);
+                if (result != null) {
+                    searchResults.add(result);
+                    foundSearchTermInFile = true;
+                }
+            }
+            if (foundSearchTermInFile) {
+                analyzedFilesWithHits++;
+            }
+        } catch (IOException ignored) {
+            // most likely corrupted .log.gz file - skip it.
         }
         return searchResults;
     }
@@ -137,29 +161,5 @@ class LogFilesSearcher {
         }
 
         return logEntry;
-    }
-
-    private List<Pair<Path, LocalDate>> fileList(File directory, LocalDate startDate, LocalDate endDate) throws IOException {
-        List<Pair<Path, LocalDate>> fileNames = new ArrayList<>();
-        try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(directory.toPath())) {
-            for (Path path : directoryStream) {
-                if (path.toString().endsWith(".log.gz")) {
-                    Matcher fileNameMatcher = LOG_FILE_PATTERN.matcher(path.getFileName().toString());
-                    if (fileNameMatcher.matches()) {
-                        LocalDate fileLocalDate = LocalDate.of(Integer.parseInt(fileNameMatcher.group(1)),
-                                Integer.parseInt(fileNameMatcher.group(2)), Integer.parseInt(fileNameMatcher.group(3)));
-                        if (!fileLocalDate.isBefore(startDate) && !fileLocalDate.isAfter(endDate)) {
-                            fileNames.add(Pair.of(path, fileLocalDate));
-                        }
-                    }
-                } else if (path.getFileName().toString().equals("latest.log")) {
-                    LocalDate lastModified = Instant.ofEpochMilli(path.toFile().lastModified()).atZone(ZoneId.systemDefault()).toLocalDate();
-                    if (!lastModified.isBefore(startDate) && !lastModified.isAfter(endDate)) {
-                        fileNames.add(Pair.of(path, lastModified));
-                    }
-                }
-            }
-        }
-        return fileNames;
     }
 }
