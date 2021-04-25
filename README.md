@@ -28,7 +28,9 @@ It is a collection of different features mainly focused on Hypixel SkyBlock. üê
 | Stalk SkyBlock stats of a player                                        | `/moo stalkskyblock`                    |
 | Analyze chests and their Bazaar value on your private island            | `/moo analyzeChests`                    |
 | Analyze minions on a private island                                     | `/moo analyzeIsland`                    |
-| Dungeon interfaces enhancements (normalize dungeon item stats, improved party finder) | Hold <kbd>shift</kbd> (configurable) while viewing a dungeon item tooltip |
+| Improved Dungeon item tooltips (item quality + obtained floor; normalize dungeon item stats) | To normalize stats: Hold <kbd>shift</kbd> (configurable) while viewing a dungeon item tooltip |
+| Improved Dungeon Party Finder                                           | configure with `/moo config party`      |
+| Dungeon Party inspector (Who is in my party again? What class are we missing?) | `/moo dungeon party` or `/moo dp` |
 | Dungeon performance tracker and overlay: Skill score calculation, class milestone tracker, destroyed crypts tracker, and elapsed time indicator | automatically; or with `/moo dungeon` |
 | Check how long current world has been loaded (‚âà when the server was last restarted) | `/moo worldage` + `/moo config` &rarr; SkyBlock |
 | Additional info in various tooltips (e.g. show item age, display pet exp, price per item in an auction, Bestiary overview) | `/moo config` &rarr; SkyBlock &rarr; Tooltip enhancements |

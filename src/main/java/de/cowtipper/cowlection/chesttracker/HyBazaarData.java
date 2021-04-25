@@ -1,4 +1,4 @@
-package de.cowtipper.cowlection.chestTracker;
+package de.cowtipper.cowlection.chesttracker;
 
 import com.google.gson.annotations.SerializedName;
 

@@ -1,6 +1,6 @@
 package de.cowtipper.cowlection;
 
-import de.cowtipper.cowlection.chestTracker.ChestTracker;
+import de.cowtipper.cowlection.chesttracker.ChestTracker;
 import de.cowtipper.cowlection.command.MooCommand;
 import de.cowtipper.cowlection.command.ReplyCommand;
 import de.cowtipper.cowlection.command.ShrugCommand;

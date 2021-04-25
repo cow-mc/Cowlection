@@ -1,4 +1,4 @@
-package de.cowtipper.cowlection.chestTracker;
+package de.cowtipper.cowlection.chesttracker;
 
 import de.cowtipper.cowlection.Cowlection;
 import de.cowtipper.cowlection.util.ApiUtils;

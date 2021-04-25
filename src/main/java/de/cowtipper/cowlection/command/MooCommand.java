@@ -4,7 +4,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.realmsclient.util.Pair;
 import de.cowtipper.cowlection.Cowlection;
-import de.cowtipper.cowlection.chestTracker.ChestOverviewGui;
+import de.cowtipper.cowlection.chesttracker.ChestOverviewGui;
 import de.cowtipper.cowlection.command.exception.ApiContactException;
 import de.cowtipper.cowlection.command.exception.InvalidPlayerNameException;
 import de.cowtipper.cowlection.command.exception.MooCommandException;
@@ -935,7 +935,7 @@ public class MooCommand extends CommandBase {
             GuiScreen.setClipboardString(GsonUtils.toJson(entities, true));
             main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Copied " + nearbyEntities.size() + " nearby entities to clipboard.");
         } else {
-            main.getChatHelper().sendMessage(EnumChatFormatting.RED, "You stare into the void... and see nothing of interest.");
+            main.getChatHelper().sendMessage(EnumChatFormatting.RED, "You stare into the void... and see nothing of interest. " + EnumChatFormatting.GRAY + "Try looking at: NPCs, mobs, armor stands, placed skulls, banners, signs, dropped items, item in item frames, or maps on a wall.");
         }
     }
 

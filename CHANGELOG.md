@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [1.8.9-0.13.0] - unreleased
+## [1.8.9-0.13.0] - 25.04.2021
 ### Added
 - Bestiary Overview: enhances tooltips of `/bestiary` ⬌ `/be`
   - hover over one of the area/location-items in a *sub*-category of the Bestiary to see an overview of the tiers upgrades you are closest to
@@ -46,7 +46,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fixed issue with 'no dung class selected'
 - Unexpected API-related exceptions no longer void all chat output
-- Greatly increased speed of the Log Search (`/moo search`) 
+- Greatly increased speed of the Log Search (`/moo search`)
 
 ## [1.8.9-0.12.0] - 03.01.2021
 ### Added
@@ -316,7 +316,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 *Note:* The 'best friends' list is currently available via <kbd>ESC</kbd> > Mod Options > Cowlection > Config > bestFriends.
 
-[1.8.9-0.13.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.12.0...master
+[1.8.9-0.13.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.12.0...v1.8.9-0.13.0
 [1.8.9-0.12.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.11.0...v1.8.9-0.12.0
 [1.8.9-0.11.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.10.2...v1.8.9-0.11.0
 [1.8.9-0.10.2]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.10.1...v1.8.9-0.10.2

@@ -5,7 +5,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.mojang.util.UUIDTypeAdapter;
 import de.cowtipper.cowlection.Cowlection;
-import de.cowtipper.cowlection.chestTracker.HyBazaarData;
+import de.cowtipper.cowlection.chesttracker.HyBazaarData;
 import de.cowtipper.cowlection.command.exception.ThrowingConsumer;
 import de.cowtipper.cowlection.config.CredentialStorage;
 import de.cowtipper.cowlection.data.*;
