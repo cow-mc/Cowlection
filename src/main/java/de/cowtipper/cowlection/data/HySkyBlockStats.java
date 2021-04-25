@@ -28,6 +28,14 @@ public class HySkyBlockStats {
     private HySkyBlockStats() {
     }
 
+    /**
+     * ConcurrentHashMaps don't allow null values, so this acts as a null object
+     */
+    public HySkyBlockStats(boolean fakeNullElement) {
+        success = false;
+        cause = "Hypixel API down? Check status.hypixel.net";
+    }
+
     public boolean isSuccess() {
         return success;
     }

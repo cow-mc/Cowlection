@@ -159,6 +159,8 @@ public class ApiUtils {
         connection.getResponseCode();
         if (connection.getResponseCode() == HttpStatus.SC_NO_CONTENT) { // http status 204
             return null;
+        } else if (connection.getResponseCode() == HttpStatus.SC_BAD_GATEWAY && url.startsWith("https://api.hypixel.net/")) { // http status 502 (cloudflare)
+            throw new IOException("Couldn't contact Hypixel API (502 Bad Gateway). API might be down, check https://status.hypixel.net for info.");
         } else {
             BufferedReader reader;
             InputStream errorStream = connection.getErrorStream();

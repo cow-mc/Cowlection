@@ -155,7 +155,7 @@ public class DungeonsPartyListener {
 
                     ApiUtils.fetchSkyBlockStats(partyMember, hySkyBlockStats -> {
                         // (2) once completed, request SkyBlock stats
-                        partyMemberStats.put(partyMemberName, hySkyBlockStats);
+                        partyMemberStats.put(partyMemberName, hySkyBlockStats != null ? hySkyBlockStats : new HySkyBlockStats(true));
 
                         if (pendingApiRequests.decrementAndGet() == 0) {
                             // (3) wait for all requests to finish
