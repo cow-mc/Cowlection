@@ -182,7 +182,7 @@ public class ChatListener {
                     if (!joinedYourself && MooConfig.getDungPartyFinderPlayerLookupDisplay() != MooConfig.Setting.DISABLED) {
                         // another player joined via Dungeon Party Finder
                         String dungeonClass = dungeonPartyFinderJoinedMatcher.group(2) + " Lvl " + dungeonPartyFinderJoinedMatcher.group(3);
-                        getDungeonPartyMemberDetails(messageSender, dungeonClass);
+                        getNewDungeonPartyMemberDetails(messageSender, dungeonClass);
                     } else if (joinedYourself && MooConfig.dungPartyFinderPartyLookup) {
                         // successfully joined another party via Dungeon Party Finder
                         main.getDungeonCache().lookupPartyMembers();
@@ -199,7 +199,7 @@ public class ChatListener {
         }
     }
 
-    private void getDungeonPartyMemberDetails(String playerName, String dungeonClass) {
+    private void getNewDungeonPartyMemberDetails(String playerName, String dungeonClass) {
         ApiUtils.fetchFriendData(playerName, stalkedPlayer -> {
             if (stalkedPlayer != null && !stalkedPlayer.equals(Friend.FRIEND_NOT_FOUND)) {
                 ApiUtils.fetchSkyBlockStats(stalkedPlayer, hySBStalking -> {
@@ -212,7 +212,8 @@ public class ChatListener {
                         boolean outputAsChatMessages = MooConfig.getDungPartyFinderPlayerLookupDisplay() == MooConfig.Setting.TEXT;
 
                         HySkyBlockStats.Profile.Member member = activeProfile.getMember(stalkedPlayer.getUuid());
-                        String armorLookupPrefix = " ❈ " + EnumChatFormatting.DARK_GREEN + playerName;
+                        String gameModeIcon = activeProfile.getGameModeIcon();
+                        String armorLookupPrefix = " ➲ " + gameModeIcon + (gameModeIcon.isEmpty() ? "" : " ") + EnumChatFormatting.DARK_GREEN + playerName;
                         String delimiter = "\n" + (outputAsChatMessages ? "    " : "");
 
                         HySkyBlockStats.Profile.Dungeons dungeons = member.getDungeons();
@@ -233,25 +234,36 @@ public class ChatListener {
                         String highestFloorCompletions = "\n" + (outputAsChatMessages ? "  " : "") + EnumChatFormatting.GRAY + "Completed no dungeons yet";
 
                         String skyBlockDetails;
+                        boolean hasPlayedDungeons = dungeons != null && dungeons.hasPlayed();
+                        int totalDungeonCompletions = hasPlayedDungeons ? dungeons.getTotalDungeonCompletions() : 0;
                         if (outputAsChatMessages) {
                             // highest floor completions:
-                            if (dungeons != null && dungeons.hasPlayed()) {
+                            if (hasPlayedDungeons) {
                                 highestFloorCompletions = dungeons.getHighestFloorCompletions(1, true).toString();
                             }
                             skyBlockDetails = armorLookupPrefix + armorLookupResult + petInfo + highestFloorCompletions;
                         } else {
                             // as a tooltip: == MooConfig.Setting.TOOLTIP
-                            if (dungeons != null && dungeons.hasPlayed()) {
+                            if (hasPlayedDungeons) {
                                 // highest floor completions:
                                 highestFloorCompletions = dungeons.getHighestFloorCompletions(3, false).toString();
                             }
-                            skyBlockDetails = EnumChatFormatting.BOLD + playerName + armorLookupResult + petInfo + highestFloorCompletions;
+                            skyBlockDetails = gameModeIcon + (gameModeIcon.isEmpty() ? "" : " " + EnumChatFormatting.WHITE) + EnumChatFormatting.BOLD + playerName + armorLookupResult + petInfo + highestFloorCompletions;
                         }
 
                         ApiUtils.fetchHyPlayerDetails(stalkedPlayer, hyPlayerData -> {
                             String foundDungeonsSecrets = "";
                             if (hyPlayerData != null) {
-                                foundDungeonsSecrets = "\n" + (outputAsChatMessages ? "  " : "") + EnumChatFormatting.GRAY + "Found secrets: " + EnumChatFormatting.GOLD + hyPlayerData.getAchievement("skyblock_treasure_hunter");
+                                int foundSecrets = hyPlayerData.getAchievement("skyblock_treasure_hunter");
+                                foundDungeonsSecrets = "\n" + (outputAsChatMessages ? "  " : "") + EnumChatFormatting.GRAY + "Found secrets: " + EnumChatFormatting.GOLD + foundSecrets;
+
+                                String averageSecretsPerCompletion = null;
+                                if (foundSecrets > 0 && totalDungeonCompletions > 0) {
+                                    averageSecretsPerCompletion = Utils.formatDecimal(foundSecrets / (1d * totalDungeonCompletions));
+                                }
+                                if (averageSecretsPerCompletion != null) {
+                                    foundDungeonsSecrets += EnumChatFormatting.GRAY + " (" + EnumChatFormatting.YELLOW + averageSecretsPerCompletion + EnumChatFormatting.GRAY + "/completion)";
+                                }
                             }
 
                             MooChatComponent armorLookupComponent;

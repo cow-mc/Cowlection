@@ -213,8 +213,6 @@ public class DungeonsPartyListener {
                 continue;
             }
             UUID uuid = partyMember.getValue().get();
-            // player name:
-            playerEntry.append("  ").append(EnumChatFormatting.DARK_GREEN).append(partyMemberName).append(EnumChatFormatting.LIGHT_PURPLE).append(" ➜ ").append(EnumChatFormatting.GRAY);
 
             HySkyBlockStats sbStats = partyMemberStats.get(partyMemberName);
             if (sbStats != null && sbStats.isSuccess()) {
@@ -227,13 +225,17 @@ public class DungeonsPartyListener {
                     continue;
                 }
                 // ^ abort if any of the above failed, otherwise visualize API data:
+                // player name + game mode icon:
+                String gameModeIcon = activeProfile.getGameModeIcon();
+                playerEntry.append("  ").append(gameModeIcon).append(gameModeIcon.isEmpty() ? "" : " ").append(EnumChatFormatting.DARK_GREEN).append(partyMemberName).append(EnumChatFormatting.LIGHT_PURPLE).append(" ➜ ").append(EnumChatFormatting.GRAY);
+
                 HySkyBlockStats.Profile.Member member = activeProfile.getMember(uuid);
 
                 // active pet:
                 HySkyBlockStats.Profile.Pet activePet = member.getActivePet();
 
                 // append player name + class and class level + armor + active pet
-                playerTooltip.append(EnumChatFormatting.WHITE).append(EnumChatFormatting.BOLD).append(partyMemberName).append(EnumChatFormatting.LIGHT_PURPLE).append(" ➜ ").append(EnumChatFormatting.GRAY).append(EnumChatFormatting.ITALIC).append("no class selected")
+                playerTooltip.append(gameModeIcon).append(gameModeIcon.isEmpty() ? "" : " ").append(EnumChatFormatting.WHITE).append(EnumChatFormatting.BOLD).append(partyMemberName).append(EnumChatFormatting.LIGHT_PURPLE).append(" ➜ ").append(EnumChatFormatting.GRAY).append(EnumChatFormatting.ITALIC).append("no class selected")
                         .append("\n").append(String.join("\n", member.getArmor()))
                         .append("\n\n").append(EnumChatFormatting.GRAY).append("Active pet: ").append(activePet != null ? activePet.toFancyString() : "" + EnumChatFormatting.DARK_GRAY + EnumChatFormatting.ITALIC + "none");
 
@@ -267,7 +269,17 @@ public class DungeonsPartyListener {
                 playerTooltip.append(dungeons.getHighestFloorCompletions(3, false));
 
                 // found dungeon secrets:
-                playerTooltip.append("\n").append(EnumChatFormatting.GRAY).append("Found secrets: ").append(EnumChatFormatting.GOLD).append(partyMemberFoundDungeonSecrets.getOrDefault(partyMemberName, 0));
+                int foundSecrets = partyMemberFoundDungeonSecrets.getOrDefault(partyMemberName, 0);
+                int totalDungeonCompletions = dungeons.getTotalDungeonCompletions();
+                String averageSecretsPerCompletion = null;
+                if (foundSecrets > 0 && totalDungeonCompletions > 0) {
+                    averageSecretsPerCompletion = Utils.formatDecimal(foundSecrets / (1d * totalDungeonCompletions));
+                }
+
+                playerTooltip.append("\n").append(EnumChatFormatting.GRAY).append("Found secrets: ").append(EnumChatFormatting.GOLD).append(foundSecrets);
+                if (averageSecretsPerCompletion != null) {
+                    playerTooltip.append(EnumChatFormatting.GRAY).append(" (").append(EnumChatFormatting.YELLOW).append(averageSecretsPerCompletion).append(EnumChatFormatting.GRAY).append("/completion)");
+                }
             } else {
                 playerEntry.setLength(0);
                 playerEntry.append(errorNamePrefix).append("API error").append(sbStats != null && sbStats.getCause() != null ? ": " + sbStats.getCause() : "");

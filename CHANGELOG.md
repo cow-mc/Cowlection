@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.8.9-0.14.0] - unreleased
+### Added
+- (Dungeons) player lookups:
+  - added ironman icon ♲
+  - added average secrets per completion
+
 ## [1.8.9-0.13.0] - 25.04.2021
 ### Added
 - Bestiary Overview: enhances tooltips of `/bestiary` ⬌ `/be`
@@ -316,6 +322,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 *Note:* The 'best friends' list is currently available via <kbd>ESC</kbd> > Mod Options > Cowlection > Config > bestFriends.
 
+[1.8.9-0.14.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.13.0...master
 [1.8.9-0.13.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.12.0...v1.8.9-0.13.0
 [1.8.9-0.12.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.11.0...v1.8.9-0.12.0
 [1.8.9-0.11.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.10.2...v1.8.9-0.11.0

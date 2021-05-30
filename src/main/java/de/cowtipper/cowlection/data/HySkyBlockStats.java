@@ -9,6 +9,7 @@ import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.StringUtils;
 import net.minecraftforge.common.util.Constants;
 import org.apache.commons.codec.binary.Base64;
 
@@ -63,6 +64,7 @@ public class HySkyBlockStats {
     public static class Profile {
         private String cute_name;
         private Map<String, Member> members;
+        private String game_mode;
         private Banking banking;
 
         /**
@@ -77,6 +79,15 @@ public class HySkyBlockStats {
 
         public Member getMember(UUID uuid) {
             return members.get(UUIDTypeAdapter.fromUUID(uuid));
+        }
+
+        public String getGameModeIcon() {
+            if (StringUtils.isNullOrEmpty(game_mode)) {
+                return "";
+            } else if ("ironman".equals(game_mode)) {
+                return EnumChatFormatting.GRAY + "♲";
+            }
+            return "";
         }
 
         public double getCoinBank() {
@@ -398,6 +409,18 @@ public class HySkyBlockStats {
                 return dungeonTypesLevels.toString();
             }
 
+            public int getTotalDungeonCompletions() {
+                int totalDungeonCompletions = 0;
+                if (dungeon_types != null) {
+                    for (Type dungeonType : dungeon_types.values()) {
+                        if (dungeonType != null && dungeonType.hasPlayed()) {
+                            totalDungeonCompletions += dungeonType.getTotalTierCompletions();
+                        }
+                    }
+                }
+                return totalDungeonCompletions;
+            }
+
             public static class Type {
                 private Map<String, Integer> times_played;
                 private Map<String, Integer> tier_completions;
@@ -423,6 +446,16 @@ public class HySkyBlockStats {
 
                 public boolean hasPlayed() {
                     return experience > 0 || best_score != null;
+                }
+
+                public int getTotalTierCompletions() {
+                    int totalTierCompletions = 0;
+                    if (tier_completions != null) {
+                        for (Integer completions : tier_completions.values()) {
+                            totalTierCompletions += completions;
+                        }
+                    }
+                    return totalTierCompletions;
                 }
 
                 /**
