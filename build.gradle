@@ -4,11 +4,15 @@ buildscript {
         jcenter()
         maven {
             name = "forge"
-            url = "http://files.minecraftforge.net/maven"
+            url = "https://maven.minecraftforge.net/"
+        }
+        maven {
+            name = "jitpack"
+            url = "https://jitpack.io/"
         }
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
+        classpath "com.github.asbyth:ForgeGradle:6f53277"
     }
 }
 apply plugin: 'net.minecraftforge.gradle.forge'
@@ -89,6 +93,16 @@ processResources {
         exclude 'mcmod.info'
     }
 }
+
+task moveResources {
+    doLast {
+        ant.move file: "${buildDir}/resources/main",
+                todir: "${buildDir}/classes/java"
+    }
+}
+
+moveResources.dependsOn processResources
+classes.dependsOn moveResources
 
 import org.apache.tools.ant.filters.FixCrLfFilter
 // update versions in update.json

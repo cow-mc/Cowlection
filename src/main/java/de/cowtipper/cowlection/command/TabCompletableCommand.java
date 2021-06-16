@@ -28,7 +28,7 @@ public class TabCompletableCommand extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return null;
+        return "/" + cmdName + " [additional parameters]. This client-command provides username tab-completion for the equivalent server-side command.";
     }
 
     @Override
