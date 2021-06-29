@@ -347,18 +347,22 @@ public final class Utils {
                 }
             }
         }
-        // remove essence upgrade indicators (✪)
-        String essenceUpgradeIndicator = EnumChatFormatting.GOLD + "✪";
-        int essenceModifier = modifiedItemName.indexOf(essenceUpgradeIndicator);
-        while (essenceModifier > 0) {
-            if (strikethrough) {
-                modifiedItemName.replace(essenceModifier, essenceModifier + essenceUpgradeIndicator.length(), grayedOutFormatting + "✪");
-            } else {
-                modifiedItemName.delete(essenceModifier, essenceModifier + essenceUpgradeIndicator.length());
-            }
-            essenceModifier = modifiedItemName.indexOf(essenceUpgradeIndicator);
-        }
+        // remove or 'hide' essence upgrade indicators (✪)
+        replaceInStringBuilder(modifiedItemName, EnumChatFormatting.GOLD + "✪", grayedOutFormatting + "✪", strikethrough);
+        replaceInStringBuilder(modifiedItemName, EnumChatFormatting.RED + "✪", "" + EnumChatFormatting.DARK_GRAY + EnumChatFormatting.STRIKETHROUGH + "✪", strikethrough);
 
         return Pair.of(modifiedItemName.toString().trim(), reforge);
+    }
+
+    private static void replaceInStringBuilder(StringBuilder sb, String search, String replacement, boolean replace) {
+        int hit = sb.indexOf(search);
+        while (hit > 0) {
+            if (replace) {
+                sb.replace(hit, hit + search.length(), replacement);
+            } else {
+                sb.delete(hit, hit + search.length());
+            }
+            hit = sb.indexOf(search);
+        }
     }
 }

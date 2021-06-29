@@ -31,8 +31,7 @@ import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.eventhandler.*;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import org.lwjgl.input.Mouse;
@@ -67,6 +66,7 @@ public class DungeonsListener {
      * <li>§7Health: §a+107 HP §8(+133.75 HP)</li>
      * <li>§7Defense: §a+130 §8(Heavy +65) §8(+162.5)</li>
      * <li>§7Speed: §a-1 §8(Heavy -1)</li>
+     * <li>§7Health: §a+432 HP §e(+60 HP) §9(Ancient +7 HP) §8(+1,032.48 HP)</li>
      * </ul>
      * <pre>
      * | Groups                     | Example matches   |
@@ -74,14 +74,16 @@ public class DungeonsListener {
      * | Group `prefix`             | §7Crit Damage: §c |
      * | Group `statNonDungeon`     | +23               |
      * | Group `statNonDungeonUnit` | %                 |
+     * | Group `statHpb`            | +60               |
      * | Group `colorReforge`       | §8                |
      * | Group `reforge`            | Heavy             |
      * | Group `statReforge`        | -3                |
-     * | Group `statReforgeUnit`    | %                 |
      * | Group `colorDungeon`       | §8                |
+     * | Group `statDungeon`        | +42               |
+     * | Group `statDungeonUnit`    | %                 |
      * </pre>
      */
-    private final Pattern TOOLTIP_LINE_PATTERN = Pattern.compile("^(?<prefix>(?:" + FORMATTING_CODE + ")+[A-Za-z ]+: " + FORMATTING_CODE + ")(?<statNonDungeon>[+-]?[0-9]+)(?<statNonDungeonUnit>%| HP|)(?: (?<colorReforge>" + FORMATTING_CODE + ")\\((?<reforge>[A-Za-z]+) (?<statReforge>[+-]?[0-9]+)(?<statReforgeUnit>%| HP|)\\))?(?: (?<colorDungeon>" + FORMATTING_CODE + ")\\((?<statDungeon>[+-]?[.0-9]+)(?<statDungeonUnit>%| HP|)\\))?$");
+    private final Pattern TOOLTIP_LINE_PATTERN = Pattern.compile("^(?<prefix>(?:" + FORMATTING_CODE + ")+[A-Za-z ]+: " + FORMATTING_CODE + ")(?<statNonDungeon>[+-]?[0-9]+)(?<statNonDungeonUnit>%| HP|)(?: §e\\(\\+(?<statHpb>[0-9]+)(?: HP)?\\))?(?: (?<colorReforge>" + FORMATTING_CODE + ")\\((?<reforge>[A-Za-z]+) (?<statReforge>[+-]?[0-9]+)(?:%| HP|)\\))?(?: (?<colorDungeon>" + FORMATTING_CODE + ")\\((?<statDungeon>[+-]?[.,0-9]+)(?<statDungeonUnit>%| HP|)\\))?$");
     /**
      * Player deaths in dungeon:
      * <ul>
@@ -190,6 +192,11 @@ public class DungeonsListener {
                                 statBase -= Integer.parseInt(lineMatcher.group("statReforge"));
                             }
 
+                            if (lineMatcher.group("statHpb") != null) {
+                                // tooltip line has Hot Potato Book stats; subtract them from base stats
+                                statBase -= Integer.parseInt(lineMatcher.group("statHpb"));
+                            }
+
                             if (statBase == 0) {
                                 // don't redraw 0 stats
                                 tooltipIterator.remove();
@@ -198,7 +205,7 @@ public class DungeonsListener {
                             String newToolTipLine = String.format("%s%+d%s", lineMatcher.group("prefix"), statBase, lineMatcher.group("statNonDungeonUnit"));
                             if (lineMatcher.group("statDungeon") != null) {
                                 // tooltip line has dungeon stats; update them!
-                                double statDungeon = Double.parseDouble(lineMatcher.group("statDungeon"));
+                                double statDungeon = Double.parseDouble(lineMatcher.group("statDungeon").replace(",", ""));
 
                                 double dungeonStatModifier = statDungeon / statNonDungeon; // modified through skill level or gear essence upgrades
                                 if (extraAttributes.hasKey("dungeon_item_level")) {

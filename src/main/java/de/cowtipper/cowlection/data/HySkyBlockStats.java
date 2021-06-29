@@ -209,7 +209,7 @@ public class HySkyBlockStats {
                 Map<XpTables.Slayer, Integer> slayerLevels = new EnumMap<>(XpTables.Slayer.class);
                 for (XpTables.Slayer slayerBoss : XpTables.Slayer.values()) {
                     SlayerBossDetails bossDetails = slayer_bosses.get(slayerBoss.name().toLowerCase());
-                    int slayerLevel = slayerBoss.getLevel(bossDetails.xp);
+                    int slayerLevel = bossDetails != null ? slayerBoss.getLevel(bossDetails.xp) : 0;
                     slayerLevels.put(slayerBoss, slayerLevel);
                 }
                 return slayerLevels;

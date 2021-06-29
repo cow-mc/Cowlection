@@ -34,7 +34,7 @@ public final class DataHelper {
 
         public static SkyBlockRarity getPetRarityByColorCode(String colorCode) {
             if (MYTHIC.rarityColor.toString().equals(colorCode)) {
-                // special case: Mystic Bat
+                // special case: Mystic pets
                 return LEGENDARY;
             }
             for (SkyBlockRarity petRarity : getPetRarities()) {
@@ -79,7 +79,9 @@ public final class DataHelper {
         BUILD_BATTLE("Build Battle"),
         DUELS("Duels"),
         SKYBLOCK("SkyBlock"),
-        PIT("Pit");
+        PIT("Pit"),
+        REPLAY("Replay"),
+        SMP("SMP");
 
         private final String cleanName;
 
@@ -568,6 +570,18 @@ public final class DataHelper {
         minions.put("e7eb574b6ab8b394c6b4a112ae18d5a672ffa414ec4dff3d65c9950523c19e0a", "Revenant IX");
         minions.put("d0197c8a4eaca2e5cc1b287ac84c62ef8c9f63068218105292dd89c3f7e64596", "Revenant X");
         minions.put("9cf6f95308bedb182b434aa73058aa8d69818b48900396cebc127c1bf7df6790", "Revenant XI");
+
+        minions.put("3a851ed2ce5c2c0523af772d206d9555e2e1383ec87946e6ff4c51186e29ef7f", "Voidling I");
+        minions.put("bc494af6b45980cb2b035007c25e1b4e169371c410fe5d2708daa4f695668fd2", "Voidling II");
+        minions.put("4092f0e0e390f1d2382c908b0a8a90f988458ba8cfa13773f81faa6fc0c906f2", "Voidling III");
+        minions.put("be983af1e4fd62b3ad436b00782a3faebb2e392827097eb96c652e2e5521e438", "Voidling IV");
+        minions.put("527465fd028df45d67de911870cabbde33ee4c4f3ba2057c15465e94b495e22f", "Voidling V");
+        minions.put("5936fa9d8f9319ff6b20e2d25520ba97e2bbe858d579a34392631515d49cd7eb", "Voidling VI");
+        minions.put("6ed0ad0130e99a36cf7d78cae759965476f98025b1833cde5542f7dc42829400", "Voidling VII");
+        minions.put("56140d9598bef25911b283649278ac1213697609be939676b8d944e9d63577bc", "Voidling VIII");
+        minions.put("76a551138ea5378f71f3e6440a00dab112e60ff8b9784cd2010b3ac36123d5a6", "Voidling IX");
+        minions.put("7d63d05501d38fac8b0969deb78b68a58fe03c3e0d78cdb84ef1a9a7513ee326", "Voidling X");
+        minions.put("7334fc47a50b46ac9df7bf2ed712309ff0b029981368b22db0d539c88f83144f", "Voidling XI");
 
         minions.put("2fe009c5cfa44c05c88e5df070ae2533bd682a728e0b33bfc93fd92a6e5f3f64", "Skeleton I");
         minions.put("3ab6f9c3c911879181dbf2468783348abc671346d5e8c34d118b2b7ece7c47c2", "Skeleton II");

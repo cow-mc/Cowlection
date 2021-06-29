@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - (Dungeons) player lookups:
   - added ironman icon ♲
   - added average secrets per completion
+- Added data for Enderman slayer and Voidling minions
+
+### Fixed
+- 'Show Dungeon item base stats' feature now works with HPB'd items and master stars
+- Fixed Mythic pets level in player lookup
 
 ## [1.8.9-0.13.0] - 25.04.2021
 ### Added

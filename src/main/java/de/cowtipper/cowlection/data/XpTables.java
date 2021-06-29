@@ -140,7 +140,7 @@ public class XpTables {
     }
 
     public enum Slayer {
-        ZOMBIE, SPIDER, WOLF(true);
+        ZOMBIE, SPIDER, WOLF(true), ENDERMAN(true);
         private final boolean alternativeXpFormula;
         /**
          * Valid for Zombie + Spider
@@ -260,7 +260,12 @@ public class XpTables {
         }
 
         public static int getLevel(String rarity, double exp) {
-            TreeSet<Integer> xpToLevels = PET_XP.get(DataHelper.SkyBlockRarity.valueOf(rarity));
+            DataHelper.SkyBlockRarity petRarity = DataHelper.SkyBlockRarity.valueOf(rarity);
+            if (petRarity == DataHelper.SkyBlockRarity.MYTHIC) {
+                // special case: Mystic pets
+                petRarity = DataHelper.SkyBlockRarity.LEGENDARY;
+            }
+            TreeSet<Integer> xpToLevels = PET_XP.get(petRarity);
             if (xpToLevels != null) {
                 return xpToLevels.headSet((int) exp, true).size();
             } else {
