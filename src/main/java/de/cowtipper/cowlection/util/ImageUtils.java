@@ -13,8 +13,6 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 public class ImageUtils {
     public static int getTierFromTexture(String minionSkinId) {
@@ -131,12 +129,10 @@ public class ImageUtils {
             }
         }
         try {
-            File cowlectionImagePath = new File(Minecraft.getMinecraft().mcDataDir, "cowlection_images");
-            if (!cowlectionImagePath.exists() && !cowlectionImagePath.mkdirs()) {
-                // dir didn't exist and couldn't be created
+            File imageFile = Utils.getTimestampedFileForDirectory("map", "png");
+            if(imageFile == null) {
                 return null;
             }
-            File imageFile = getTimestampedPngFileForDirectory(cowlectionImagePath, "map");
             ImageIO.write(image, "png", imageFile);
             return imageFile.getCanonicalFile();
         } catch (IOException e) {
@@ -179,19 +175,4 @@ public class ImageUtils {
         return new Color((shadeMul * c.getRed()) / 255, (shadeMul * c.getGreen()) / 255, (shadeMul * c.getBlue()) / 255, c.getAlpha());
     }
 
-    /**
-     * Based on ScreenShotHelper#getTimestampedPNGFileForDirectory
-     */
-    private static File getTimestampedPngFileForDirectory(File directory, String prefix) {
-        String currentDateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH.mm.ss"));
-        int i = 1;
-
-        while (true) {
-            File timestampedFile = new File(directory, prefix + "_" + currentDateTime + (i == 1 ? "" : "_" + i) + ".png");
-            if (!timestampedFile.exists()) {
-                return timestampedFile;
-            }
-            ++i;
-        }
-    }
 }

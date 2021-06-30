@@ -55,6 +55,7 @@ public class MooConfig {
     public static boolean fixReplyCmd;
     public static boolean enableCopyInventory;
     private static String wailaLevelOfDetail;
+    private static String copyOrSaveWailaAndInventoryData;
     public static String[] tabCompletableNamesCommands;
     private static final String CATEGORY_LOGS_SEARCH = "logssearch";
     public static String[] logsDirs;
@@ -250,14 +251,13 @@ public class MooConfig {
 
         // Sub-Category: Cowlection config gui
         MooConfigCategory.SubCategory subCat = configCat.addSubCategory("Cowlection config gui");
-        subCat.addExplanations("Display of the explanations for each sub-section:",
-                "  ‣ " + EnumChatFormatting.YELLOW + "as tooltip ①" + EnumChatFormatting.DARK_GRAY + "⬛" + EnumChatFormatting.RESET + " = tooltip when hovering over sub-category heading (with darkened background)",
-                "  ‣ " + EnumChatFormatting.YELLOW + "as tooltip ②" + EnumChatFormatting.WHITE + "⬛" + EnumChatFormatting.RESET + " = tooltip when hovering over sub-category heading (no extra background)",
+        subCat.addExplanations("Display of the explanations for each sub-section marked with §2❢§r",
+                "  ‣ " + EnumChatFormatting.YELLOW + "as tooltip" + EnumChatFormatting.RESET + " = tooltip when hovering over sub-category heading",
                 "  ‣ " + EnumChatFormatting.YELLOW + "as text" + EnumChatFormatting.RESET + " = below each sub-category heading",
                 "  ‣ " + EnumChatFormatting.YELLOW + "hidden" + EnumChatFormatting.RESET + " = ");
         Property propConfigGuiExplanations = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "configGuiExplanations", "tooltip ① §0⬛", "Display config settings explanations",
-                new String[]{"as tooltip ①§0⬛", "as tooltip ②§f⬛", "as text", "hidden"}));
+                "configGuiExplanations", "as tooltip", "Display config settings explanations",
+                new String[]{"as tooltip", "as text", "hidden"}));
 
 
         // (not visible in config gui: has opened config? or: knows how to move the dungeon overlay?)
@@ -284,6 +284,8 @@ public class MooConfig {
                 "enableCopyInventory", false, "Enable copy inventory with CTRL + C?"));
         Property propWailaLevelOfDetail = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "wailaLevelOfDetail", "main info", "Level of detail of /moo waila", new String[]{"main info", "all info"}));
+        Property propCopyOrSaveWailaAndInventoryData = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "copyOrSaveWailaAndInventoryData", "to clipboard", "Copy or save waila and inventory data?", new String[]{"to clipboard", "save file"}));
 
         // Sub-Category: Tab-completable names in commands
         subCat = configCat.addSubCategory("Tab-completable usernames");
@@ -636,6 +638,7 @@ public class MooConfig {
             fixReplyCmd = propFixReplyCmd.getBoolean();
             enableCopyInventory = propEnableCopyInventory.getBoolean();
             wailaLevelOfDetail = propWailaLevelOfDetail.getString();
+            copyOrSaveWailaAndInventoryData = propCopyOrSaveWailaAndInventoryData.getString();
             tabCompletableNamesCommands = propTabCompletableNamesCommands.getStringList();
             logsDirs = propLogsDirs.getStringList();
             defaultStartDate = propDefaultStartDate.getString().trim();
@@ -718,6 +721,7 @@ public class MooConfig {
         propFixReplyCmd.set(fixReplyCmd);
         propEnableCopyInventory.set(enableCopyInventory);
         propWailaLevelOfDetail.set(wailaLevelOfDetail);
+        propCopyOrSaveWailaAndInventoryData.set(copyOrSaveWailaAndInventoryData);
         propTabCompletableNamesCommands.set(tabCompletableNamesCommands);
         propLogsDirs.set(logsDirs);
         propDefaultStartDate.set(defaultStartDate);
@@ -884,6 +888,10 @@ public class MooConfig {
 
     public static boolean keepFullWailaInfo() {
         return "all info".equals(wailaLevelOfDetail);
+    }
+
+    public static boolean copyWailaAndInventoryDataToClipboard() {
+        return "to clipboard".equals(copyOrSaveWailaAndInventoryData);
     }
 
     // Category: Notifications
@@ -1100,7 +1108,7 @@ public class MooConfig {
                 case "always":
                     return ALWAYS;
                 case "as a tooltip":
-                case "as tooltip ②§f⬛":
+                case "as tooltip":
                     return TOOLTIP;
                 case "in chat":
                 case "as text":
@@ -1112,7 +1120,6 @@ public class MooConfig {
                     return DISABLED;
                 case "on SkyBlock":
                 case "key press":
-                case "as tooltip ①§0⬛":
                 case "a letter":
                     return SPECIAL;
                 default:

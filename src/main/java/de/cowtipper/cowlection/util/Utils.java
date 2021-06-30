@@ -1,6 +1,11 @@
 package de.cowtipper.cowlection.util;
 
 import com.mojang.realmsclient.util.Pair;
+import de.cowtipper.cowlection.Cowlection;
+import de.cowtipper.cowlection.config.MooConfig;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumChatFormatting;
 import org.apache.commons.lang3.StringUtils;
@@ -10,9 +15,14 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -363,6 +373,57 @@ public final class Utils {
                 sb.delete(hit, hit + search.length());
             }
             hit = sb.indexOf(search);
+        }
+    }
+
+    public static void copyToClipboardOrSaveAsFile(String what, String fileName, NBTBase data, boolean sortData) {
+        String nbt = GsonUtils.toJson(data, sortData);
+        if (MooConfig.copyWailaAndInventoryDataToClipboard()) {
+            GuiScreen.setClipboardString(nbt);
+            Cowlection.getInstance().getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Copied " + what + " to clipboard.");
+        } else {
+            try {
+                File target = getTimestampedFileForDirectory(fileName, "json");
+                if (target == null) {
+                    return;
+                }
+                Files.write(target.toPath(), nbt.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE_NEW);
+
+                File targetNormalized = target.getCanonicalFile();
+
+                Cowlection.getInstance().getChatHelper().sendMessage(new MooChatComponent("Saved " + what).green()
+                        .appendSibling(new MooChatComponent(" [open file]").gold().setOpenFile(targetNormalized))
+                        .appendSibling(new MooChatComponent(" [open folder]").darkAqua().setOpenFile(targetNormalized.getParentFile())));
+            } catch (IOException | UnsupportedOperationException e) {
+                e.printStackTrace();
+                Cowlection.getInstance().getChatHelper().sendMessage(EnumChatFormatting.RED, "Couldn't save " + what + ": " + e.toString());
+            }
+        }
+    }
+
+    /**
+     * Based on ScreenShotHelper#getTimestampedPNGFileForDirectory
+     */
+    static File getTimestampedFileForDirectory(String suffix, String fileType) {
+        File cowlectionOutPath = new File(Minecraft.getMinecraft().mcDataDir, Cowlection.MODID.toLowerCase() + "_out");
+        if (!cowlectionOutPath.exists() && !cowlectionOutPath.mkdirs()) {
+            // dir didn't exist and couldn't be created
+            return null;
+        }
+
+        String currentDateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH.mm.ss"));
+        String sanitizedSuffix = StringUtils.replaceEach(EnumChatFormatting.getTextWithoutFormattingCodes(suffix).trim(),
+                // replacement characters from https://stackoverflow.com/a/61448658
+                new String[]{"\\", "/", ":", "*", "?", "\"", "<", ">", "|"},
+                new String[]{"⧵", "∕", "∶", "∗", "？", "“", "‹", "›", "∣"});
+        String baseName = currentDateTime + "_" + sanitizedSuffix;
+        int i = 1;
+        while (true) {
+            File timestampedFile = new File(cowlectionOutPath, baseName + (i == 1 ? "" : "_" + i) + "." + fileType);
+            if (!timestampedFile.exists()) {
+                return timestampedFile;
+            }
+            ++i;
         }
     }
 }

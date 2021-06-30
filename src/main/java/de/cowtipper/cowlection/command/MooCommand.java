@@ -822,8 +822,7 @@ public class MooCommand extends CommandBase {
                             NBTTagCompound relevantNbt = tldrInfo(nbt, showAllInfo);
                             BlockPos skullPos = skull.getPos();
                             relevantNbt.setTag("__position", new NBTTagIntArray(new int[]{skullPos.getX(), skullPos.getY(), skullPos.getZ()}));
-                            GuiScreen.setClipboardString(GsonUtils.toJson(relevantNbt, true));
-                            main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Copied skull data to clipboard.");
+                            Utils.copyToClipboardOrSaveAsFile("skull data", "skull", relevantNbt, true);
                             return;
                         }
                     } else if (te instanceof TileEntitySign) {
@@ -833,8 +832,7 @@ public class MooCommand extends CommandBase {
                             nbt.setString("Text" + (lineNr + 1), sign.signText[lineNr].getFormattedText());
                             nbt.setString("TextUnformatted" + (lineNr + 1), sign.signText[lineNr].getUnformattedText());
                         }
-                        GuiScreen.setClipboardString(GsonUtils.toJson(nbt, true));
-                        main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Copied sign data to clipboard.");
+                        Utils.copyToClipboardOrSaveAsFile("sign data", "sign", nbt, true);
                         return;
                     } else if (te instanceof TileEntityBanner) {
                         List<String> possiblePatterns = Arrays.asList("b", "bl", "bo", "br", "bri", "bs", "bt", "bts", "cbo", "cr", "cre", "cs", "dls", "drs", "flo", "gra", "hh", "ld", "ls", "mc", "moj", "mr", "ms", "rd", "rs", "sc", "sku", "ss", "tl", "tr", "ts", "tt", "tts", "vh", "lud", "rud", "gru", "hhb", "vhr");
@@ -866,22 +864,18 @@ public class MooCommand extends CommandBase {
                     if (entity instanceof EntityArmorStand) {
                         // looking at non-invisible armor stand (e.g. Minion)
                         EntityArmorStand armorStand = (EntityArmorStand) entity;
-                        copyEntityInfoToClipboard(armorStand, showAllInfo);
-                        main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Copied armor stand '" + armorStand.getName() + EnumChatFormatting.GREEN + "' to clipboard.");
+                        copyEntityInfoToClipboard("armor stand '" + armorStand.getName() + EnumChatFormatting.GREEN + "'", "armorstand", armorStand, showAllInfo);
                         return;
                     } else if (entity instanceof EntityOtherPlayerMP) {
                         // looking at NPC or another player
                         EntityOtherPlayerMP otherPlayer = (EntityOtherPlayerMP) entity;
-                        copyEntityInfoToClipboard(otherPlayer, showAllInfo);
-                        main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Copied player/npc '" + otherPlayer.getDisplayNameString() + EnumChatFormatting.GREEN + "' to clipboard.");
+                        copyEntityInfoToClipboard("player/npc '" + otherPlayer.getDisplayNameString() + EnumChatFormatting.GREEN + "'", "npc_" + otherPlayer.getDisplayNameString(), otherPlayer, showAllInfo);
                         return;
                     } else if (entity instanceof EntityItemFrame) {
                         EntityItemFrame itemFrame = (EntityItemFrame) entity;
-                        copyEntityInfoToClipboard(itemFrame, showAllInfo);
 
                         ItemStack displayedItem = itemFrame.getDisplayedItem();
                         if (displayedItem != null) {
-
                             NBTTagCompound nbt = new NBTTagCompound();
                             if (displayedItem.getItem() == Items.filled_map) {
                                 // filled map
@@ -897,14 +891,12 @@ public class MooCommand extends CommandBase {
                             } else {
                                 displayedItem.writeToNBT(nbt);
                             }
-                            GuiScreen.setClipboardString(GsonUtils.toJson(nbt, true));
-                            main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Copied item in item frame '" + displayedItem.getDisplayName() + EnumChatFormatting.GREEN + "' to clipboard.");
+                            Utils.copyToClipboardOrSaveAsFile("item in item frame '" + displayedItem.getDisplayName() + EnumChatFormatting.GREEN + "'", "itemframe-item_" + displayedItem.getDisplayName(), nbt, true);
                             return;
                         }
                     } else if (entity instanceof EntityLiving) {
                         EntityLiving living = (EntityLiving) entity;
-                        copyEntityInfoToClipboard(living, showAllInfo);
-                        main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Copied mob '" + living.getName() + EnumChatFormatting.GREEN + "' to clipboard.");
+                        copyEntityInfoToClipboard("mob '" + living.getName() + EnumChatFormatting.GREEN + "'", "mob_" + living.getName(), living, showAllInfo);
                         return;
                     }
                     break;
@@ -934,8 +926,7 @@ public class MooCommand extends CommandBase {
                 entities.appendTag(relevantNbt);
             }
 
-            GuiScreen.setClipboardString(GsonUtils.toJson(entities, true));
-            main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Copied " + nearbyEntities.size() + " nearby entities to clipboard.");
+            Utils.copyToClipboardOrSaveAsFile(nearbyEntities.size() + " nearby entities", "entities", entities, true);
         } else {
             main.getChatHelper().sendMessage(EnumChatFormatting.RED, "You stare into the void... and see nothing of interest. " + EnumChatFormatting.GRAY + "Try looking at: NPCs, mobs, armor stands, placed skulls, banners, signs, dropped items, item in item frames, or maps on a wall.");
         }
@@ -988,9 +979,9 @@ public class MooCommand extends CommandBase {
         return relevantNbt;
     }
 
-    private void copyEntityInfoToClipboard(Entity entity, boolean showAllInfo) {
+    private void copyEntityInfoToClipboard(String what, String fileName, Entity entity, boolean showAllInfo) {
         NBTTagCompound relevantNbt = extractEntityInfo(entity, showAllInfo);
-        GuiScreen.setClipboardString(GsonUtils.toJson(relevantNbt, true));
+        Utils.copyToClipboardOrSaveAsFile(what, fileName, relevantNbt, true);
     }
 
     private NBTTagCompound tldrInfo(NBTTagCompound nbt, boolean showAllInfo) {
@@ -1143,7 +1134,7 @@ public class MooCommand extends CommandBase {
                 .appendSibling(createCmdHelpEntry("stalkskyblock", "Get info of player's SkyBlock stats §d§l⚷"))
                 .appendSibling(createCmdHelpEntry("analyzeChests", "Analyze chests' contents and evaluate potential Bazaar value"))
                 .appendSibling(createCmdHelpEntry("analyzeIsland", "Analyze a SkyBlock private island (inspect minions)"))
-                .appendSibling(createCmdHelpEntry("waila", "Copy the 'thing' you're looking at"))
+                .appendSibling(createCmdHelpEntry("waila", "Copy the 'thing' you're looking at (optional keybinding: Minecraft controls > Cowlection)"))
                 .appendSibling(createCmdHelpEntry("dungeon", "SkyBlock Dungeons: display current dungeon performance"))
                 .appendSibling(createCmdHelpEntry("dungeon party", "SkyBlock Dungeons: Shows armor and dungeon info about current party members " + EnumChatFormatting.GRAY + "(alias: " + EnumChatFormatting.WHITE + "/" + getCommandName() + " dp" + EnumChatFormatting.GRAY + ") §d§l⚷"))
                 .appendSibling(createCmdHelpSection(3, "Miscellaneous"))

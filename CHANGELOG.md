@@ -9,6 +9,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - added ironman icon ♲
   - added average secrets per completion
 - Added data for Enderman slayer and Voidling minions
+- New keybindings to...
+  1) run `/moo waila` command (disabled by default; MC Options > Controls > `Cowlection`)
+  2) copy a single item to clipboard as JSON with <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>C</kbd>
+     - must be enabled in `/moo config > General > Copy inventories with CTRL + C` first
+     - *reminder:* <kbd>CTRL</kbd> + <kbd>C</kbd> (without <kbd>SHIFT</kbd>) copies the whole inventory
+- New config options:
+  - Output of `/moo waila` and copied inventory data can now also be saved to files, instead of being copied to clipboard
+
+### Changed
+- Disabled `M` keybinding in MC Options > Controls > Cowlection by default to avoid conflicts
+- `/moo config` sub-category explanations now default to "tooltip *without* darkened background", as the darkened background was more irritating than helpful 
 
 ### Fixed
 - 'Show Dungeon item base stats' feature now works with HPB'd items and master stars
@@ -64,7 +75,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - New config options to change/adjust/deactivate some features:
   - Auto-replacement of `/r ` with `/w <last sender>`
   - Short alias `/m` for `/moo` command
-  - Copy inventories to clipboard as JSON with <kbd>CTRL</kbd> + <kbd>C</kbs>
+  - Copy inventories to clipboard as JSON with <kbd>CTRL</kbd> + <kbd>C</kbd>
   - (and several more - simply look through `/moo config`)
 - Added sound when a best friend comes online (deactivated by default)
 - Check how long current world has been loaded

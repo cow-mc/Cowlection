@@ -1,4 +1,4 @@
-![Cowlection](https://github.com/cow-mc/Cowlection/blob/master/cowlection.png?raw=true)
+fctrl ![Cowlection](https://github.com/cow-mc/Cowlection/blob/master/cowlection.png?raw=true)
 > Cow's collection ‚ûî Cowlection
 
 Cowlection is a client-side-only Forge mod by [Cow](https://namemc.com/profile/Cow) for Minecraft version 1.8.9.  
@@ -15,7 +15,7 @@ It is a collection of different features mainly focused on Hypixel SkyBlock. üê
 | Stalk a player (check online status, current game, ...)                 | `/moo stalk`                            |
 | Toggle join/leave notifications for friends, guild members or best friends separately | `/moo config` &rarr; Notifications |
 | Copy chat component                                                     | <kbd>ALT</kbd> + <kbd>right click</kbd><br>Hold <kbd>shift</kbd> to copy full component |
-| Copy inventories to clipboard as JSON                                   | <kbd>CTRL</kbd> + <kbd>C</kbd>          |
+| Copy inventories to clipboard as JSON                                   | <kbd>CTRL</kbd> + <kbd>C</kbd> (whole inventory)<br><kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>C</kbd> (single item) |
 | Copy info of "the thing" you're looking at (NPC or mob + nearby "text-only" armor stands; armor stand, placed skull, banner, sign, dropped item, item in item frame, map on wall) | `/moo whatAmILookingAt` |
 | Tab-completable usernames for several commands (e.g. `/party`, `/invite`, ...) | `/moo config` &rarr; `Commands with Tab-completable usernames` for full list of commands |
 | Auto-replace `/r` with `/w <latest username>`                           | `/r `, use `/rr` to avoid auto-replacement |

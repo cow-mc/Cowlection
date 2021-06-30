@@ -6,25 +6,25 @@ import de.cowtipper.cowlection.config.MooConfig;
 import de.cowtipper.cowlection.event.ApiErrorEvent;
 import de.cowtipper.cowlection.listener.skyblock.DungeonsListener;
 import de.cowtipper.cowlection.listener.skyblock.SkyBlockListener;
-import de.cowtipper.cowlection.util.AbortableRunnable;
-import de.cowtipper.cowlection.util.GsonUtils;
-import de.cowtipper.cowlection.util.MooChatComponent;
-import de.cowtipper.cowlection.util.TickDelay;
+import de.cowtipper.cowlection.util.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiChest;
+import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.scoreboard.ScoreObjective;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerSetSpawnEvent;
@@ -55,41 +55,58 @@ public class PlayerListener {
             if (mc.currentScreen == null && mc.gameSettings.chatVisibility != EntityPlayer.EnumChatVisibility.HIDDEN) {
                 mc.displayGuiScreen(new GuiChat("/moo "));
             }
+        } else if (keyBindings[1].isPressed()) {
+            Minecraft mc = Minecraft.getMinecraft();
+            if (mc.currentScreen == null) {
+                ClientCommandHandler.instance.executeCommand(mc.thePlayer, "/moo waila");
+            }
         }
     }
 
     @SubscribeEvent
     public void onKeyboardInput(GuiScreenEvent.KeyboardInputEvent.Pre e) {
         if (MooConfig.enableCopyInventory && Keyboard.getEventKeyState() && Keyboard.getEventKey() == Keyboard.KEY_C && GuiScreen.isCtrlKeyDown()) {
-            // ctrl + C
-            IInventory inventory;
-            String inventoryName;
-            if (e.gui instanceof GuiChest) {
-                // some kind of chest
-                ContainerChest chestContainer = (ContainerChest) ((GuiChest) e.gui).inventorySlots;
-                inventory = chestContainer.getLowerChestInventory();
-                inventoryName = (inventory.hasCustomName() ? EnumChatFormatting.getTextWithoutFormattingCodes(inventory.getDisplayName().getUnformattedTextForChat()) : inventory.getName());
-            } else if (e.gui instanceof GuiInventory) {
-                // player inventory
-                inventory = Minecraft.getMinecraft().thePlayer.inventory;
-                inventoryName = "Player inventory";
-            } else {
-                // another gui, abort!
-                return;
-            }
-            NBTTagList items = new NBTTagList();
-            for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
-                ItemStack item = inventory.getStackInSlot(slot);
-                if (item != null) {
-                    // slot + item
-                    NBTTagCompound tag = new NBTTagCompound();
-                    tag.setByte("Slot", (byte) slot);
-                    item.writeToNBT(tag);
-                    items.appendTag(tag);
+            if (GuiScreen.isShiftKeyDown()) {
+                // ctrl + shift + C
+                if (e.gui instanceof GuiContainer) {
+                    Slot slotUnderMouse = GuiHelper.getSlotUnderMouse((GuiContainer) e.gui);
+                    if (slotUnderMouse != null && slotUnderMouse.getHasStack()) {
+                        ItemStack itemUnderMouse = slotUnderMouse.getStack();
+                        NBTTagCompound itemNbt = new NBTTagCompound();
+                        itemUnderMouse.writeToNBT(itemNbt);
+                        Utils.copyToClipboardOrSaveAsFile(itemUnderMouse.getDisplayName() + EnumChatFormatting.RESET + EnumChatFormatting.GREEN, "item_" + itemUnderMouse.getDisplayName(), itemNbt, false);
+                    }
                 }
+            } else {
+                // ctrl + C
+                IInventory inventory;
+                String inventoryName;
+                if (e.gui instanceof GuiChest) {
+                    // some kind of chest
+                    ContainerChest chestContainer = (ContainerChest) ((GuiChest) e.gui).inventorySlots;
+                    inventory = chestContainer.getLowerChestInventory();
+                    inventoryName = (inventory.hasCustomName() ? EnumChatFormatting.getTextWithoutFormattingCodes(inventory.getDisplayName().getUnformattedTextForChat()) : inventory.getName());
+                } else if (e.gui instanceof GuiInventory) {
+                    // player inventory
+                    inventory = Minecraft.getMinecraft().thePlayer.inventory;
+                    inventoryName = "Player inventory";
+                } else {
+                    // another gui, abort!
+                    return;
+                }
+                NBTTagList items = new NBTTagList();
+                for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
+                    ItemStack item = inventory.getStackInSlot(slot);
+                    if (item != null) {
+                        // slot + item
+                        NBTTagCompound tag = new NBTTagCompound();
+                        tag.setByte("Slot", (byte) slot);
+                        item.writeToNBT(tag);
+                        items.appendTag(tag);
+                    }
+                }
+                Utils.copyToClipboardOrSaveAsFile(items.tagCount() + " items from '" + inventoryName + "'", "inventory_" + inventoryName, items, false);
             }
-            GuiScreen.setClipboardString(GsonUtils.toJson(items));
-            main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Copied " + items.tagCount() + " items from '" + inventoryName + "' to clipboard!");
         }
     }
 

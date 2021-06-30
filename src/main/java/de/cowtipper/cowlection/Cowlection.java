@@ -80,8 +80,9 @@ public class Cowlection {
             ClientCommandHandler.instance.registerCommand(new TabCompletableCommand(this, tabCompletableNamesCommand));
         }
         // key bindings
-        keyBindings = new KeyBinding[1];
-        keyBindings[0] = new KeyBinding("key.cowlection.moo", Keyboard.KEY_M, "key.cowlection.category");
+        keyBindings = new KeyBinding[2];
+        keyBindings[0] = new KeyBinding("key.cowlection.moo", Keyboard.KEY_NONE, "key.cowlection.category");
+        keyBindings[1] = new KeyBinding("key.cowlection.waila", Keyboard.KEY_NONE, "key.cowlection.category");
 
         for (KeyBinding keyBinding : keyBindings) {
             ClientRegistry.registerKeyBinding(keyBinding);
