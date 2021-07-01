@@ -31,7 +31,8 @@ import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
-import net.minecraftforge.fml.common.eventhandler.*;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import org.lwjgl.input.Mouse;
@@ -160,7 +161,11 @@ public class DungeonsListener {
                             hasCustomGearScore = true;
                         }
                         if (!hasCustomGearScore) {
-                            customGearScore.append(EnumChatFormatting.LIGHT_PURPLE).append("100%").append(EnumChatFormatting.DARK_GRAY).append(" (never has randomized stats)");
+                            if (MooConfig.dungItemQualityShortenNonRandomized) {
+                                customGearScore.append(EnumChatFormatting.DARK_PURPLE).append("100%");
+                            } else {
+                                customGearScore.append(EnumChatFormatting.LIGHT_PURPLE).append("100%").append(EnumChatFormatting.DARK_GRAY).append(" (never has randomized stats)");
+                            }
                         }
                         if (showItemQualityAndFloor) {
                             if (MooConfig.isDungItemQualityAtTop()) {
@@ -470,23 +475,23 @@ public class DungeonsListener {
                 if (text.startsWith("[NPC] Mort: ")) {
                     // Mort said something, probably entered dungeons
                     main.getDungeonCache().onDungeonEnterOrLeave(true);
-                    return;
-                }
-                Matcher dungeonEnteredMatcher = DUNGEON_ENTERED_DUNGEON.matcher(text);
-                if (dungeonEnteredMatcher.matches()) {
-                    String floor = dungeonEnteredMatcher.group(1) != null ? "Entrance" : dungeonEnteredMatcher.group(2);
-                    if (floor == null) {
-                        // this shouldn't ever happen: neither a floor nor the entrance was entered
-                        return;
-                    }
-                    String queuedFloor = main.getDungeonCache().getQueuedFloor();
-                    if (queuedFloor != null && !queuedFloor.equals(floor)) {
-                        // queued and entered dungeon floors are different!
-                        new TickDelay(() -> {
-                            String attentionSeeker = "" + EnumChatFormatting.LIGHT_PURPLE + EnumChatFormatting.OBFUSCATED + "#";
-                            main.getChatHelper().sendMessage(EnumChatFormatting.RED, attentionSeeker + EnumChatFormatting.RED + " You entered dungeon floor " + EnumChatFormatting.DARK_RED + floor + EnumChatFormatting.RED + " but originally queued for floor " + EnumChatFormatting.DARK_RED + queuedFloor + " " + attentionSeeker);
-                            Minecraft.getMinecraft().thePlayer.playSound("mob.cow.hurt", Minecraft.getMinecraft().gameSettings.getSoundLevel(SoundCategory.MASTER), 1);
-                        }, 100);
+                } else if (MooConfig.dungSendWrongFloorWarning) {
+                    Matcher dungeonEnteredMatcher = DUNGEON_ENTERED_DUNGEON.matcher(text);
+                    if (dungeonEnteredMatcher.matches()) {
+                        String floor = dungeonEnteredMatcher.group(1) != null ? "Entrance" : dungeonEnteredMatcher.group(2);
+                        if (floor == null) {
+                            // this shouldn't ever happen: neither a floor nor the entrance was entered
+                            return;
+                        }
+                        String queuedFloor = main.getDungeonCache().getQueuedFloor();
+                        if (queuedFloor != null && !queuedFloor.equals(floor)) {
+                            // queued and entered dungeon floors are different!
+                            new TickDelay(() -> {
+                                String attentionSeeker = "" + EnumChatFormatting.LIGHT_PURPLE + EnumChatFormatting.OBFUSCATED + "#";
+                                main.getChatHelper().sendMessage(EnumChatFormatting.RED, attentionSeeker + EnumChatFormatting.RED + " You entered dungeon floor " + EnumChatFormatting.DARK_RED + floor + EnumChatFormatting.RED + " but originally queued for floor " + EnumChatFormatting.DARK_RED + queuedFloor + " " + attentionSeeker);
+                                Minecraft.getMinecraft().thePlayer.playSound("mob.cow.hurt", Minecraft.getMinecraft().gameSettings.getSoundLevel(SoundCategory.MASTER), 1);
+                            }, 100);
+                        }
                     }
                 }
                 return;
@@ -504,7 +509,9 @@ public class DungeonsListener {
                 main.getDungeonCache().revivedPlayer(dungeonRevivedMatcher.group(1));
             } else if (text.trim().equals("> EXTRA STATS <")) {
                 // dungeon "end screen"
-                new TickDelay(() -> main.getDungeonCache().sendDungeonPerformance(), 5);
+                if (MooConfig.dungSendPerformanceOnEndScreen) {
+                    new TickDelay(() -> main.getDungeonCache().sendDungeonPerformance(), 5);
+                }
             } else if (text.startsWith("PUZZLE FAIL!")) {
                 // Skill: failed puzzle
                 main.getDungeonCache().addFailedPuzzle(text);

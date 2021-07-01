@@ -14,6 +14,7 @@ import de.cowtipper.cowlection.listener.ChatListener;
 import de.cowtipper.cowlection.listener.PlayerListener;
 import de.cowtipper.cowlection.util.ChatHelper;
 import de.cowtipper.cowlection.util.VersionChecker;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.MinecraftForge;
@@ -39,8 +40,8 @@ public class Cowlection {
     public static final String GITURL = "@GITURL@";
     public static KeyBinding[] keyBindings;
     private static Cowlection instance;
-    private File configDir;
     private File modsDir;
+    private File modOutDir;
     private MooConfig config;
     private CredentialStorage moo;
     private FriendsHandler friendsHandler;
@@ -59,7 +60,7 @@ public class Cowlection {
 
         chatHelper = new ChatHelper();
 
-        this.configDir = new File(e.getModConfigurationDirectory(), MODID + File.separatorChar);
+        File configDir = new File(e.getModConfigurationDirectory(), MODID + File.separatorChar);
         if (!configDir.exists()) {
             configDir.mkdirs();
         }
@@ -93,6 +94,7 @@ public class Cowlection {
     public void postInit(FMLPostInitializationEvent e) {
         versionChecker = new VersionChecker(this);
         playerCache = new PlayerCache();
+        modOutDir = new File(Minecraft.getMinecraft().mcDataDir, Cowlection.MODID.toLowerCase() + "_out");
     }
 
     public MooConfig getConfig() {
@@ -147,12 +149,16 @@ public class Cowlection {
         return chestTracker;
     }
 
-    public File getConfigDirectory() {
-        return configDir;
-    }
-
     public File getModsDirectory() {
         return modsDir;
+    }
+
+    public File getModOutDirectory() {
+        if (!modOutDir.exists() && !modOutDir.mkdirs()) {
+            // dir didn't exist and couldn't be created
+            return null;
+        }
+        return modOutDir;
     }
 
     public Logger getLogger() {

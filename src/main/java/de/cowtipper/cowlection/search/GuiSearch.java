@@ -23,7 +23,6 @@ import net.minecraftforge.fml.client.config.IConfigElement;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.lwjgl.input.Keyboard;
 
 import java.awt.*;
@@ -79,10 +78,11 @@ public class GuiSearch extends GuiScreen {
     private boolean isSearchInProgress;
     private String analyzedFiles;
     private String analyzedFilesWithHits;
+    private String skippedFiles;
     private boolean areEntriesSearchResults;
 
-    public GuiSearch(File configDirectory, String initialSearchQuery) {
-        this.mcLogOutputFile = new File(configDirectory, "mc-log.txt");
+    public GuiSearch(String initialSearchQuery) {
+        this.mcLogOutputFile = new File(Cowlection.getInstance().getModOutDirectory(), "cowlection-mc-log-search-temp.txt");
         try {
             mcLogOutputFile.createNewFile();
         } catch (IOException e) {
@@ -287,19 +287,21 @@ public class GuiSearch extends GuiScreen {
 
             executorService.execute(() -> {
                 try {
-                    ImmutableTriple<Integer, Integer, List<LogEntry>> searchResultsData = new LogFilesSearcher().searchFor(this.fieldSearchQuery.getText(), checkboxChatOnly.isChecked(), checkboxMatchCase.isChecked(), checkboxRemoveFormatting.isChecked(), dateStart, dateEnd);
-                    this.searchResults = searchResultsData.right;
-                    this.analyzedFiles = "Analyzed files: " + EnumChatFormatting.WHITE + searchResultsData.left;
-                    this.analyzedFilesWithHits = "Files with hits: " + EnumChatFormatting.WHITE + searchResultsData.middle;
+                    LogSearchResults searchResultsData = new LogFilesSearcher().searchFor(this.fieldSearchQuery.getText(), checkboxChatOnly.isChecked(), checkboxMatchCase.isChecked(), checkboxRemoveFormatting.isChecked(), dateStart, dateEnd);
+                    this.searchResults = searchResultsData.getSortedSearchResults();
+                    this.analyzedFiles = "Analyzed files: " + EnumChatFormatting.WHITE + searchResultsData.getAnalyzedFiles();
+                    this.analyzedFilesWithHits = "Files with hits: " + EnumChatFormatting.WHITE + searchResultsData.getAnalyzedFilesWithHits();
+                    this.skippedFiles = "Skipped files: " + EnumChatFormatting.WHITE + searchResultsData.getSkippedFiles();
                     if (this.searchResults.isEmpty()) {
                         this.searchResults.add(new LogEntry(EnumChatFormatting.ITALIC + "No results"));
                         areEntriesSearchResults = false;
                     } else {
-                        areEntriesSearchResults = true;
+                        areEntriesSearchResults = searchResultsData.getAnalyzedFiles() != 0;
                     }
                 } catch (IOException e) {
                     if (e.getStackTrace().length > 0) {
                         searchResults.add(new LogEntry(StringUtils.replaceEach(ExceptionUtils.getStackTrace(e), new String[]{"\t", "\r\n"}, new String[]{"  ", "\n"})));
+                        areEntriesSearchResults = false;
                     }
                 }
                 Minecraft.getMinecraft().addScheduledTask(() -> {
@@ -319,6 +321,9 @@ public class GuiSearch extends GuiScreen {
             this.searchResults.add(new LogEntry("" + EnumChatFormatting.GOLD + EnumChatFormatting.BOLD + "Initial setup/configuration " + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + "'Open Settings' (top right corner)"));
             this.searchResults.add(new LogEntry(EnumChatFormatting.GOLD + " 1) " + EnumChatFormatting.RESET + "Configure directories that should be scanned for log files (\"Directories with Minecraft log files\")"));
             this.searchResults.add(new LogEntry(EnumChatFormatting.GOLD + " 2) " + EnumChatFormatting.RESET + "Set default starting date (\"Start date for log file search\")"));
+            this.searchResults.add(new LogEntry("      ‣ can be a number (e.g. \"3\" means \"start searching 3 months ago\")"));
+            this.searchResults.add(new LogEntry("      ‣ or alternatively a fixed date (yyyy-mm-dd)"));
+            this.searchResults.add(new LogEntry(EnumChatFormatting.GOLD + " 3) " + EnumChatFormatting.RESET + "optional: change the maximum allowed log file size to be searched, but note that each log file must be unzipped before it can be analyzed, which can make the log file search take significantly longer for large files"));
             this.searchResults.add(new LogEntry("" + EnumChatFormatting.GOLD + EnumChatFormatting.BOLD + "Performing a search " + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + "/moo search [initial search term]"));
             this.searchResults.add(new LogEntry(EnumChatFormatting.GOLD + " 1) " + EnumChatFormatting.RESET + "Enter search term"));
             this.searchResults.add(new LogEntry(EnumChatFormatting.GOLD + " 2) " + EnumChatFormatting.RESET + "Adjust start and end date"));
@@ -360,6 +365,7 @@ public class GuiSearch extends GuiScreen {
             guiSearchResults.clearResults();
             analyzedFiles = null;
             analyzedFilesWithHits = null;
+            skippedFiles = null;
         } else {
             buttonSearch.displayString = "Search";
         }
@@ -441,13 +447,16 @@ public class GuiSearch extends GuiScreen {
                 }
             } else if (areEntriesSearchResults) {
                 if (analyzedFiles != null) {
-                    drawString(fontRendererObj, analyzedFiles, 8, 22, 0xff888888);
+                    drawString(fontRendererObj, analyzedFiles, 8, 15, 0xff888888);
                 }
                 if (analyzedFilesWithHits != null) {
-                    drawString(fontRendererObj, analyzedFilesWithHits, 8, 32, 0xff888888);
+                    drawString(fontRendererObj, analyzedFilesWithHits, 8, 25, 0xff888888);
+                }
+                if (skippedFiles != null) {
+                    drawString(fontRendererObj, skippedFiles, 8, 35, 0xff888888);
                 }
                 if (resultsCount != null) {
-                    drawString(fontRendererObj, resultsCount, 8, 48, 0xff888888);
+                    drawString(fontRendererObj, resultsCount, 8, 50, 0xff888888);
                 }
             }
             if (errorMessage != null) {

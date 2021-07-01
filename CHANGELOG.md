@@ -16,10 +16,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
      - *reminder:* <kbd>CTRL</kbd> + <kbd>C</kbd> (without <kbd>SHIFT</kbd>) copies the whole inventory
 - New config options:
   - Output of `/moo waila` and copied inventory data can now also be saved to files, instead of being copied to clipboard
+  - Bazaar: order 'Sell Inventory/Sacks Now' tooltips ascending or descending
+  - MC Log file search (`/moo search`): maximum log file size to analyze
+  - Toggle: display dungeon performance summary at the end of a dungeon
+  - Toggle: send warning when queued and entered dungeon floors are different
+  - Toggle: shorten item quality info for non-randomized items
 
 ### Changed
 - Disabled `M` keybinding in MC Options > Controls > Cowlection by default to avoid conflicts
 - `/moo config` sub-category explanations now default to "tooltip *without* darkened background", as the darkened background was more irritating than helpful 
+- MC Log file search now skips large files to prevent huge log files from blocking the search
 
 ### Fixed
 - 'Show Dungeon item base stats' feature now works with HPB'd items and master stars

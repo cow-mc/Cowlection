@@ -3,7 +3,6 @@ package de.cowtipper.cowlection.util;
 import com.mojang.realmsclient.util.Pair;
 import de.cowtipper.cowlection.Cowlection;
 import de.cowtipper.cowlection.config.MooConfig;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
@@ -405,8 +404,8 @@ public final class Utils {
      * Based on ScreenShotHelper#getTimestampedPNGFileForDirectory
      */
     static File getTimestampedFileForDirectory(String suffix, String fileType) {
-        File cowlectionOutPath = new File(Minecraft.getMinecraft().mcDataDir, Cowlection.MODID.toLowerCase() + "_out");
-        if (!cowlectionOutPath.exists() && !cowlectionOutPath.mkdirs()) {
+        File cowlectionOutPath = Cowlection.getInstance().getModOutDirectory();
+        if (cowlectionOutPath == null) {
             // dir didn't exist and couldn't be created
             return null;
         }

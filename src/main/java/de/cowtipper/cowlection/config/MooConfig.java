@@ -60,6 +60,7 @@ public class MooConfig {
     private static final String CATEGORY_LOGS_SEARCH = "logssearch";
     public static String[] logsDirs;
     private static String defaultStartDate;
+    private static int maxLogFileSize;
     // Category: Notifications
     public static boolean doUpdateCheck;
     public static boolean showBestFriendNotifications;
@@ -85,6 +86,7 @@ public class MooConfig {
     public static String[] tooltipAuctionHousePriceEachEnchantments;
     private static String auctionHouseMarkEndedAuctions;
     public static String bazaarSellAllOrder;
+    public static String bazaarSellAllOrderAscDesc;
     private static String bazaarConnectGraphsNodes;
     public static int bazaarConnectGraphsLineWidth;
     public static String bestiaryOverviewOrder;
@@ -95,9 +97,11 @@ public class MooConfig {
     // Category: SkyBlock Dungeons
     private static String showItemQualityAndFloor;
     private static String dungItemQualityPos;
+    public static boolean dungItemQualityShortenNonRandomized;
     public static boolean dungItemHideGearScore;
     public static int dungItemToolTipToggleKeyBinding;
     public static boolean dungSendPerformanceOnDeath;
+    public static boolean dungSendPerformanceOnEndScreen;
     public static boolean dungOverlayEnabled;
     public static int dungOverlayPositionX;
     public static int dungOverlayPositionY;
@@ -117,6 +121,7 @@ public class MooConfig {
     private static String dungMarkPartiesWithHealer;
     private static String dungMarkPartiesWithMage;
     private static String dungMarkPartiesWithTank;
+    public static boolean dungSendWrongFloorWarning;
 
     private static Configuration cfg = null;
     private static final List<MooConfigCategory> configCategories = new ArrayList<>();
@@ -310,9 +315,12 @@ public class MooConfig {
         Property propDefaultStartDate = subCat.addConfigEntry(cfg.get(CATEGORY_LOGS_SEARCH,
                 "defaultStartDate", "3", "Default start date (a number means X months ago, alternatively a fixed date à la yyyy-mm-dd can be used)"))
                 .setValidationPattern(Pattern.compile("^[1-9][0-9]{0,2}|(2[0-9]{3}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01]))$"));
+        Property propMaxLogFileSize = subCat.addConfigEntry(cfg.get(CATEGORY_LOGS_SEARCH,
+                "maxLogFileSize", 2048, "Max log file size (in KB)?", 50, 10000));
         logSearchProperties = new ArrayList<>();
         logSearchProperties.add(propLogsDirs);
         logSearchProperties.add(propDefaultStartDate);
+        logSearchProperties.add(propMaxLogFileSize);
 
         // Category: Notifications
         configCat = new MooConfigCategory("Notifications", "notifications");
@@ -443,6 +451,9 @@ public class MooConfig {
                 "bazaarSellAllOrder", "price (sum)", "Bazaar: sell all order", new String[]{"price (sum)", "item amount", "unordered", "price (each)"}),
                 new MooConfigPreview(MooConfigPreview.createDemoItem("chest", "§aSell Inventory Now", new String[]{"§7Instantly sell anything in", "§7your inventory that can be", "§7sold on the Bazaar.", "", " §a1§7x §aEnchanted Leather §7for §65,263.1 coins", " §a42§7x §fLeather §7for §6436.8 coins", " §a2§7x §fRabbit Hide §7for §642.0 coins", " §a79§7x §fRaw Beef §7for §6450.3 coins", " §a16§7x §aEnchanted Raw Beef §7for §69,867.2 coins", "", "§7You earn: §615,698 coins", "", "§eClick to sell!"}, Collections.emptyMap())));
 
+        Property propBazaarSellAllOrderAscDesc = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "bazaarSellAllOrderAscDesc", "low → high", "Bazaar: sell all order asc/desc", new String[]{"low → high", "high → low"}));
+
         MooConfigPreview bazaarGraphPreview = new MooConfigPreview(MooConfigPreview.createDemoItem("paper", "§aBuy Price §731d §77d §e24h", new String[]{
                 "§7The price at which buy orders have been filled.", "",
                 "§r┌----------------------------------------------┐", "§r│§66. 1k§r+§bxxxxxx§8·································§bxx§r│",
@@ -506,6 +517,9 @@ public class MooConfig {
                         MooConfigPreview.createDungeonItem("light", "7/17/20 7:22 PM", "§7Gear Score: §d336 §8(526)", "§7Crit Chance: §c+5% §9(Light +2%)", "§7Crit Damage: §c+30% §9(Light +4%) §8(+48.9%)", "§7Bonus Attack Speed: §c+4% §9(Light +4%)", "", "§7Health: §a+126 HP §9(Light +15 HP) §8(+205.38 HP)", "§7Defense: §a+76 §9(Light +4) §8(+123.88)", "§7Speed: §a+4 §9(Light +4) §8(+6.52)", "", "§9Growth V, §9Protection V", "§9Thorns III", "", "§7Increase the damage you deal", "§7with arrows by §c5%§7.", "", "§6Full Set Bonus: Skeleton Soldier", "§7Increase the damage you deal", "§7with arrows by an extra §c25%§7.", "", "§aPerfect 52500 / 52500", "§5§lEPIC DUNGEON LEGGINGS"),
                         MooConfigPreview.createDungeonItem("clean", "7/11/20 12:27 PM", "§7Gear Score: §d359 §8(561)", "§7Crit Chance: §c+11% §9(Clean +8%)", "§7Crit Damage: §c+26% §8(+42.38%)", "", "§7Health: §a+126 HP §9(Clean +15 HP) §8(+205.38 HP)", "§7Defense: §a+87 §9(Clean +15) §8(+141.81)", "", "§9Growth V, §9Protection V", "§9Thorns III", "", "§7Increase the damage you deal", "§7with arrows by §c5%§7.", "", "§6Full Set Bonus: Skeleton Soldier", "§7Increase the damage you deal", "§7with arrows by an extra §c25%§7.", "", "§aPerfect 52500 / 52500", "§5§lEPIC DUNGEON LEGGINGS")));
 
+        Property propDungItemQualityShortenNonRandomized = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "dungItemQualityShortenNonRandomized", false, "Shorten item quality for non-randomized items?"));
+
         Property propDungItemHideGearScore = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "dungItemHideGearScore", false, "Hide Gear Score?"));
 
@@ -522,6 +536,9 @@ public class MooConfig {
 
         Property propDungSendPerformanceOnDeath = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "dungSendPerformanceOnDeath", true, "Send dungeon performance after a player died?"));
+
+        Property propDungSendPerformanceOnEndScreen = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "dungSendPerformanceOnEndScreen", true, "Send dungeon performance on end screen?"));
 
         Property propDungOverlayEnabled = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "dungOverlayEnabled", true, "Enable Dungeon performance overlay?"));
@@ -624,6 +641,9 @@ public class MooConfig {
                 "dungMarkPartiesWithTank", "do not mark", "Mark parties with Tank class?", new String[]{"always", "if duplicated", "do not mark"}),
                 new MooConfigPreview(DataHelper.DungeonClass.TANK));
 
+        Property propDungSendWrongFloorWarning = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "dungSendWrongFloorWarning", true, "Send warning when entering wrong floor?"));
+
         boolean modifiedMooCmdAlias = false;
         String mooCmdAliasPreChange = mooCmdAlias;
         boolean modifiedTabCompletableCommandsList = false;
@@ -642,6 +662,7 @@ public class MooConfig {
             tabCompletableNamesCommands = propTabCompletableNamesCommands.getStringList();
             logsDirs = propLogsDirs.getStringList();
             defaultStartDate = propDefaultStartDate.getString().trim();
+            maxLogFileSize = propMaxLogFileSize.getInt();
             // Category: Notifications
             doUpdateCheck = propDoUpdateCheck.getBoolean();
             showBestFriendNotifications = propShowBestFriendNotifications.getBoolean();
@@ -667,6 +688,7 @@ public class MooConfig {
             tooltipAuctionHousePriceEachEnchantments = propTooltipAuctionHousePriceEachEnchantments.getStringList();
             auctionHouseMarkEndedAuctions = propAuctionHouseMarkEndedAuctions.getString();
             bazaarSellAllOrder = propBazaarSellAllOrder.getString();
+            bazaarSellAllOrderAscDesc = propBazaarSellAllOrderAscDesc.getString();
             bazaarConnectGraphsNodes = propBazaarConnectGraphsNodes.getString();
             bazaarConnectGraphsLineWidth = propBazaarConnectGraphsLineWidth.getInt();
             bestiaryOverviewOrder = propBestiaryOverviewOrder.getString();
@@ -676,9 +698,11 @@ public class MooConfig {
             // Category: SkyBlock Dungeons
             showItemQualityAndFloor = propShowItemQualityAndFloor.getString();
             dungItemQualityPos = propDungItemQualityPos.getString();
+            dungItemQualityShortenNonRandomized = propDungItemQualityShortenNonRandomized.getBoolean();
             dungItemHideGearScore = propDungItemHideGearScore.getBoolean();
             dungItemToolTipToggleKeyBinding = propDungItemToolTipToggleKeyBinding.getInt();
             dungSendPerformanceOnDeath = propDungSendPerformanceOnDeath.getBoolean();
+            dungSendPerformanceOnEndScreen = propDungSendPerformanceOnEndScreen.getBoolean();
             dungOverlayEnabled = propDungOverlayEnabled.getBoolean();
             dungOverlayPositionX = propDungOverlayPositionX.getInt();
             dungOverlayPositionY = propDungOverlayPositionY.getInt();
@@ -698,6 +722,7 @@ public class MooConfig {
             dungMarkPartiesWithHealer = propDungMarkPartiesWithHealer.getString();
             dungMarkPartiesWithMage = propDungMarkPartiesWithMage.getString();
             dungMarkPartiesWithTank = propDungMarkPartiesWithTank.getString();
+            dungSendWrongFloorWarning = propDungSendWrongFloorWarning.getBoolean();
 
             if (!hasOpenedConfigGui && (!propDungOverlayEnabled.isDefault() || !propDungOverlayPositionX.isDefault() || !propDungOverlayPositionY.isDefault() || !propDungOverlayGuiScale.isDefault())) {
                 // player hasn't opened config gui yet and but already moved the dungeon overlay
@@ -725,6 +750,7 @@ public class MooConfig {
         propTabCompletableNamesCommands.set(tabCompletableNamesCommands);
         propLogsDirs.set(logsDirs);
         propDefaultStartDate.set(defaultStartDate);
+        propMaxLogFileSize.set(maxLogFileSize);
         // Category: Notifications
         propDoUpdateCheck.set(doUpdateCheck);
         propShowBestFriendNotifications.set(showBestFriendNotifications);
@@ -750,6 +776,7 @@ public class MooConfig {
         propTooltipAuctionHousePriceEachEnchantments.set(tooltipAuctionHousePriceEachEnchantments);
         propAuctionHouseMarkEndedAuctions.set(auctionHouseMarkEndedAuctions);
         propBazaarSellAllOrder.set(bazaarSellAllOrder);
+        propBazaarSellAllOrderAscDesc.set(bazaarSellAllOrderAscDesc);
         propBazaarConnectGraphsNodes.set(bazaarConnectGraphsNodes);
         propBazaarConnectGraphsLineWidth.set(bazaarConnectGraphsLineWidth);
         propBestiaryOverviewOrder.set(bestiaryOverviewOrder);
@@ -759,9 +786,11 @@ public class MooConfig {
         // Category: SkyBlock Dungeons
         propShowItemQualityAndFloor.set(showItemQualityAndFloor);
         propDungItemQualityPos.set(dungItemQualityPos);
+        propDungItemQualityShortenNonRandomized.set(dungItemQualityShortenNonRandomized);
         propDungItemHideGearScore.set(dungItemHideGearScore);
         propDungItemToolTipToggleKeyBinding.set(dungItemToolTipToggleKeyBinding);
         propDungSendPerformanceOnDeath.set(dungSendPerformanceOnDeath);
+        propDungSendPerformanceOnEndScreen.set(dungSendPerformanceOnEndScreen);
         propDungOverlayEnabled.set(dungOverlayEnabled);
         propDungOverlayPositionX.set(dungOverlayPositionX);
         propDungOverlayPositionY.set(dungOverlayPositionY);
@@ -781,6 +810,7 @@ public class MooConfig {
         propDungMarkPartiesWithHealer.set(dungMarkPartiesWithHealer);
         propDungMarkPartiesWithMage.set(dungMarkPartiesWithMage);
         propDungMarkPartiesWithTank.set(dungMarkPartiesWithTank);
+        propDungSendWrongFloorWarning.set(dungSendWrongFloorWarning);
 
         if (saveToFile && cfg.hasChanged()) {
             boolean isPlayerIngame = Minecraft.getMinecraft().thePlayer != null;
@@ -868,6 +898,13 @@ public class MooConfig {
             logsDirs.add(Utils.toRealPath(defaultMcLogsDirFile));
         }
         return logsDirs.toArray(new String[]{});
+    }
+
+    /**
+     * @return max log file size in Bytes
+     */
+    public static long getMaxLogFileSize() {
+        return maxLogFileSize * 1024L;
     }
 
     // Category: General

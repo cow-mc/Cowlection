@@ -89,7 +89,7 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
             // add control buttons to navigate to other guis
             if ("Other settings".equals(subCategory.getDisplayName())) {
                 this.listEntries.add(new GuiSwitchEntry("gotoKeyBindings", "Controls", () -> mc.displayGuiScreen(new GuiControls(MooConfigCategoryScrolling.this.parent, mc.gameSettings))));
-                this.listEntries.add(new GuiSwitchEntry("gotoLogSearchConfig", "Log Search", () -> mc.displayGuiScreen(new GuiSearch(Cowlection.getInstance().getConfigDirectory(), ""))));
+                this.listEntries.add(new GuiSwitchEntry("gotoLogSearchConfig", "Log Search", () -> mc.displayGuiScreen(new GuiSearch(""))));
                 continue; // don't add properties to main config gui
             }
 
@@ -215,7 +215,7 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
                                 if (labelWidth > this.maxListLabelWidth) {
                                     this.maxListLabelWidth = labelWidth;
                                 }
-                                this.listEntries.add(new GuiSwitchEntry("gotoLogSearchConfig", "Log Search", () -> mc.displayGuiScreen(new GuiSearch(Cowlection.getInstance().getConfigDirectory(), ""))));
+                                this.listEntries.add(new GuiSwitchEntry("gotoLogSearchConfig", "Log Search", () -> mc.displayGuiScreen(new GuiSearch(""))));
                                 hasLogSearchBeenAdded = true;
                             } else if (hasLogSearchBeenAdded) {
                                 // already added the replacement-entry, thus don't increase entry counter

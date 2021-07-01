@@ -421,7 +421,11 @@ public class SkyBlockListener {
                 numberFormatter.setMaximumFractionDigits(1);
                 List<String> toolTip = e.toolTip;
                 int startIndex = 1337;
-                TreeMultimap<Double, String> sellEntries = TreeMultimap.create(Ordering.natural().reverse(), Ordering.natural());
+                Ordering<Double> tooltipOrdering = Ordering.natural();
+                if("high → low".equals(MooConfig.bazaarSellAllOrderAscDesc)) {
+                    tooltipOrdering = tooltipOrdering.reverse();
+                }
+                TreeMultimap<Double, String> sellEntries = TreeMultimap.create(tooltipOrdering, Ordering.natural());
                 for (int i = 0; i < toolTip.size(); i++) {
                     Matcher bazaarSellMatcher = BAZAAR_SELL_ALL_PATTERN.matcher(toolTip.get(i));
                     if (bazaarSellMatcher.matches()) {

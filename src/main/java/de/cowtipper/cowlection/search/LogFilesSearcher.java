@@ -2,18 +2,15 @@ package de.cowtipper.cowlection.search;
 
 import de.cowtipper.cowlection.config.MooConfig;
 import net.minecraft.util.EnumChatFormatting;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.ImmutableTriple;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.*;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -32,9 +29,9 @@ class LogFilesSearcher {
     private static final Pattern LOG4J_PATTERN = Pattern.compile("^\\[(?<timeHours>[\\d]{2}):(?<timeMinutes>[\\d]{2}):(?<timeSeconds>[\\d]{2})] \\[(?<thread>[^/]+)/(?<logLevel>[A-Z]+)]:(?<isChat> \\[CHAT])? (?<message>.*)$");
     private int analyzedFilesWithHits = 0;
 
-    ImmutableTriple<Integer, Integer, List<LogEntry>> searchFor(String searchQuery, boolean chatOnly, boolean matchCase, boolean removeFormatting, LocalDate dateStart, LocalDate dateEnd) throws IOException {
-        AtomicInteger foundLogs = new AtomicInteger();
-        List<LogEntry> searchResults = Collections.synchronizedList(new ArrayList<>());
+    LogSearchResults searchFor(String searchQuery, boolean chatOnly, boolean matchCase, boolean removeFormatting, LocalDate dateStart, LocalDate dateEnd) throws IOException {
+        LogSearchResults logSearchResults = new LogSearchResults();
+        long fileSizeLimit = MooConfig.getMaxLogFileSize();
         for (String logsDirPath : MooConfig.logsDirs) {
             File logsDir = new File(logsDirPath);
             if (!logsDir.exists() || !logsDir.isDirectory()) {
@@ -55,15 +52,25 @@ class LogFilesSearcher {
                             LocalDate fileLocalDate = LocalDate.of(Integer.parseInt(fileNameMatcher.group(1)),
                                     Integer.parseInt(fileNameMatcher.group(2)), Integer.parseInt(fileNameMatcher.group(3)));
                             if (!fileLocalDate.isBefore(dateStart) && !fileLocalDate.isAfter(dateEnd)) {
-                                foundLogs.incrementAndGet();
-                                searchResults.addAll(analyzeFile(path, true, fileLocalDate, searchQuery, chatOnly, matchCase, removeFormatting));
+                                if (path.toFile().length() > fileSizeLimit) {
+                                    // file too large
+                                    logSearchResults.addSkippedFile();
+                                } else {
+                                    logSearchResults.addAnalyzedFile();
+                                    logSearchResults.addSearchResults(analyzeFile(path, true, fileLocalDate, searchQuery, chatOnly, matchCase, removeFormatting));
+                                }
                             }
                         }
                     } else if (fileName.equals("latest.log")) {
                         LocalDate lastModified = Instant.ofEpochMilli(path.toFile().lastModified()).atZone(ZoneId.systemDefault()).toLocalDate();
                         if (!lastModified.isBefore(dateStart) && !lastModified.isAfter(dateEnd)) {
-                            foundLogs.incrementAndGet();
-                            searchResults.addAll(analyzeFile(path, false, lastModified, searchQuery, chatOnly, matchCase, removeFormatting));
+                            if (path.toFile().length() > fileSizeLimit) {
+                                // file too large
+                                logSearchResults.addSkippedFile();
+                            } else {
+                                logSearchResults.addAnalyzedFile();
+                                logSearchResults.addSearchResults(analyzeFile(path, false, lastModified, searchQuery, chatOnly, matchCase, removeFormatting));
+                            }
                         }
                     }
                 });
@@ -73,12 +80,21 @@ class LogFilesSearcher {
             }
         }
 
-        if (foundLogs.get() == 0) {
-            throw new FileNotFoundException(EnumChatFormatting.DARK_RED + "ERROR: No Minecraft log files could be found for the selected date range. Please check if the dates as well as the directories of the log files are set correctly (Log Search ➡ Settings).");
+        if (logSearchResults.getAnalyzedFiles() == 0) {
+            // no files were analyzed
+            int skippedFileCounter = logSearchResults.getSkippedFiles();
+            if (skippedFileCounter > 0) {
+                throw new FileNotFoundException(EnumChatFormatting.DARK_RED + "ERROR: No Minecraft log files could be found for the selected date range.\n"
+                        + EnumChatFormatting.RED + skippedFileCounter + EnumChatFormatting.DARK_RED + " log files were skipped because they are too large ( >" + FileUtils.byteCountToDisplaySize(MooConfig.getMaxLogFileSize()) + ").\n"
+                        + EnumChatFormatting.RED + "Please check if the dates as well as the directories of the log files are set correctly (Log Search ➡ Settings [top right corner]).\n"
+                        + EnumChatFormatting.DARK_RED + "You could also increase the maximum allowed log file size to be searched (Log Search ➡ Settings), but note that each file must be unzipped before it can be analyzed, which can make the log file search take significantly longer for large files.");
+            } else {
+                throw new FileNotFoundException(EnumChatFormatting.DARK_RED + "ERROR: No Minecraft log files could be found for the selected date range.\n"
+                        + EnumChatFormatting.RED + "Please check if the dates as well as the directories of the log files are set correctly (Log Search ➡ Settings [top right corner]).");
+            }
         } else {
-            List<LogEntry> sortedSearchResults = searchResults
-                    .stream().sorted(Comparator.comparing(LogEntry::getTime)).collect(Collectors.toList());
-            return new ImmutableTriple<>(foundLogs.get(), analyzedFilesWithHits, sortedSearchResults);
+            logSearchResults.setAnalyzedFilesWithHits(analyzedFilesWithHits);
+            return logSearchResults;
         }
     }
 

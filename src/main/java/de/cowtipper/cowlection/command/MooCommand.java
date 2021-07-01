@@ -14,7 +14,6 @@ import de.cowtipper.cowlection.config.gui.MooConfigGui;
 import de.cowtipper.cowlection.data.*;
 import de.cowtipper.cowlection.data.HySkyBlockStats.Profile.Pet;
 import de.cowtipper.cowlection.handler.DungeonCache;
-import de.cowtipper.cowlection.listener.skyblock.DungeonsListener;
 import de.cowtipper.cowlection.listener.skyblock.DungeonsPartyListener;
 import de.cowtipper.cowlection.search.GuiSearch;
 import de.cowtipper.cowlection.util.*;
@@ -139,7 +138,7 @@ public class MooCommand extends CommandBase {
             main.getConfig().theyOpenedTheConfigGui();
             displayGuiScreen(new MooConfigGui(buildString(args, 1)));
         } else if (args[0].equalsIgnoreCase("search")) {
-            displayGuiScreen(new GuiSearch(main.getConfigDirectory(), CommandBase.buildString(args, 1)));
+            displayGuiScreen(new GuiSearch(CommandBase.buildString(args, 1)));
         } else if (args[0].equalsIgnoreCase("guiscale")) {
             handleGuiScale(args);
         } else if (args[0].equalsIgnoreCase("rr")) {
