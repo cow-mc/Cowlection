@@ -87,6 +87,7 @@ public class MooConfig {
     private static String auctionHouseMarkEndedAuctions;
     public static String bazaarSellAllOrder;
     public static String bazaarSellAllOrderAscDesc;
+    public static boolean bazaarShowItemsLeft;
     private static String bazaarConnectGraphsNodes;
     public static int bazaarConnectGraphsLineWidth;
     public static String bestiaryOverviewOrder;
@@ -454,6 +455,9 @@ public class MooConfig {
         Property propBazaarSellAllOrderAscDesc = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "bazaarSellAllOrderAscDesc", "low → high", "Bazaar: sell all order asc/desc", new String[]{"low → high", "high → low"}));
 
+        Property propBazaarShowItemsLeft = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "bazaarShowItemsLeft", true, "Bazaar: show items left"));
+
         MooConfigPreview bazaarGraphPreview = new MooConfigPreview(MooConfigPreview.createDemoItem("paper", "§aBuy Price §731d §77d §e24h", new String[]{
                 "§7The price at which buy orders have been filled.", "",
                 "§r┌----------------------------------------------┐", "§r│§66. 1k§r+§bxxxxxx§8·································§bxx§r│",
@@ -689,6 +693,7 @@ public class MooConfig {
             auctionHouseMarkEndedAuctions = propAuctionHouseMarkEndedAuctions.getString();
             bazaarSellAllOrder = propBazaarSellAllOrder.getString();
             bazaarSellAllOrderAscDesc = propBazaarSellAllOrderAscDesc.getString();
+            bazaarShowItemsLeft = propBazaarShowItemsLeft.getBoolean();
             bazaarConnectGraphsNodes = propBazaarConnectGraphsNodes.getString();
             bazaarConnectGraphsLineWidth = propBazaarConnectGraphsLineWidth.getInt();
             bestiaryOverviewOrder = propBestiaryOverviewOrder.getString();
@@ -777,6 +782,7 @@ public class MooConfig {
         propAuctionHouseMarkEndedAuctions.set(auctionHouseMarkEndedAuctions);
         propBazaarSellAllOrder.set(bazaarSellAllOrder);
         propBazaarSellAllOrderAscDesc.set(bazaarSellAllOrderAscDesc);
+        propBazaarShowItemsLeft.set(bazaarShowItemsLeft);
         propBazaarConnectGraphsNodes.set(bazaarConnectGraphsNodes);
         propBazaarConnectGraphsLineWidth.set(bazaarConnectGraphsLineWidth);
         propBestiaryOverviewOrder.set(bestiaryOverviewOrder);

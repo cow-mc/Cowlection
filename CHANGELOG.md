@@ -14,13 +14,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   2) copy a single item to clipboard as JSON with <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>C</kbd>
      - must be enabled in `/moo config > General > Copy inventories with CTRL + C` first
      - *reminder:* <kbd>CTRL</kbd> + <kbd>C</kbd> (without <kbd>SHIFT</kbd>) copies the whole inventory
-- New config options:
+- New config options for older features:
   - Output of `/moo waila` and copied inventory data can now also be saved to files, instead of being copied to clipboard
   - Bazaar: order 'Sell Inventory/Sacks Now' tooltips ascending or descending
   - MC Log file search (`/moo search`): maximum log file size to analyze
   - Toggle: display dungeon performance summary at the end of a dungeon
   - Toggle: send warning when queued and entered dungeon floors are different
   - Toggle: shorten item quality info for non-randomized items
+- Bazaar: display items left on a buy order/sell order (toggleable)
 
 ### Changed
 - Disabled `M` keybinding in MC Options > Controls > Cowlection by default to avoid conflicts

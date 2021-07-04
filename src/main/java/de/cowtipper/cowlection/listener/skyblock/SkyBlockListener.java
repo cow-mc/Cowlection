@@ -72,6 +72,8 @@ public class SkyBlockListener {
     private static final Pattern TIER_SUFFIX_PATTERN = Pattern.compile(" [IVX0-9]+$");
     // example: " §a42§7x §fLeather §7for §6436.8 coins"
     private static final Pattern BAZAAR_SELL_ALL_PATTERN = Pattern.compile("^(?:§[0-9a-fl-or])* (?:§[0-9a-fl-or])+([0-9,]+)(?:§[0-9a-fl-or])+x (?:§[0-9a-fl-or])+.+ (?:§[0-9a-fl-or])+for (?:§[0-9a-fl-or])+([0-9,.]+) coins$");
+    private static final Pattern BAZAAR_TARGET_AMOUNT_PATTERN = Pattern.compile("^O(?:ff|rd)er amount: ([\\d,]+)x$");
+    private static final Pattern BAZAAR_FILLED_PATTERN = Pattern.compile("^Filled: ([\\d,k]+)/(?:[\\d,k]+) \\(?([\\d.]+)%[)!]$");
     List<BestiaryEntry> bestiaryOverview = null;
     private final NumberFormat numberFormatter;
     private final Cowlection main;
@@ -422,7 +424,7 @@ public class SkyBlockListener {
                 List<String> toolTip = e.toolTip;
                 int startIndex = 1337;
                 Ordering<Double> tooltipOrdering = Ordering.natural();
-                if("high → low".equals(MooConfig.bazaarSellAllOrderAscDesc)) {
+                if ("high → low".equals(MooConfig.bazaarSellAllOrderAscDesc)) {
                     tooltipOrdering = tooltipOrdering.reverse();
                 }
                 TreeMultimap<Double, String> sellEntries = TreeMultimap.create(tooltipOrdering, Ordering.natural());
@@ -469,6 +471,49 @@ public class SkyBlockListener {
                         ++sellEntryIndex;
                     }
                     e.toolTip.add(startIndex + sellEntryIndex, EnumChatFormatting.DARK_GRAY + "  » ordered by " + MooConfig.bazaarSellAllOrder);
+                }
+            }
+        }
+
+        // bazaar: show how many items left on offer/order
+        if (MooConfig.bazaarShowItemsLeft) {
+            String displayName = e.itemStack.getDisplayName();
+            if (displayName.startsWith("" + EnumChatFormatting.GOLD + EnumChatFormatting.BOLD + "SELL" + EnumChatFormatting.GRAY + ":")
+                    || displayName.startsWith("" + EnumChatFormatting.GREEN + EnumChatFormatting.BOLD + "BUY" + EnumChatFormatting.GRAY + ":")) {
+                int targetAmount = -1; // order/offer amount
+                List<String> toolTip = e.toolTip;
+                for (int lineNr = 2; lineNr < Math.min(5, toolTip.size()); lineNr++) {
+                    String line = EnumChatFormatting.getTextWithoutFormattingCodes(toolTip.get(lineNr));
+                    Matcher targetAmountMatcher = BAZAAR_TARGET_AMOUNT_PATTERN.matcher(line);
+                    Matcher filledMatcher = BAZAAR_FILLED_PATTERN.matcher(line);
+                    try {
+                        if (targetAmount == -1 && targetAmountMatcher.matches()) {
+                            targetAmount = Integer.parseInt(targetAmountMatcher.group(1).replace(",", ""));
+                        } else if (targetAmount > 0 && filledMatcher.matches()) {
+                            double percentageFilled = Double.parseDouble(filledMatcher.group(2)) / 100;
+                            int itemsLeft;
+                            if (percentageFilled == 1) {
+                                // order already filled 100%
+                                break;
+                            } else if (filledMatcher.group(1).contains("k")) {
+                                // filled amount is abbreviated, use filled % to calculate remaining items
+                                itemsLeft = (int) (targetAmount - targetAmount * percentageFilled);
+                            } else {
+                                int amountFilled = Integer.parseInt(filledMatcher.group(1).replace(",", ""));
+                                itemsLeft = targetAmount - amountFilled;
+                            }
+
+                            if (itemsLeft > 0) {
+                                toolTip.set(lineNr, toolTip.get(lineNr) + EnumChatFormatting.YELLOW + " " + Utils.formatNumber(itemsLeft) + " left");
+                                break;
+                            }
+                        } else if (targetAmount > 0) {
+                            // order/offer amount was found, but next line wasn't the 'filled' line, abort!
+                            break;
+                        }
+                    } catch (NumberFormatException ignored) {
+                        break;
+                    }
                 }
             }
         }
