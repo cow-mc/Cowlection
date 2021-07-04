@@ -32,6 +32,7 @@ class LogFilesSearcher {
     LogSearchResults searchFor(String searchQuery, boolean chatOnly, boolean matchCase, boolean removeFormatting, LocalDate dateStart, LocalDate dateEnd) throws IOException {
         LogSearchResults logSearchResults = new LogSearchResults();
         long fileSizeLimit = MooConfig.getMaxLogFileSize();
+        long latestLogSizeLimit = MooConfig.getMaxLatestLogFileSize();
         for (String logsDirPath : MooConfig.logsDirs) {
             File logsDir = new File(logsDirPath);
             if (!logsDir.exists() || !logsDir.isDirectory()) {
@@ -53,7 +54,7 @@ class LogFilesSearcher {
                                     Integer.parseInt(fileNameMatcher.group(2)), Integer.parseInt(fileNameMatcher.group(3)));
                             if (!fileLocalDate.isBefore(dateStart) && !fileLocalDate.isAfter(dateEnd)) {
                                 if (path.toFile().length() > fileSizeLimit) {
-                                    // file too large
+                                    // .log.gz file too large
                                     logSearchResults.addSkippedFile();
                                 } else {
                                     logSearchResults.addAnalyzedFile();
@@ -64,8 +65,8 @@ class LogFilesSearcher {
                     } else if (fileName.equals("latest.log")) {
                         LocalDate lastModified = Instant.ofEpochMilli(path.toFile().lastModified()).atZone(ZoneId.systemDefault()).toLocalDate();
                         if (!lastModified.isBefore(dateStart) && !lastModified.isAfter(dateEnd)) {
-                            if (path.toFile().length() > fileSizeLimit) {
-                                // file too large
+                            if (path.toFile().length() > latestLogSizeLimit) {
+                                // latest.log too large
                                 logSearchResults.addSkippedFile();
                             } else {
                                 logSearchResults.addAnalyzedFile();
@@ -85,7 +86,7 @@ class LogFilesSearcher {
             int skippedFileCounter = logSearchResults.getSkippedFiles();
             if (skippedFileCounter > 0) {
                 throw new FileNotFoundException(EnumChatFormatting.DARK_RED + "ERROR: No Minecraft log files could be found for the selected date range.\n"
-                        + EnumChatFormatting.RED + skippedFileCounter + EnumChatFormatting.DARK_RED + " log files were skipped because they are too large ( >" + FileUtils.byteCountToDisplaySize(MooConfig.getMaxLogFileSize()) + ").\n"
+                        + EnumChatFormatting.RED + skippedFileCounter + EnumChatFormatting.DARK_RED + " log files were skipped because they are too large (" + EnumChatFormatting.RED + ".log.gz" + EnumChatFormatting.DARK_RED + " files >" + FileUtils.byteCountToDisplaySize(MooConfig.getMaxLogFileSize()) + "; " + EnumChatFormatting.RED + "latest.log" + EnumChatFormatting.DARK_RED + " >" + FileUtils.byteCountToDisplaySize(MooConfig.getMaxLatestLogFileSize()) + ").\n"
                         + EnumChatFormatting.RED + "Please check if the dates as well as the directories of the log files are set correctly (Log Search ➡ Settings [top right corner]).\n"
                         + EnumChatFormatting.DARK_RED + "You could also increase the maximum allowed log file size to be searched (Log Search ➡ Settings), but note that each file must be unzipped before it can be analyzed, which can make the log file search take significantly longer for large files.");
             } else {

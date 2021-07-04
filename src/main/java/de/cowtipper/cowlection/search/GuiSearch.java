@@ -291,7 +291,7 @@ public class GuiSearch extends GuiScreen {
                     this.searchResults = searchResultsData.getSortedSearchResults();
                     this.analyzedFiles = "Analyzed files: " + EnumChatFormatting.WHITE + searchResultsData.getAnalyzedFiles();
                     this.analyzedFilesWithHits = "Files with hits: " + EnumChatFormatting.WHITE + searchResultsData.getAnalyzedFilesWithHits();
-                    this.skippedFiles = "Skipped files: " + EnumChatFormatting.WHITE + searchResultsData.getSkippedFiles();
+                    this.skippedFiles = "Skipped large files: " + (searchResultsData.getSkippedFiles() > 0 ? EnumChatFormatting.RED : EnumChatFormatting.WHITE) + searchResultsData.getSkippedFiles();
                     if (this.searchResults.isEmpty()) {
                         this.searchResults.add(new LogEntry(EnumChatFormatting.ITALIC + "No results"));
                         areEntriesSearchResults = false;

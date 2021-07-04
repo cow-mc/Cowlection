@@ -61,6 +61,7 @@ public class MooConfig {
     public static String[] logsDirs;
     private static String defaultStartDate;
     private static int maxLogFileSize;
+    private static int maxLatestLogFileSize;
     // Category: Notifications
     public static boolean doUpdateCheck;
     public static boolean showBestFriendNotifications;
@@ -318,10 +319,13 @@ public class MooConfig {
                 .setValidationPattern(Pattern.compile("^[1-9][0-9]{0,2}|(2[0-9]{3}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01]))$"));
         Property propMaxLogFileSize = subCat.addConfigEntry(cfg.get(CATEGORY_LOGS_SEARCH,
                 "maxLogFileSize", 2048, "Max log file size (in KB)?", 50, 10000));
+        Property propMaxLatestLogFileSize = subCat.addConfigEntry(cfg.get(CATEGORY_LOGS_SEARCH,
+                "maxLatestLogFileSize", 50000, "Max latest.log file size (in KB)?", 50, 200000));
         logSearchProperties = new ArrayList<>();
         logSearchProperties.add(propLogsDirs);
         logSearchProperties.add(propDefaultStartDate);
         logSearchProperties.add(propMaxLogFileSize);
+        logSearchProperties.add(propMaxLatestLogFileSize);
 
         // Category: Notifications
         configCat = new MooConfigCategory("Notifications", "notifications");
@@ -667,6 +671,7 @@ public class MooConfig {
             logsDirs = propLogsDirs.getStringList();
             defaultStartDate = propDefaultStartDate.getString().trim();
             maxLogFileSize = propMaxLogFileSize.getInt();
+            maxLatestLogFileSize = propMaxLatestLogFileSize.getInt();
             // Category: Notifications
             doUpdateCheck = propDoUpdateCheck.getBoolean();
             showBestFriendNotifications = propShowBestFriendNotifications.getBoolean();
@@ -756,6 +761,7 @@ public class MooConfig {
         propLogsDirs.set(logsDirs);
         propDefaultStartDate.set(defaultStartDate);
         propMaxLogFileSize.set(maxLogFileSize);
+        propMaxLatestLogFileSize.set(maxLatestLogFileSize);
         // Category: Notifications
         propDoUpdateCheck.set(doUpdateCheck);
         propShowBestFriendNotifications.set(showBestFriendNotifications);
@@ -911,6 +917,13 @@ public class MooConfig {
      */
     public static long getMaxLogFileSize() {
         return maxLogFileSize * 1024L;
+    }
+
+    /**
+     * @return max latest.log file size in Bytes
+     */
+    public static long getMaxLatestLogFileSize() {
+        return maxLatestLogFileSize * 1024L;
     }
 
     // Category: General
