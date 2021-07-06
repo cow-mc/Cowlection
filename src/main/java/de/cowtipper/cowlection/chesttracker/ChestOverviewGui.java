@@ -39,6 +39,8 @@ public class ChestOverviewGui extends GuiScreen {
     public ChestOverviewGui(Cowlection main) {
         this.screenTitle = Cowlection.MODNAME + " Chest Analyzer";
         this.main = main;
+        // clear wanted item chest highlighting
+        main.getChestTracker().getChestsWithWantedItem().clear();
     }
 
     @Override
@@ -344,6 +346,14 @@ public class ChestOverviewGui extends GuiScreen {
 
         @Override
         protected void elementClicked(int slotIndex, boolean isDoubleClick, int mouseX, int mouseY) {
+            if (!isDoubleClick) {
+                return;
+            }
+            ItemData itemData = itemDataHolder.get(slotIndex);
+            if (itemData != null) {
+                this.mc.displayGuiScreen(null);
+                main.getChestTracker().markChestsWithWantedItem(itemData.getKey(), itemData.getAmount(), itemData.getName());
+            }
         }
 
         @Override

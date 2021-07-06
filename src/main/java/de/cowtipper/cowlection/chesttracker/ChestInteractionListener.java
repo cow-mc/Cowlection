@@ -212,9 +212,20 @@ public class ChestInteractionListener {
             Tessellator tessellator = Tessellator.getInstance();
             WorldRenderer worldRenderer = tessellator.getWorldRenderer();
 
-            GlStateManager.color(55 / 255f, 155 / 255f, 55 / 255f, 100 / 255f);
-
+            Set<BlockPos> chestsWithWantedItem = main.getChestTracker().getChestsWithWantedItem();
             for (BlockPos chestPos : cachedChestPositions) {
+                if (chestsWithWantedItem.size() > 0) {
+                    if (chestsWithWantedItem.contains(chestPos)) {
+                        // chest has wanted item
+                        GlStateManager.color(55 / 255f, 155 / 255f, 55 / 255f, 200 / 255f);
+                    } else {
+                        // chest doesn't have wanted item
+                        GlStateManager.color(55 / 255f, 155 / 255f, 55 / 255f, 75 / 255f);
+                    }
+                } else {
+                    // no item search in progress
+                    GlStateManager.color(55 / 255f, 155 / 255f, 55 / 255f, 100 / 255f);
+                }
                 EnumFacing otherChestFacing = main.getChestTracker().getOtherChestFacing(chestPos);
                 double chestPosXMin = chestPos.getX() - xMinOffset - (otherChestFacing == EnumFacing.WEST ? 1 : 0);
                 double chestPosXMax = chestPos.getX() - xMaxOffset + 1 + (otherChestFacing == EnumFacing.EAST ? 1 : 0);

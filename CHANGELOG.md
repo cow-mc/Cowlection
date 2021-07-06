@@ -5,7 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [1.8.9-0.14.0] - unreleased
 ### Added
-- Chest Tracker & Analyzer: added support for 'lowest BIN' prices
+- Chest Tracker & Analyzer:
+  - added support for 'lowest BIN' prices
+  - double clicking an analysis row now highlights chests that contain the clicked item
 - Bazaar: display items left on a buy order/sell order (toggleable)
 - (Dungeons) player lookups:
   - added ironman icon ♲

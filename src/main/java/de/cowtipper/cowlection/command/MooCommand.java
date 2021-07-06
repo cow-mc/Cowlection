@@ -696,6 +696,7 @@ public class MooCommand extends CommandBase {
                     main.getChatHelper().sendMessage(new MooChatComponent("Enabled chest tracker! You can now...").green()
                             .appendFreshSibling(new MooChatComponent(EnumChatFormatting.GREEN + "  ❶ " + EnumChatFormatting.YELLOW + "add chests on your island by opening them; deselect chests by Sneaking + Right Click.").yellow())
                             .appendFreshSibling(new MooChatComponent(EnumChatFormatting.GREEN + "  ❷ " + EnumChatFormatting.YELLOW + "use " + EnumChatFormatting.GOLD + analyzeCommand + EnumChatFormatting.YELLOW + " again to run the chest analysis.").yellow().setSuggestCommand(analyzeCommand))
+                            .appendFreshSibling(new MooChatComponent("     (You can search for an item inside your chests by double clicking its analysis row)").gray().setSuggestCommand(analyzeCommand))
                             .appendFreshSibling(new MooChatComponent(EnumChatFormatting.GREEN + "  ❸ " + EnumChatFormatting.YELLOW + "use " + EnumChatFormatting.GOLD + analyzeCommand + " stop" + EnumChatFormatting.YELLOW + " to stop the chest tracker and clear current results.").yellow().setSuggestCommand(analyzeCommand + " stop")));
                 } else {
                     main.getChatHelper().sendMessage(new MooChatComponent("Enabled chest tracker! " + EnumChatFormatting.GRAY + "Run " + analyzeCommand + " again to run the chest analysis.").green().setSuggestCommand(analyzeCommand));

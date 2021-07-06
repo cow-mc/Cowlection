@@ -25,6 +25,7 @@ public class ChestTracker {
     public static long lastLowestBinsUpdate;
     private final Map<BlockPos, List<ItemStack>> chestCache = new HashMap<>();
     private final Map<BlockPos, EnumFacing> doubleChestCache = new HashMap<>();
+    private final Set<BlockPos> chestsWithWantedItem = new HashSet<>();
     private Map<String, ItemData> analysisResult = new HashMap<>();
     private ChestInteractionListener chestInteractionListener;
     private HyBazaarData bazaarCache;
@@ -167,6 +168,10 @@ public class ChestTracker {
         return chestCache.keySet();
     }
 
+    public Set<BlockPos> getChestsWithWantedItem() {
+        return chestsWithWantedItem;
+    }
+
     public void clear() {
         MinecraftForge.EVENT_BUS.unregister(chestInteractionListener);
         chestInteractionListener = null;
@@ -174,6 +179,7 @@ public class ChestTracker {
         lowestBinsCache = null;
         chestCache.clear();
         doubleChestCache.clear();
+        chestsWithWantedItem.clear();
         analysisResult.clear();
     }
 
@@ -216,6 +222,7 @@ public class ChestTracker {
             }
         }
         chestCache.remove(mainChestPos);
+        chestsWithWantedItem.remove(mainChestPos);
     }
 
     private boolean isOtherChestCached(BlockPos chestPos, EnumFacing otherChestFacing) {
@@ -264,6 +271,39 @@ public class ChestTracker {
      */
     public boolean allowUpdateLowestBins() {
         return lowestBinsCache == null || (System.currentTimeMillis() - lastLowestBinsUpdate) > 300000;
+    }
+
+    public void markChestsWithWantedItem(String sbKey, int amount, String itemName) {
+        // clear old search results
+        chestsWithWantedItem.clear();
+
+        if (sbKey.endsWith("_ambiguous")) {
+            sbKey = sbKey.substring(0, sbKey.length() - 10);
+        }
+        int relevantChests = 0;
+        for (Map.Entry<BlockPos, List<ItemStack>> chestCache : chestCache.entrySet()) {
+            boolean hasItemBeenFoundInChest = false;
+            for (ItemStack item : chestCache.getValue()) {
+                String key = item.hasDisplayName() ? item.getDisplayName() : item.getUnlocalizedName();
+                if (item.hasTagCompound()) {
+                    key = item.getTagCompound().getCompoundTag("ExtraAttributes").getString("id");
+                }
+                if (sbKey.equals(key)) {
+                    if (!hasItemBeenFoundInChest) {
+                        chestsWithWantedItem.add(chestCache.getKey());
+                        hasItemBeenFoundInChest = true;
+                        ++relevantChests;
+                    }
+                    amount -= item.stackSize;
+                }
+            }
+            if (amount <= 0) {
+                // already found all relevant chests
+                break;
+            }
+        }
+        main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Chest Tracker & Analyzer is now highlighting " + EnumChatFormatting.LIGHT_PURPLE + relevantChests + EnumChatFormatting.GREEN + " chest" + (relevantChests > 1 ? "s" : "") + " with " + itemName
+                + EnumChatFormatting.GREEN + ". Re-opening the chest analysis results with " + EnumChatFormatting.GRAY + "/moo analyzeChests " + EnumChatFormatting.GREEN + "clears the current search.");
     }
 
     public enum Updating {
