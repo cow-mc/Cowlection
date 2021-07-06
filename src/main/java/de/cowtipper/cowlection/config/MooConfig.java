@@ -74,8 +74,10 @@ public class MooConfig {
     public static int notifyFreshServer;
     public static int notifyOldServer;
     public static boolean notifyServerAge;
-    public static boolean chestAnalyzerShowNonBazaarItems;
+    public static boolean chestAnalyzerShowBazaarItems;
     private static String chestAnalyzerUseBazaarPrices;
+    public static boolean chestAnalyzerShowLowestBinItems;
+    public static boolean chestAnalyzerShowNoPriceItems;
     public static boolean chestAnalyzerShowCommandUsage;
     public static int tooltipToggleKeyBinding;
     private static String tooltipItemAge;
@@ -393,17 +395,21 @@ public class MooConfig {
         Property propNotifyServerAge = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "notifyServerAge", true, "Show server age notifications?"));
 
-        // Sub-Category: Chest Analyzer (Bazaar prices)
-        subCat = configCat.addSubCategory("Chest Tracker & Analyzer (Bazaar prices)");
+        // Sub-Category: Chest Analyzer (Bazaar & lowest BIN prices)
+        subCat = configCat.addSubCategory("Chest Tracker & Analyzer (Bazaar & lowest BIN prices)");
         String analyzeCommand = "/moo analyzeChests";
         subCat.addExplanations("Use " + EnumChatFormatting.YELLOW + analyzeCommand + EnumChatFormatting.RESET + " to start tracking chests on your island! " + EnumChatFormatting.GREEN + "Then you can...",
                 EnumChatFormatting.GREEN + "  ❶ " + EnumChatFormatting.RESET + "add chests by opening them; deselect chests by Sneaking + Right Click.",
                 EnumChatFormatting.GREEN + "  ❷ " + EnumChatFormatting.RESET + "use " + EnumChatFormatting.YELLOW + analyzeCommand + EnumChatFormatting.RESET + " again to run the chest analysis.",
                 EnumChatFormatting.GREEN + "  ❸ " + EnumChatFormatting.RESET + "use " + EnumChatFormatting.YELLOW + analyzeCommand + " stop" + EnumChatFormatting.RESET + " to stop the chest tracker and clear current results.");
-        Property propChestAnalyzerShowNonBazaarItems = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "chestAnalyzerShowNonBazaarItems", false, "Show non-Bazaar items in Chest Tracker?"));
+        Property propChestAnalyzerShowBazaarItems = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "chestAnalyzerShowBazaarItems", true, "Show Bazaar items in Chest Tracker?"));
         Property propChestAnalyzerUseBazaarPrices = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "chestAnalyzerUseBazaarPrices", "Instant-Sell", "Use Bazaar prices?", new String[]{"Instant-Sell", "Sell Offer"}));
+        Property propChestAnalyzerShowLowestBinItems = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "chestAnalyzerShowLowestBinItems", true, "Show lowest BIN items in Chest Tracker?"));
+        Property propChestAnalyzerShowNoPriceItems = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "chestAnalyzerShowNoPriceItems", false, "Show items without price in Chest Tracker?"));
         Property propChestAnalyzerShowCommandUsage = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "chestAnalyzerShowCommandUsage", true, "Show command usage?"));
 
@@ -684,8 +690,10 @@ public class MooConfig {
             notifyFreshServer = propNotifyFreshServer.getInt();
             notifyOldServer = propNotifyOldServer.getInt();
             notifyServerAge = propNotifyServerAge.getBoolean();
-            chestAnalyzerShowNonBazaarItems = propChestAnalyzerShowNonBazaarItems.getBoolean();
+            chestAnalyzerShowBazaarItems = propChestAnalyzerShowBazaarItems.getBoolean();
             chestAnalyzerUseBazaarPrices = propChestAnalyzerUseBazaarPrices.getString();
+            chestAnalyzerShowLowestBinItems = propChestAnalyzerShowLowestBinItems.getBoolean();
+            chestAnalyzerShowNoPriceItems = propChestAnalyzerShowNoPriceItems.getBoolean();
             chestAnalyzerShowCommandUsage = propChestAnalyzerShowCommandUsage.getBoolean();
             tooltipToggleKeyBinding = propTooltipToggleKeyBinding.getInt();
             tooltipItemAge = propTooltipItemAge.getString();
@@ -774,8 +782,10 @@ public class MooConfig {
         propNotifyFreshServer.set(notifyFreshServer);
         propNotifyOldServer.set(notifyOldServer);
         propNotifyServerAge.set(notifyServerAge);
-        propChestAnalyzerShowNonBazaarItems.set(chestAnalyzerShowNonBazaarItems);
+        propChestAnalyzerShowBazaarItems.set(chestAnalyzerShowBazaarItems);
         propChestAnalyzerUseBazaarPrices.set(chestAnalyzerUseBazaarPrices);
+        propChestAnalyzerShowLowestBinItems.set(chestAnalyzerShowLowestBinItems);
+        propChestAnalyzerShowNoPriceItems.set(chestAnalyzerShowNoPriceItems);
         propChestAnalyzerShowCommandUsage.set(chestAnalyzerShowCommandUsage);
         propTooltipToggleKeyBinding.set(tooltipToggleKeyBinding);
         propTooltipItemAge.set(tooltipItemAge);

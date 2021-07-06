@@ -2,6 +2,7 @@ package de.cowtipper.cowlection.util;
 
 import com.google.gson.*;
 import com.mojang.util.UUIDTypeAdapter;
+import de.cowtipper.cowlection.chesttracker.LowestBinsCache;
 import de.cowtipper.cowlection.data.HyPlayerData;
 import net.minecraft.nbt.*;
 import net.minecraftforge.common.util.Constants;
@@ -19,8 +20,14 @@ import java.util.TreeMap;
 import java.util.UUID;
 
 public final class GsonUtils {
-    private static final Gson gson = new GsonBuilder().registerTypeAdapter(UUID.class, new UUIDTypeAdapter()).registerTypeAdapter(HyPlayerData.class, new HyPlayerDataDeserializer()).create();
-    private static final Gson gsonPrettyPrinter = new GsonBuilder().registerTypeAdapter(UUID.class, new UUIDTypeAdapter()).setPrettyPrinting().create();
+    private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(UUID.class, new UUIDTypeAdapter())
+            .registerTypeAdapter(HyPlayerData.class, new HyPlayerDataDeserializer())
+            .registerTypeAdapter(LowestBinsCache.class, new LowestBinsDeserializer())
+            .create();
+    private static final Gson gsonPrettyPrinter = new GsonBuilder()
+            .registerTypeAdapter(UUID.class, new UUIDTypeAdapter())
+            .setPrettyPrinting().create();
 
     private GsonUtils() {
     }
@@ -166,6 +173,26 @@ public final class GsonUtils {
                 return new HyPlayerData();
             }
             return hyPlayerData;
+        }
+    }
+
+    public static class LowestBinsDeserializer implements JsonDeserializer<LowestBinsCache> {
+        @Override
+        public LowestBinsCache deserialize(JsonElement json, Type type, JsonDeserializationContext jdc) throws JsonParseException {
+            LowestBinsCache lowestBinsCache = new LowestBinsCache();
+            if (!json.isJsonObject()) {
+                // invalid JSON
+                return lowestBinsCache;
+            }
+            JsonObject lowestBins = json.getAsJsonObject();
+            for (Map.Entry<String, JsonElement> entry : lowestBins.entrySet()) {
+                try {
+                    lowestBinsCache.put(entry.getKey(), entry.getValue().getAsInt());
+                } catch (ClassCastException | NumberFormatException ignored) {
+                    // somehow not an integer
+                }
+            }
+            return lowestBinsCache;
         }
     }
 }

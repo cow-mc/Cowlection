@@ -220,12 +220,16 @@ public class HySkyBlockStats {
             }
 
             public List<Pet> getPets() {
-                pets.sort((p1, p2) -> ComparisonChain.start().compare(p2.active, p1.active).compare(p2.getRarity(), p1.getRarity()).compare(p2.exp, p1.exp).result());
+                if (pets == null) {
+                    pets = Collections.emptyList();
+                } else {
+                    pets.sort((p1, p2) -> ComparisonChain.start().compare(p2.active, p1.active).compare(p2.getRarity(), p1.getRarity()).compare(p2.exp, p1.exp).result());
+                }
                 return pets;
             }
 
             public Pet getActivePet() {
-                for (Pet pet : pets) {
+                for (Pet pet : getPets()) {
                     if (pet.isActive()) {
                         return pet;
                     }
@@ -234,7 +238,7 @@ public class HySkyBlockStats {
             }
 
             public Pet getPet(String type) {
-                for (Pet pet : pets) {
+                for (Pet pet : getPets()) {
                     if (type.equals(pet.type)) {
                         return pet;
                     }
@@ -296,6 +300,14 @@ public class HySkyBlockStats {
 
             public boolean isActive() {
                 return active;
+            }
+
+            public String getType() {
+                return type;
+            }
+
+            public double getExp() {
+                return exp;
             }
 
             public DataHelper.SkyBlockRarity getRarity() {

@@ -8,7 +8,9 @@ import de.cowtipper.cowlection.config.MooConfig;
 import de.cowtipper.cowlection.config.gui.MooConfigGui;
 import de.cowtipper.cowlection.data.BestiaryEntry;
 import de.cowtipper.cowlection.data.DataHelper;
+import de.cowtipper.cowlection.data.HySkyBlockStats;
 import de.cowtipper.cowlection.data.XpTables;
+import de.cowtipper.cowlection.util.GsonUtils;
 import de.cowtipper.cowlection.util.GuiHelper;
 import de.cowtipper.cowlection.util.MooChatComponent;
 import de.cowtipper.cowlection.util.Utils;
@@ -65,7 +67,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SkyBlockListener {
-    private static final Set<String> blackList = new HashSet<>(Arrays.asList("ENCHANTED_BOOK", "RUNE", "PET", "POTION")); // + minions (_GENERATOR_)
     private static final Pattern ITEM_COUNT_PREFIXED_PATTERN = Pattern.compile("^(?:§[0-9a-fl-or])*[\\d]+x ");
     private static final Pattern ITEM_COUNT_SUFFIXED_PATTERN = Pattern.compile(" (?:§[0-9a-fl-or])*x[\\d]+$");
     private static final Pattern PET_NAME_PATTERN = Pattern.compile("^§7\\[Lvl (\\d+)] (§[0-9a-f])");
@@ -107,7 +108,7 @@ public class SkyBlockListener {
                 if (extraAttributes != null && extraAttributes.hasKey("id")) {
                     // seems to be a SkyBlock item
                     String sbId = extraAttributes.getString("id");
-                    if (itemLookupType == ItemLookupType.WIKI || (/* itemLookupType == ItemLookupType.PRICE && */ !blackList.contains(sbId) && !sbId.contains("_GENERATOR_"))) {
+                    if (itemLookupType == ItemLookupType.WIKI || (/* itemLookupType == ItemLookupType.PRICE && */ !DataHelper.AMBIGUOUS_ITEM_IDS.contains(sbId) && !sbId.contains("_GENERATOR_"))) {
                         // open item price info or open wiki entry
                         Pair<String, String> sbItemBaseName = Utils.extractSbItemBaseName(itemStack.getDisplayName(), extraAttributes, false);
                         itemBaseName = sbItemBaseName.first();
@@ -205,19 +206,9 @@ public class SkyBlockListener {
                 && e.itemStack.getItem() == Items.skull) {
             if (extraAttributes != null && extraAttributes.hasKey("petInfo")) {
                 // pet in inventory, auction house or similar
-                String petInfo = extraAttributes.getString("petInfo");
-                String expSubstr = "\"exp\":";
-                int beginPetExp = petInfo.indexOf(expSubstr);
-                int endPetExp = petInfo.indexOf(',', beginPetExp);
-                if (beginPetExp > 0 && endPetExp > 0) {
-                    try {
-                        long petExp = (long) Double.parseDouble(petInfo.substring(beginPetExp + expSubstr.length(), endPetExp));
-                        int index = Math.max(0, e.toolTip.size() - (e.showAdvancedItemTooltips ? /* item name & nbt info */ 2 : 0));
-                        e.toolTip.add(index, EnumChatFormatting.GRAY + "Pet exp: " + EnumChatFormatting.GOLD + numberFormatter.format(petExp));
-                    } catch (NumberFormatException ignored) {
-                        // do nothing
-                    }
-                }
+                HySkyBlockStats.Profile.Pet petInfo = GsonUtils.fromJson(extraAttributes.getString("petInfo"), HySkyBlockStats.Profile.Pet.class);
+                int index = Math.max(0, e.toolTip.size() - (e.showAdvancedItemTooltips ? /* item name & nbt info */ 2 : 0));
+                e.toolTip.add(index, EnumChatFormatting.GRAY + "Pet exp: " + EnumChatFormatting.GOLD + numberFormatter.format(petInfo.getExp()));
             } else if (e.itemStack.getDisplayName().contains("[Lvl ")) {
                 // pet in pets menu
                 for (int i = e.toolTip.size() - 1; i >= 0; i--) {

@@ -4,11 +4,11 @@ import com.google.gson.annotations.SerializedName;
 import de.cowtipper.cowlection.util.Utils;
 import net.minecraft.util.EnumChatFormatting;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public final class DataHelper {
+    public static final Set<String> AMBIGUOUS_ITEM_IDS = new HashSet<>(Arrays.asList("ENCHANTED_BOOK", "RUNE", "PET", "POTION", "NEW_YEAR_CAKE", "SPOOKY_PIE", "CAKE_SOUL"));
+
     private DataHelper() {
     }
 

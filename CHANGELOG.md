@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [1.8.9-0.14.0] - unreleased
 ### Added
+- Chest Tracker & Analyzer: added support for 'lowest BIN' prices
+- Bazaar: display items left on a buy order/sell order (toggleable)
 - (Dungeons) player lookups:
   - added ironman icon ♲
   - added average secrets per completion
@@ -21,7 +23,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Toggle: display dungeon performance summary at the end of a dungeon
   - Toggle: send warning when queued and entered dungeon floors are different
   - Toggle: shorten item quality info for non-randomized items
-- Bazaar: display items left on a buy order/sell order (toggleable)
 
 ### Changed
 - Disabled `M` keybinding in MC Options > Controls > Cowlection by default to avoid conflicts

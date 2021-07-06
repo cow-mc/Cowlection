@@ -6,6 +6,7 @@ import com.google.gson.JsonSyntaxException;
 import com.mojang.util.UUIDTypeAdapter;
 import de.cowtipper.cowlection.Cowlection;
 import de.cowtipper.cowlection.chesttracker.HyBazaarData;
+import de.cowtipper.cowlection.chesttracker.LowestBinsCache;
 import de.cowtipper.cowlection.command.exception.ThrowingConsumer;
 import de.cowtipper.cowlection.config.CredentialStorage;
 import de.cowtipper.cowlection.data.*;
@@ -29,6 +30,7 @@ public class ApiUtils {
     private static final String ONLINE_STATUS_URL = "https://api.hypixel.net/status?key=%s&uuid=%s";
     private static final String SKYBLOCK_STATS_URL = "https://api.hypixel.net/skyblock/profiles?key=%s&uuid=%s";
     private static final String BAZAAR_URL = "https://api.hypixel.net/skyblock/bazaar";
+    public static final String LOWEST_BINS = "https://moulberry.codes/lowestbin.json";
     private static final String PLAYER_URL = "https://api.hypixel.net/player?key=%s&uuid=%s";
     private static final String API_KEY_URL = "https://api.hypixel.net/key?key=%s";
     private static final ExecutorService pool = Executors.newCachedThreadPool();
@@ -118,6 +120,21 @@ public class ApiUtils {
         return null;
     }
 
+    public static void fetchLowestBins(ThrowingConsumer<LowestBinsCache> action) {
+        pool.execute(() -> action.accept(getLowestBins()));
+    }
+
+    private static LowestBinsCache getLowestBins() {
+        try (BufferedReader reader = makeApiCall(LOWEST_BINS)) {
+            if (reader != null) {
+                return GsonUtils.fromJson(reader, LowestBinsCache.class);
+            }
+        } catch (IOException | JsonSyntaxException e) {
+            e.printStackTrace();
+        }
+        return new LowestBinsCache();
+    }
+
     public static void fetchHyPlayerDetails(Friend stalkedPlayer, ThrowingConsumer<HyPlayerData> action) {
         pool.execute(() -> action.accept(stalkHyPlayer(stalkedPlayer)));
     }
@@ -161,6 +178,8 @@ public class ApiUtils {
             return null;
         } else if (connection.getResponseCode() == HttpStatus.SC_BAD_GATEWAY && url.startsWith("https://api.hypixel.net/")) { // http status 502 (cloudflare)
             throw new IOException("Couldn't contact Hypixel API (502 Bad Gateway). API might be down, check https://status.hypixel.net for info.");
+        } else if (connection.getResponseCode() == HttpStatus.SC_BAD_GATEWAY && url.startsWith("https://moulberry.codes/")) { // http status 502 (cloudflare)
+            throw new IOException("Couldn't contact Moulberry's API (502 Bad Gateway). API might be down, check if " + LOWEST_BINS + " is reachable.");
         } else {
             BufferedReader reader;
             InputStream errorStream = connection.getErrorStream();

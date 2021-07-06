@@ -27,6 +27,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.opengl.GL11;
 
 import java.util.*;
 
@@ -333,9 +334,9 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
             this.overlayBackground(0, this.top, 255, 255);
             this.overlayBackground(this.bottom, this.height, 255, 255);
             GlStateManager.enableBlend();
-            GlStateManager.tryBlendFuncSeparate(770, 771, 0, 1);
+            GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 0, 1);
             GlStateManager.disableAlpha();
-            GlStateManager.shadeModel(7425);
+            GlStateManager.shadeModel(GL11.GL_SMOOTH);
             GlStateManager.disableTexture2D();
 
             int maxScroll = this.func_148135_f();
@@ -374,7 +375,7 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
 
             this.func_148142_b(mouseX, mouseY); // GuiSlot#renderDecorations
             GlStateManager.enableTexture2D();
-            GlStateManager.shadeModel(7424);
+            GlStateManager.shadeModel(GL11.GL_FLAT);
             GlStateManager.enableAlpha();
             GlStateManager.disableBlend();
 

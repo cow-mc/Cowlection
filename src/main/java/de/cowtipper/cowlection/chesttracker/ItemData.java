@@ -8,8 +8,10 @@ public class ItemData {
     private final ItemStack itemStack;
     private final String name;
     private int amount;
-    private double bazaarInstantSellPrice = -1;
-    private double bazaarSellOfferPrice = -1;
+    private double bazaarInstantSellPrice = 0;
+    private double bazaarSellOfferPrice = 0;
+    private int lowestBin = 0;
+    private PriceType priceType;
 
     public ItemData(String key, ItemStack itemStack) {
         this.key = key;
@@ -17,6 +19,7 @@ public class ItemData {
         this.itemStack.stackSize = 1;
         this.name = itemStack.getDisplayName();
         this.amount = 0;
+        this.priceType = PriceType.NONE;
     }
 
     public String getKey() {
@@ -35,20 +38,41 @@ public class ItemData {
         return amount;
     }
 
-    public double getBazaarInstantSellPrice() {
-        return bazaarInstantSellPrice;
+    public double getPrice(boolean useInstantSellPrices) {
+        switch (priceType) {
+            case BAZAAR:
+                return useInstantSellPrices ? bazaarInstantSellPrice : bazaarSellOfferPrice;
+            case LOWEST_BIN:
+                return lowestBin;
+            default:
+                return 0;
+        }
+    }
+
+    public double getPriceSum(boolean useInstantSellPrices) {
+        switch (priceType) {
+            case BAZAAR:
+                return useInstantSellPrices ? getBazaarInstantSellValue() : getBazaarSellOfferValue();
+            case LOWEST_BIN:
+                return getLowestBinValue();
+            default:
+                return 0;
+        }
     }
 
     public void setBazaarInstantSellPrice(double bazaarInstantSellPrice) {
         this.bazaarInstantSellPrice = bazaarInstantSellPrice;
-    }
-
-    public double getBazaarSellOfferPrice() {
-        return bazaarSellOfferPrice;
+        this.priceType = PriceType.BAZAAR;
     }
 
     public void setBazaarSellOfferPrice(double bazaarSellOfferPrice) {
         this.bazaarSellOfferPrice = bazaarSellOfferPrice;
+        this.priceType = PriceType.BAZAAR;
+    }
+
+    public void setLowestBin(int lowestBin) {
+        this.lowestBin = lowestBin;
+        this.priceType = PriceType.LOWEST_BIN;
     }
 
     public ItemData addAmount(int stackSize) {
@@ -57,14 +81,30 @@ public class ItemData {
     }
 
     public double getBazaarInstantSellValue() {
-        return bazaarInstantSellPrice >= 0 ? amount * bazaarInstantSellPrice : -1;
+        return amount * bazaarInstantSellPrice;
     }
 
     public double getBazaarSellOfferValue() {
-        return bazaarSellOfferPrice >= 0 ? amount * bazaarSellOfferPrice : -1;
+        return amount * bazaarSellOfferPrice;
+    }
+
+    public long getLowestBinValue() {
+        return (long) amount * lowestBin;
+    }
+
+    public PriceType getPriceType() {
+        return priceType;
     }
 
     public String toCopyableFormat() {
-        return "\n" + EnumChatFormatting.getTextWithoutFormattingCodes(name) + "\t" + name + "\t" + amount + "\t" + Math.round(getBazaarInstantSellPrice()) + "\t" + Math.round(getBazaarInstantSellValue()) + "\t" + Math.round(getBazaarSellOfferPrice()) + "\t" + Math.round(getBazaarSellOfferValue());
+        return "\n" + EnumChatFormatting.getTextWithoutFormattingCodes(name) + "\t" + name + "\t" + amount + "\t" + toCopyableFormat(bazaarInstantSellPrice) + "\t" + toCopyableFormat(getBazaarInstantSellValue()) + "\t" + toCopyableFormat(bazaarSellOfferPrice) + "\t" + toCopyableFormat(getBazaarSellOfferValue()) + "\t" + toCopyableFormat(lowestBin) + "\t" + toCopyableFormat(getLowestBinValue());
+    }
+
+    private String toCopyableFormat(double value) {
+        return value > 0 ? Long.toString(Math.round(value)) : "";
+    }
+
+    public enum PriceType {
+        BAZAAR, LOWEST_BIN, NONE
     }
 }

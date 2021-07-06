@@ -25,11 +25,14 @@ public class ChestOverviewGui extends GuiScreen {
     private ItemOverview itemOverview;
     private List<GuiTooltip> guiTooltips;
     private GuiButton btnClose;
-    private GuiButton btnUpdateBazaar;
+    private GuiButton btnUpdatePrices;
     private GuiButton btnCopy;
-    private GuiCheckBox showNonBazaarItems;
+    private GuiCheckBox chkShowNoPriceItems;
+    private GuiCheckBox chkShowLowestBinItems;
+    private GuiCheckBox chkShowBazaarItems;
     private GuiButton btnBazaarInstantOrOffer;
-    private AbortableRunnable updateBazaar;
+    private boolean useBazaarInstantSellPrices;
+    private AbortableRunnable updatePrices;
     private final String screenTitle;
     private final Cowlection main;
 
@@ -44,18 +47,26 @@ public class ChestOverviewGui extends GuiScreen {
         // close
         this.buttonList.add(this.btnClose = new GuiButtonExt(1, this.width - 25, 3, 22, 20, EnumChatFormatting.RED + "X"));
         addTooltip(btnClose, Arrays.asList(EnumChatFormatting.RED + "Close interface", "" + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + "Hint:" + EnumChatFormatting.RESET + " alternatively press ESC"));
-        // update bazaar prices
-        this.buttonList.add(this.btnUpdateBazaar = new GuiButton(20, this.width - 165, 5, 130, 16, "⟳ Update Bazaar prices"));
-        addTooltip(btnUpdateBazaar, Arrays.asList(EnumChatFormatting.YELLOW + "Get latest Bazaar prices from Hypixel API", EnumChatFormatting.WHITE + "(only once per minute)"));
+        // update prices
+        this.buttonList.add(this.btnUpdatePrices = new GuiButton(20, this.width - 125, 5, 90, 16, "⟳ Update prices"));
+        addTooltip(btnUpdatePrices, Arrays.asList(EnumChatFormatting.YELLOW + "‣ Get latest Bazaar prices from Hypixel API", EnumChatFormatting.WHITE + "   (only once per minute)",
+                EnumChatFormatting.YELLOW + "‣ Get latest lowest BINs from Moulberry's API", EnumChatFormatting.WHITE + "   (only once every 5 minutes)"));
         // copy to clipboard
-        this.buttonList.add(this.btnCopy = new GuiButton(21, this.width - 280, 5, 110, 16, "⎘ Copy to clipboard"));
+        this.buttonList.add(this.btnCopy = new GuiButton(21, this.width - 240, 5, 110, 16, "⎘ Copy to clipboard"));
         addTooltip(btnCopy, Collections.singletonList(EnumChatFormatting.YELLOW + "Copied data can be pasted into e.g. Google Spreadsheets"));
-        // checkbox: show/hide non-bazaar items
-        this.buttonList.add(this.showNonBazaarItems = new GuiCheckBox(10, this.width - 162, this.height - 28, " Show non-Bazaar items", MooConfig.chestAnalyzerShowNonBazaarItems));
-        addTooltip(showNonBazaarItems, Collections.singletonList(EnumChatFormatting.YELLOW + "Should items that are " + EnumChatFormatting.GOLD + "not " + EnumChatFormatting.YELLOW + "on the Bazaar be displayed?"));
+
         // toggle: use insta-sell or sell offer prices
-        this.buttonList.add(this.btnBazaarInstantOrOffer = new GuiButton(15, this.width - 165, this.height - 16, 130, 14, MooConfig.useInstantSellBazaarPrices() ? "Use Instant-Sell prices" : "Use Sell Offer prices"));
+        this.buttonList.add(this.btnBazaarInstantOrOffer = new GuiButton(15, this.width - 165, this.height - 52, 130, 14, MooConfig.useInstantSellBazaarPrices() ? "Use Instant-Sell prices" : "Use Sell Offer prices"));
         addTooltip(btnBazaarInstantOrOffer, Collections.singletonList(EnumChatFormatting.YELLOW + "Use " + EnumChatFormatting.GOLD + "Instant-Sell " + EnumChatFormatting.YELLOW + "or " + EnumChatFormatting.GOLD + "Sell Offer" + EnumChatFormatting.YELLOW + " prices?"));
+        // checkbox: show/hide Bazaar items
+        this.buttonList.add(this.chkShowBazaarItems = new GuiCheckBox(10, this.width - 162, this.height - 36, " Show Bazaar items", MooConfig.chestAnalyzerShowBazaarItems));
+        addTooltip(chkShowBazaarItems, Collections.singletonList(EnumChatFormatting.YELLOW + "Should items with a " + EnumChatFormatting.GOLD + "Bazaar " + EnumChatFormatting.YELLOW + "price be displayed?"));
+        // checkbox: show/hide lowest BIN items
+        this.buttonList.add(this.chkShowLowestBinItems = new GuiCheckBox(10, this.width - 162, this.height - 25, " Show lowest BIN items", MooConfig.chestAnalyzerShowLowestBinItems));
+        addTooltip(chkShowLowestBinItems, Collections.singletonList(EnumChatFormatting.YELLOW + "Should items with a " + EnumChatFormatting.GOLD + "lowest BIN " + EnumChatFormatting.YELLOW + "price be displayed?"));
+        // checkbox: show/hide items without a price
+        this.buttonList.add(this.chkShowNoPriceItems = new GuiCheckBox(10, this.width - 162, this.height - 14, " Show items without price", MooConfig.chestAnalyzerShowNoPriceItems));
+        addTooltip(chkShowNoPriceItems, Collections.singletonList(EnumChatFormatting.YELLOW + "Should items " + EnumChatFormatting.GOLD + "without " + EnumChatFormatting.YELLOW + "a Bazaar or BIN price be displayed?"));
         // main item gui
         this.itemOverview = new ItemOverview();
     }
@@ -67,7 +78,7 @@ public class ChestOverviewGui extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        btnUpdateBazaar.enabled = updateBazaar == null && main.getChestTracker().allowUpdateBazaar();
+        btnUpdatePrices.enabled = updatePrices == null && (main.getChestTracker().allowUpdateBazaar() || main.getChestTracker().allowUpdateLowestBins());
         itemOverview.drawScreen(mouseX, mouseY, partialTicks);
         this.drawString(this.fontRendererObj, this.screenTitle, itemOverview.getLeftX(), 10, 0xFFCC00);
         super.drawScreen(mouseX, mouseY, partialTicks);
@@ -99,74 +110,76 @@ public class ChestOverviewGui extends GuiScreen {
         if (button.enabled) {
             if (button == btnClose) {
                 this.mc.displayGuiScreen(null);
-            } else if (button == btnUpdateBazaar) {
-                btnUpdateBazaar.enabled = false;
-                this.main.getChestTracker().refreshBazaarCache();
-                updateBazaar = new AbortableRunnable() {
-                    private int retries = 20 * 20; // retry for up to 20 seconds
-                    private final long previousBazaarUpdate = main.getChestTracker().getLastBazaarUpdate();
+            } else if (button == btnUpdatePrices) {
+                btnUpdatePrices.enabled = false;
+                EnumSet<ChestTracker.Updating> updating = this.main.getChestTracker().refreshPriceCache();
+                if (updating.size() > 1) {
+                    updatePrices = new AbortableRunnable() {
+                        private int retries = 20 * 20; // retry for up to 20 seconds
+                        private final long previousBazaarUpdate = ChestTracker.lastBazaarUpdate;
+                        private final long previousLowestBinsUpdate = ChestTracker.lastLowestBinsUpdate;
 
-                    @SubscribeEvent
-                    public void onTickCheckBazaarDataUpdated(TickEvent.ClientTickEvent e) {
-                        if (!stopped && e.phase == TickEvent.Phase.END) {
-                            if (Minecraft.getMinecraft().theWorld == null || retries <= 0) {
-                                // already stopped; or world gone, probably disconnected; or no retries left (took too long [20 seconds not enough?] or is not on SkyBlock): stop!
+                        @SubscribeEvent
+                        public void onTickCheckPriceDataUpdated(TickEvent.ClientTickEvent e) {
+                            if (!stopped && e.phase == TickEvent.Phase.END) {
+                                if (Minecraft.getMinecraft().theWorld == null || retries <= 0) {
+                                    // already stopped; or world gone, probably disconnected; or no retries left (took too long [20 seconds not enough?] or is not on SkyBlock): stop!
+                                    stop();
+                                    return;
+                                }
+                                retries--;
+                                if (updating.contains(ChestTracker.Updating.BAZAAR) && previousBazaarUpdate == ChestTracker.lastBazaarUpdate
+                                        || updating.contains(ChestTracker.Updating.LOWEST_BINS) && previousLowestBinsUpdate == ChestTracker.lastLowestBinsUpdate) {
+                                    // cache(s) have not updated yet, retry next tick
+                                    return;
+                                }
+                                // refresh item overview
+                                Minecraft.getMinecraft().addScheduledTask(() -> ChestOverviewGui.this.itemOverview.reloadItemData());
                                 stop();
-                                return;
                             }
-                            retries--;
-                            if (previousBazaarUpdate == main.getChestTracker().getLastBazaarUpdate()) {
-                                // bazaar data wasn't updated yet, retry next tick
-                                return;
+                        }
+
+                        @Override
+                        public void stop() {
+                            if (!stopped) {
+                                stopped = true;
+                                retries = -1;
+                                MinecraftForge.EVENT_BUS.unregister(this);
+                                stopPriceUpdateChecker();
                             }
-                            // refresh item overview
-                            Minecraft.getMinecraft().addScheduledTask(() -> ChestOverviewGui.this.itemOverview.reloadItemData());
-                            stop();
                         }
-                    }
 
-                    @Override
-                    public void stop() {
-                        if (!stopped) {
-                            stopped = true;
-                            retries = -1;
-                            MinecraftForge.EVENT_BUS.unregister(this);
-                            stopScoreboardChecker();
+                        @Override
+                        public void run() {
+                            MinecraftForge.EVENT_BUS.register(this);
                         }
-                    }
-
-                    @Override
-                    public void run() {
-                        MinecraftForge.EVENT_BUS.register(this);
-                    }
-                };
-                new TickDelay(updateBazaar, 20); // 2 second delay + retrying for 20 seconds, making sure bazaar data got updated
-            } else if (button == showNonBazaarItems) {
+                    };
+                    new TickDelay(updatePrices, 20); // 1 second delay + retrying for 20 seconds, making sure price data got updated
+                }
+            } else if (button == chkShowNoPriceItems || button == chkShowLowestBinItems || button == chkShowBazaarItems) {
                 this.itemOverview.reloadItemData();
             } else if (button == btnCopy) {
-                StringBuilder allItemData = new StringBuilder("Item\tItem (formatted)\tAmount\tPrice (instant-sell)\tValue (instant-sell)\tPrice (sell offer)\tValue (sell offer)");
+                StringBuilder allItemData = new StringBuilder("Item\tItem (formatted)\tAmount\tPrice (instant-sell)\tValue (instant-sell)\tPrice (sell offer)\tValue (sell offer)\tPrice (lowest BIN)\tValue (lowest BIN)");
                 for (ItemData itemData : itemOverview.itemDataHolder) {
                     allItemData.append(itemData.toCopyableFormat());
                 }
                 allItemData.append("\n\n").append("Bazaar value (instant-sell):\t").append(itemOverview.summedValueInstaSell)
-                        .append("\n").append("Bazaar value (sell offer):\t").append(itemOverview.summedValueSellOffer);
+                        .append("\n").append("Bazaar value (sell offer):\t").append(itemOverview.summedValueSellOffer)
+                        .append("\n").append("Auction House value (lowest BINs):\t").append(itemOverview.summedValueLowestBins);
                 GuiScreen.setClipboardString(allItemData.toString());
             } else if (button == btnBazaarInstantOrOffer) {
-                if ("Use Instant-Sell prices".equals(btnBazaarInstantOrOffer.displayString)) {
-                    btnBazaarInstantOrOffer.displayString = "Use Sell Offer prices";
-                } else {
-                    btnBazaarInstantOrOffer.displayString = "Use Instant-Sell prices";
-                }
+                this.btnBazaarInstantOrOffer.displayString = this.useBazaarInstantSellPrices ? "Use Sell Offer prices" : "Use Instant-Sell prices";
+                this.useBazaarInstantSellPrices = !this.useBazaarInstantSellPrices;
                 this.itemOverview.reloadItemData();
             }
         }
     }
 
-    private void stopScoreboardChecker() {
-        if (updateBazaar != null) {
-            // there is still a bazaar update-checker running, stop it
-            updateBazaar.stop();
-            updateBazaar = null;
+    private void stopPriceUpdateChecker() {
+        if (updatePrices != null) {
+            // there is still a price update-checker running, stop it
+            updatePrices.stop();
+            updatePrices = null;
         }
     }
 
@@ -200,11 +213,15 @@ public class ChestOverviewGui extends GuiScreen {
         private boolean orderDesc = true;
         private long lastOrderChange;
         private List<ItemData> itemDataHolder;
-        private int summedValueInstaSell;
-        private int summedValueSellOffer;
+        private long summedValueInstaSell;
+        private long summedValueSellOffer;
+        private long summedValueLowestBins;
+        private long summedTotalValue;
+        private boolean showBazaarItems;
+        private boolean showLowestBinItems;
 
         ItemOverview() {
-            super(ChestOverviewGui.this.mc, ChestOverviewGui.this.width, ChestOverviewGui.this.height, 32, ChestOverviewGui.this.height - 32, 16);
+            super(ChestOverviewGui.this.mc, ChestOverviewGui.this.width, ChestOverviewGui.this.height, 32, ChestOverviewGui.this.height - 54, 16);
             this.setShowSelectionBox(false);
             // space above first entry for control buttons
             int headerPadding = 20;
@@ -214,26 +231,46 @@ public class ChestOverviewGui extends GuiScreen {
         }
 
         private void reloadItemData() {
-            boolean useInstantSellPrices = "Use Instant-Sell prices".equals(btnBazaarInstantOrOffer.displayString);
+            boolean useInstantSellPrices = ChestOverviewGui.this.useBazaarInstantSellPrices;
             itemDataHolder = main.getChestTracker().getAnalysisResult(orderBy, orderDesc, useInstantSellPrices);
             summedValueInstaSell = 0;
             summedValueSellOffer = 0;
-            boolean showNonBazaarItems = ChestOverviewGui.this.showNonBazaarItems.isChecked();
+            summedValueLowestBins = 0;
+            summedTotalValue = 0;
+            showBazaarItems = ChestOverviewGui.this.chkShowBazaarItems.isChecked();
+            showLowestBinItems = ChestOverviewGui.this.chkShowLowestBinItems.isChecked();
+            boolean showNoPriceItems = ChestOverviewGui.this.chkShowNoPriceItems.isChecked();
 
             for (Iterator<ItemData> iterator = itemDataHolder.iterator(); iterator.hasNext(); ) {
                 ItemData itemData = iterator.next();
-                boolean hasBazaarPrice = false;
-                if (itemData.getBazaarInstantSellPrice() > 0) {
-                    summedValueInstaSell += itemData.getBazaarInstantSellValue();
-                    hasBazaarPrice = true;
+                switch (itemData.getPriceType()) {
+                    case BAZAAR:
+                        summedValueInstaSell += itemData.getBazaarInstantSellValue();
+                        summedValueSellOffer += itemData.getBazaarSellOfferValue();
+                        if (showBazaarItems) {
+                            continue;
+                        }
+                        break;
+                    case LOWEST_BIN:
+                        summedValueLowestBins += itemData.getLowestBinValue();
+                        if (showLowestBinItems) {
+                            continue;
+                        }
+                        break;
+                    default: // case NONE:
+                        if (showNoPriceItems) {
+                            continue;
+                        }
+                        break;
                 }
-                if (itemData.getBazaarSellOfferPrice() > 0) {
-                    summedValueSellOffer += itemData.getBazaarSellOfferValue();
-                    hasBazaarPrice = true;
-                }
-                if (!showNonBazaarItems && !hasBazaarPrice) {
-                    iterator.remove();
-                }
+                // otherwise: hide item
+                iterator.remove();
+            }
+            if (showLowestBinItems) {
+                summedTotalValue = summedValueLowestBins;
+            }
+            if (showBazaarItems) {
+                summedTotalValue += (useInstantSellPrices ? summedValueInstaSell : summedValueSellOffer);
             }
         }
 
@@ -247,7 +284,7 @@ public class ChestOverviewGui extends GuiScreen {
             // draw column titles
             for (Column column : Column.values()) {
                 int columnX = x + column.getXOffset() - (column != Column.ITEM_NAME ? ChestOverviewGui.this.fontRendererObj.getStringWidth(column.getName()) : /* item name is aligned left, rest right */ 0);
-                ChestOverviewGui.this.drawString(ChestOverviewGui.this.fontRendererObj, column.getName(), columnX, y + 2, 0xFFFFFF);
+                ChestOverviewGui.this.fontRendererObj.drawStringWithShadow(column.getName(), columnX, y + 2, 0xFFFFFF);
                 if (column == orderBy) {
                     arrowX = columnX;
                 }
@@ -346,25 +383,40 @@ public class ChestOverviewGui extends GuiScreen {
             if (itemName.length() != itemData.getName().length()) {
                 itemName += "…";
             }
-            ChestOverviewGui.this.drawString(fontRenderer, itemName, itemNameXPos, y + 1, entryID % 2 == 0 ? 0xFFFFFF : 0x909090);
-            ChestOverviewGui.this.drawString(fontRenderer, itemAmount, amountXPos, y + 1, entryID % 2 == 0 ? 0xFFFFFF : 0x909090);
+            fontRenderer.drawStringWithShadow(itemName, itemNameXPos, y + 1, entryID % 2 == 0 ? 0xFFFFFF : 0x909090);
+            fontRenderer.drawStringWithShadow(itemAmount, amountXPos, y + 1, entryID % 2 == 0 ? 0xFFFFFF : 0x909090);
 
-            boolean useInstantSellPrices = "Use Instant-Sell prices".equals(btnBazaarInstantOrOffer.displayString);
-            double itemPrice = useInstantSellPrices ? itemData.getBazaarInstantSellPrice() : itemData.getBazaarSellOfferPrice();
-            String bazaarPrice = itemPrice > 0 ? Utils.formatDecimal(itemPrice) : EnumChatFormatting.DARK_GRAY + "?";
-            ChestOverviewGui.this.drawString(fontRenderer, bazaarPrice, x + Column.PRICE_EACH.getXOffset() - fontRenderer.getStringWidth(bazaarPrice), y + 1, entryID % 2 == 0 ? 0xFFFFFF : 0x909090);
+            boolean useInstantSellPrices = ChestOverviewGui.this.useBazaarInstantSellPrices;
+            double itemPrice = itemData.getPrice(useInstantSellPrices);
+            String bazaarOrBinPrice = itemPrice > 0 ? Utils.formatDecimal(itemPrice) : EnumChatFormatting.DARK_GRAY + "?";
+            fontRenderer.drawStringWithShadow(bazaarOrBinPrice, x + Column.PRICE_EACH.getXOffset() - fontRenderer.getStringWidth(bazaarOrBinPrice), y + 1, entryID % 2 == 0 ? 0xFFFFFF : 0x909090);
 
-            double itemValue = useInstantSellPrices ? itemData.getBazaarInstantSellValue() : itemData.getBazaarSellOfferValue();
-            String bazaarValue = itemPrice > 0 ? Utils.formatNumber(itemValue) : EnumChatFormatting.DARK_GRAY + "?";
-            ChestOverviewGui.this.drawString(fontRenderer, bazaarValue, x + Column.PRICE_SUM.getXOffset() - fontRenderer.getStringWidth(bazaarValue), y + 1, entryID % 2 == 0 ? 0xFFFFFF : 0x909090);
+            double itemValue = itemData.getPriceSum(useInstantSellPrices);
+            String bazaarOrBinValue = itemPrice > 0 ? Utils.formatNumber(itemValue) : EnumChatFormatting.DARK_GRAY + "?";
+            fontRenderer.drawStringWithShadow(bazaarOrBinValue, x + Column.PRICE_SUM.getXOffset() - fontRenderer.getStringWidth(bazaarOrBinValue), y + 1, entryID % 2 == 0 ? 0xFFFFFF : 0x909090);
         }
 
         public void drawScreenPost(int mouseX, int mouseY) {
             int xMin = getLeftX();
-            String bazaarValueInstantSell = "∑ Bazaar value (instant-sell prices): " + (summedValueInstaSell > 0 ? EnumChatFormatting.WHITE + Utils.formatNumber(summedValueInstaSell) : EnumChatFormatting.DARK_GRAY + "?"); // sum
-            ChestOverviewGui.this.drawString(ChestOverviewGui.this.fontRendererObj, bazaarValueInstantSell, xMin + 175 - ChestOverviewGui.this.fontRendererObj.getStringWidth("∑ Bazaar value (instant-sell prices): "), ChestOverviewGui.this.height - 28, 0xdddddd);
-            String bazaarValueSellOffer = "∑ Bazaar value (sell offer prices): " + (summedValueSellOffer > 0 ? EnumChatFormatting.WHITE + Utils.formatNumber(summedValueSellOffer) : EnumChatFormatting.DARK_GRAY + "?"); // sum
-            ChestOverviewGui.this.drawString(ChestOverviewGui.this.fontRendererObj, bazaarValueSellOffer, xMin + 175 - ChestOverviewGui.this.fontRendererObj.getStringWidth("∑ Bazaar value (sell offer prices): "), ChestOverviewGui.this.height - 17, 0xdddddd);
+            FontRenderer fontRenderer = ChestOverviewGui.this.fontRendererObj;
+
+            boolean useInstantSellPrices = ChestOverviewGui.this.useBazaarInstantSellPrices;
+
+            String bazaarValueInstantSell = ((showBazaarItems && useInstantSellPrices) ? EnumChatFormatting.WHITE : EnumChatFormatting.DARK_GRAY) + "∑ Bazaar value (instant-sell prices): " + (summedValueInstaSell > 0 ? Utils.formatNumber(summedValueInstaSell) : EnumChatFormatting.DARK_GRAY + "―"); // sum
+            fontRenderer.drawStringWithShadow(bazaarValueInstantSell, xMin + 175 - fontRenderer.getStringWidth("∑ Bazaar value (instant-sell prices): "), ChestOverviewGui.this.height - 50, 0xdddddd);
+            String bazaarValueSellOffer = ((showBazaarItems && !useInstantSellPrices) ? EnumChatFormatting.WHITE : EnumChatFormatting.DARK_GRAY) + "∑ Bazaar value (sell offer prices): " + (summedValueSellOffer > 0 ? Utils.formatNumber(summedValueSellOffer) : EnumChatFormatting.DARK_GRAY + "―"); // sum
+            fontRenderer.drawStringWithShadow(bazaarValueSellOffer, xMin + 175 - fontRenderer.getStringWidth("∑ Bazaar value (sell offer prices): "), ChestOverviewGui.this.height - 39, 0xdddddd);
+            String lowestBinValue = ((showLowestBinItems) ? EnumChatFormatting.WHITE : EnumChatFormatting.DARK_GRAY) + "∑ Auction House value (lowest BINs): " + (summedValueLowestBins > 0 ? Utils.formatNumber(summedValueLowestBins) : EnumChatFormatting.DARK_GRAY + "―"); // sum
+            fontRenderer.drawStringWithShadow(lowestBinValue, xMin + 175 - fontRenderer.getStringWidth("∑ Auction House value (lowest BINs): "), ChestOverviewGui.this.height - 28, 0xdddddd);
+            String estimatedSellValue = ((showBazaarItems || showLowestBinItems) ? EnumChatFormatting.WHITE : EnumChatFormatting.DARK_GRAY)
+                    + "∑ estimated sell value ("
+                    + (showBazaarItems ? (useInstantSellPrices ? "insta" : "offer") : "")
+                    + (showLowestBinItems ? (showBazaarItems ? "+" : "") + "BIN" : "")
+                    + "): ";
+            String totalValue = estimatedSellValue + (summedTotalValue > 0 ? EnumChatFormatting.WHITE + Utils.formatNumber(summedTotalValue) : EnumChatFormatting.DARK_GRAY + "―"); // sum
+            int estimatedTotalEndX = fontRenderer.drawStringWithShadow(totalValue, xMin + 175 - fontRenderer.getStringWidth(estimatedSellValue), ChestOverviewGui.this.height - 13, 0xdddddd);
+
+            drawRect(3, ChestOverviewGui.this.height - 16, estimatedTotalEndX + 2, ChestOverviewGui.this.height - 15, 0xff555555);
 
             if (isMouseYWithinSlotBounds(mouseY)) {
                 int slotIndex = this.getSlotIndexFromScreenCoords(mouseX, mouseY);
@@ -379,7 +431,7 @@ public class ChestOverviewGui extends GuiScreen {
                     ItemData itemData = itemDataHolder.get(slotIndex);
                     FontRenderer font = itemData.getItemStack().getItem().getFontRenderer(itemData.getItemStack());
                     GlStateManager.pushMatrix();
-                    ChestOverviewGui.this.drawHoveringText(itemData.getItemStack().getTooltip(mc.thePlayer, false), mouseX, mouseY, (font == null ? fontRendererObj : font));
+                    ChestOverviewGui.this.drawHoveringText(itemData.getItemStack().getTooltip(mc.thePlayer, false), mouseX, mouseY, (font == null ? ChestOverviewGui.this.fontRendererObj : font));
                     GlStateManager.popMatrix();
                 }
             }
