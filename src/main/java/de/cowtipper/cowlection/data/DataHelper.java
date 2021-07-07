@@ -393,6 +393,18 @@ public final class DataHelper {
         minions.put("3ca2b317a1fd2c15fce3f477182babb3c09b9933afc83d5cdb2bcb091e60f0e3", "Mithril XI");
         minions.put("2939c105c2eedbf04600b07de5801e42ec9329054feef89cb0b6a956034e6ee4", "Mithril XII");
 
+        minions.put("1e8bab9493708beda34255606d5883b8762746bcbe6c94e8ca78a77a408c8ba8", "Hard Stone I");
+        minions.put("e3e2ac0b65f1556750effa8f465899de5e914d80fab46a81bebbfff7993a5473", "Hard Stone II");
+        minions.put("ba048e4983e5e0790aa358f2ac14a5f18ba59ad96a74c5d56492882c23c62c26", "Hard Stone III");
+        minions.put("f5d6e71fe84b9315d410bc4ddf0daecee4f1d927b6ca115cb5b7b06e571a0eb", "Hard Stone IV");
+        minions.put("ac8e3e68c469cb33141bddd81b5ca6fdcb71d3af399b6d6e4d48e06aab33e638", "Hard Stone V");
+        minions.put("89ebee06206f65094a6baac7c195c59b47b119af863acbfb6ef80aed04db2923", "Hard Stone VI");
+        minions.put("8744ed895d580938e1d0b7403d023e3fc0ec0123dd1ee43ed3db8a00be977c20", "Hard Stone VII");
+        minions.put("bd239e23a8b4dca4a8a5b565b5254bf861aac24b38c7c6e2a06f4a4b0d658193", "Hard Stone VIII");
+        minions.put("a897f4e0ed295df1c711450b42766bb11835b17770fc90f84f29330ab4a908d1", "Hard Stone IX");
+        minions.put("5c2e3ff6d131440211dfdff76ad15007bc91243a8359d6a67b784e37f900d7f0", "Hard Stone X");
+        minions.put("b37997c9ab7c8d6aa55626d2f1c274b6ded842a6e0a4b1671ef743d2527fa73a", "Hard Stone XI");
+
         minions.put("bbc571c5527336352e2fee2b40a9edfa2e809f64230779aa01253c6aa535881b", "Wheat I");
         minions.put("c62b0508b3fef406833d519da8b08ee078604c78b8ca6e9c138760041fa861bf", "Wheat II");
         minions.put("e61773628ed7555e0a63add21166ad34227d10d21e34c3c7e5a0fa8532dd3f6", "Wheat III");

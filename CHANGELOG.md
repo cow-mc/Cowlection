@@ -12,7 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - (Dungeons) player lookups:
   - added ironman icon ♲
   - added average secrets per completion
-- Added data for Enderman slayer and Voidling minions
+- Added data for Enderman slayer, Voidling minions, and Hard Stone minions
 - New keybindings to...
   1) run `/moo waila` command (disabled by default; MC Options > Controls > `Cowlection`)
   2) copy a single item to clipboard as JSON with <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>C</kbd>
