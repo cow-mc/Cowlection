@@ -30,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Disabled `M` keybinding in MC Options > Controls > Cowlection by default to avoid conflicts
 - `/moo config` sub-category explanations now default to "tooltip *without* darkened background", as the darkened background was more irritating than helpful 
 - MC Log file search now skips large files to prevent huge log files from blocking the search
+- Dungeon Party Finder: Each dungeon class can now also be blocked or blocked if duplicated (= red party background)
 
 ### Fixed
 - 'Show Dungeon item base stats' feature now works with HPB'd items and master stars

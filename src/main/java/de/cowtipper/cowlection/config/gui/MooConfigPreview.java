@@ -62,14 +62,20 @@ public class MooConfigPreview {
             @Override
             public IChatComponent getText() {
                 String markWith;
-                switch (MooConfig.filterDungPartiesWithDupes(dungeonClass)) {
-                    case ALWAYS:
-                        markWith = "" + EnumChatFormatting.WHITE + dungeonClass.getShortName();
+                switch (MooConfig.dungeonPartyMarker(dungeonClass)) {
+                    case UNIDEAL_DUPE:
+                        markWith = EnumChatFormatting.GOLD + "²⁺" + EnumChatFormatting.YELLOW + dungeonClass.getShortName() + EnumChatFormatting.GRAY + " + " + EnumChatFormatting.GOLD + "⬛ " + EnumChatFormatting.GRAY + "as background";
                         break;
-                    case SPECIAL:
-                        markWith = EnumChatFormatting.GOLD + "²⁺" + EnumChatFormatting.YELLOW + dungeonClass.getShortName();
+                    case UNIDEAL_ALWAYS:
+                        markWith = "" + EnumChatFormatting.WHITE + dungeonClass.getShortName() + EnumChatFormatting.GRAY + " + " + EnumChatFormatting.GOLD + "⬛ " + EnumChatFormatting.GRAY + "as background";
                         break;
-                    default: // disabled/"do not mark":
+                    case BLOCK_DUPE:
+                        markWith = EnumChatFormatting.RED + "⬛ " + EnumChatFormatting.GRAY + "as background if duplicated";
+                        break;
+                    case BLOCK_ALWAYS:
+                        markWith = EnumChatFormatting.RED + "⬛ " + EnumChatFormatting.GRAY + "as background";
+                        break;
+                    default: // do not mark
                         markWith = "" + EnumChatFormatting.DARK_GRAY + EnumChatFormatting.ITALIC + "not marked";
                 }
                 return new MooChatComponent("Marked with: " + markWith).gray();

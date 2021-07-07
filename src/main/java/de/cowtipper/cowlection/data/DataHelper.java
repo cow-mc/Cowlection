@@ -111,7 +111,7 @@ public final class DataHelper {
     public enum PartyType {
         SUITABLE(0xff22B14C, 240),
         UNIDEAL(0xffCD8032, 240),
-        UNJOINABLE(0xffEB6E6E, 279),
+        UNJOINABLE_OR_BLOCK(0xffEB6E6E, 279),
         CURRENT(0xff5FDE6C, 240),
         NONE(0xffFF0000, 279);
 

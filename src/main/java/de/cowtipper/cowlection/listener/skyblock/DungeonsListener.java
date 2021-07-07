@@ -317,12 +317,12 @@ public class DungeonsListener {
                 || lastToolTipLine.startsWith("Requires a Class at Level")
                 || lastToolTipLine.startsWith("Requires Catacombs Level")) {
             // cannot enter dungeon
-            partyType = DataHelper.PartyType.UNJOINABLE;
+            partyType = DataHelper.PartyType.UNJOINABLE_OR_BLOCK;
         } else if (lastToolTipLine.endsWith("You are in this party!")) {
             partyType = DataHelper.PartyType.CURRENT;
         } else {
             Map<DungeonClass, AtomicInteger> dungClassesInParty = new LinkedHashMap<>();
-            if (MooConfig.filterDungPartiesWithDupes(activeDungeonClass) == MooConfig.Setting.SPECIAL) {
+            if (MooConfig.dungeonPartyMarker(activeDungeonClass).ifDuped()) {
                 // add our own class if we want to avoid dupes
                 AtomicInteger classCounter = new AtomicInteger();
                 classCounter.incrementAndGet();
@@ -340,6 +340,11 @@ public class DungeonsListener {
                 if (playerDetailMatcher.matches()) {
                     String className = playerDetailMatcher.group(2);
                     DungeonClass clazz = DungeonClass.get(className);
+                    if (MooConfig.dungeonPartyMarker(clazz) == MooConfig.Mark.BLOCK_ALWAYS) {
+                        // class is blocked -> block party
+                        partyType = DataHelper.PartyType.UNJOINABLE_OR_BLOCK;
+                        break;
+                    }
                     dungClassesInParty.putIfAbsent(clazz, new AtomicInteger(0));
                     dungClassesInParty.get(clazz).incrementAndGet();
 
@@ -356,12 +361,12 @@ public class DungeonsListener {
                     // TODO make trigger words in party notes configurable
                     if (partyTypeCarry != DataHelper.PartyType.NONE && (partyNote.contains("carry") || partyNote.contains("carries"))) {
                         partyType = partyTypeCarry;
-                        if (partyTypeCarry != DataHelper.PartyType.UNJOINABLE) {
+                        if (partyTypeCarry != DataHelper.PartyType.UNJOINABLE_OR_BLOCK) {
                             middleText = (partyNote.contains("free") ? EnumChatFormatting.GREEN : "") + "carry";
                         }
                     } else if (partyTypeHyperion != DataHelper.PartyType.NONE && partyNote.contains("hyp")) {
                         partyType = partyTypeHyperion;
-                        if (partyTypeHyperion != DataHelper.PartyType.UNJOINABLE) {
+                        if (partyTypeHyperion != DataHelper.PartyType.UNJOINABLE_OR_BLOCK) {
                             middleText = "hyper";
                         }
                     }
@@ -373,7 +378,7 @@ public class DungeonsListener {
                 }
             }
             FontRenderer font = Minecraft.getMinecraft().fontRendererObj;
-            if (partyType != DataHelper.PartyType.UNJOINABLE && middleText != null) {
+            if (partyType != DataHelper.PartyType.UNJOINABLE_OR_BLOCK && middleText != null) {
                 GlStateManager.pushMatrix();
                 GlStateManager.translate(0, 0, 281);
                 double scaleFactor = 0.5;
@@ -381,7 +386,7 @@ public class DungeonsListener {
                 font.drawStringWithShadow(middleText, (float) ((x + 1) / scaleFactor), (float) ((y + 5) / scaleFactor), new Color(85, 240, 240, 255).getRGB());
                 GlStateManager.popMatrix();
             }
-            if (partyType != DataHelper.PartyType.UNJOINABLE) {
+            if (partyType != DataHelper.PartyType.UNJOINABLE_OR_BLOCK) {
                 if (memberTooLowLevel || partyReqTooLowLevel) {
                     // at least one party member is lower than the min class level or party min Dungeon level req is too low
                     partyType = DataHelper.PartyType.UNIDEAL;
@@ -393,49 +398,49 @@ public class DungeonsListener {
                 StringBuilder unwantedClasses = new StringBuilder();
                 StringBuilder dupedClasses = new StringBuilder();
                 for (Map.Entry<DungeonClass, AtomicInteger> partyClassInfo : dungClassesInParty.entrySet()) {
-                    switch (MooConfig.filterDungPartiesWithDupes(partyClassInfo.getKey())) {
-                        case ALWAYS:
-                            unwantedClasses.append(partyClassInfo.getKey().getShortName());
-                            break;
-                        case SPECIAL:
-                            if (partyClassInfo.getValue().get() > 1) {
-                                // 2+ class
-                                dupedClasses.append(partyClassInfo.getKey().getShortName());
-                            }
-                            break;
-                        default: // DISABLED
-                            // do nothing
+                    MooConfig.Mark dungeonPartyMarker = MooConfig.dungeonPartyMarker(partyClassInfo.getKey());
+                    if (dungeonPartyMarker == MooConfig.Mark.UNIDEAL_DUPE && partyClassInfo.getValue().get() > 1) {
+                        // 2+ class
+                        dupedClasses.append(partyClassInfo.getKey().getShortName());
+                    } else if (dungeonPartyMarker == MooConfig.Mark.UNIDEAL_ALWAYS) {
+                        unwantedClasses.append(partyClassInfo.getKey().getShortName());
+                    } else if (dungeonPartyMarker == MooConfig.Mark.BLOCK_DUPE && partyClassInfo.getValue().get() > 1) {
+                        // found blocked if duplicated class
+                        partyType = DataHelper.PartyType.UNJOINABLE_OR_BLOCK;
+                        break;
                     }
                 }
-                StringBuilder badClasses = new StringBuilder();
-                if (unwantedClasses.length() > 0) {
-                    badClasses.append(EnumChatFormatting.WHITE).append(unwantedClasses);
-                }
-                if (dupedClasses.length() > 0) {
-                    badClasses.append(EnumChatFormatting.GOLD).append("²⁺").append(EnumChatFormatting.YELLOW).append(dupedClasses); // 2+
-                }
+                if (partyType != DataHelper.PartyType.UNJOINABLE_OR_BLOCK) {
+                    StringBuilder badClasses = new StringBuilder();
+                    if (unwantedClasses.length() > 0) {
+                        badClasses.append(EnumChatFormatting.WHITE).append(unwantedClasses);
+                    }
+                    if (dupedClasses.length() > 0) {
+                        badClasses.append(EnumChatFormatting.GOLD).append("²⁺").append(EnumChatFormatting.YELLOW).append(dupedClasses); // 2+
+                    }
 
-                if (badClasses.length() > 0) {
-                    // party has unwanted classes or class duplicates
-                    partyType = DataHelper.PartyType.UNIDEAL;
+                    if (badClasses.length() > 0) {
+                        // party has unwanted classes or class duplicates
+                        partyType = DataHelper.PartyType.UNIDEAL;
 
-                    GlStateManager.pushMatrix();
-                    GlStateManager.translate(0, 0, 280);
-                    double scaleFactor = 0.8;
-                    GlStateManager.scale(scaleFactor, scaleFactor, 0);
-                    font.drawStringWithShadow(badClasses.toString(), (float) (x / scaleFactor), (float) (y / scaleFactor), new Color(255, 170, 0, 255).getRGB());
-                    GlStateManager.popMatrix();
-                } else if (!memberTooLowLevel && !partyReqTooLowLevel && middleText == null) {
-                    // party matches our criteria!
-                    partyType = DataHelper.PartyType.SUITABLE;
-                }
-                // add party size indicator
-                if (MooConfig.dungPartiesSize && partySize > 0) {
-                    GlStateManager.pushMatrix();
-                    GlStateManager.translate(0, 0, 280);
-                    String partySizeIndicator = String.valueOf(partySize);
-                    font.drawStringWithShadow(partySizeIndicator, x + 17 - font.getStringWidth(partySizeIndicator), y + 9, 0xffFFFFFF);
-                    GlStateManager.popMatrix();
+                        GlStateManager.pushMatrix();
+                        GlStateManager.translate(0, 0, 280);
+                        double scaleFactor = 0.8;
+                        GlStateManager.scale(scaleFactor, scaleFactor, 0);
+                        font.drawStringWithShadow(badClasses.toString(), (float) (x / scaleFactor), (float) (y / scaleFactor), new Color(255, 170, 0, 255).getRGB());
+                        GlStateManager.popMatrix();
+                    } else if (!memberTooLowLevel && !partyReqTooLowLevel && middleText == null) {
+                        // party matches our criteria!
+                        partyType = DataHelper.PartyType.SUITABLE;
+                    }
+                    // add party size indicator
+                    if (MooConfig.dungPartiesSize && partySize > 0) {
+                        GlStateManager.pushMatrix();
+                        GlStateManager.translate(0, 0, 280);
+                        String partySizeIndicator = String.valueOf(partySize);
+                        font.drawStringWithShadow(partySizeIndicator, x + 17 - font.getStringWidth(partySizeIndicator), y + 9, 0xffFFFFFF);
+                        GlStateManager.popMatrix();
+                    }
                 }
             }
         }

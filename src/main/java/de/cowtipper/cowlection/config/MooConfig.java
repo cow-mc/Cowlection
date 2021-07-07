@@ -139,6 +139,7 @@ public class MooConfig {
         this.main = main;
         cfg = configuration;
 
+        // config version history: null > 1 > 0.12.0 > 0.13.0-pre > 2
         String oldLoadedConfigVersion = cfg.getLoadedConfigVersion();
         boolean configVersionChanged = oldLoadedConfigVersion == null || !oldLoadedConfigVersion.equals(cfg.getDefinedConfigVersion());
         if (configVersionChanged) {
@@ -175,6 +176,7 @@ public class MooConfig {
     }
 
     private void updateConfigPostInit(String oldVersion) {
+        boolean changedSomething = false;
         if ("1".equals(oldVersion)) {
             // config of Cowlection v1.8.9-0.12.0 and older
             ConfigCategory sbDungCategory = cfg.getCategory("skyblockdungeons");
@@ -184,19 +186,44 @@ public class MooConfig {
                     sbDungCategory.get("dungOverlayTextBorder").set("no border");
                 }
                 sbDungCategory.remove("dungOverlayTextShadow");
+                changedSomething = true;
             }
-
             for (String dungClass : new String[]{"Archer", "Berserk", "Healer", "Mage", "Tank"}) {
                 String configKey = "dungFilterPartiesWith" + dungClass + "Dupes";
                 if (sbDungCategory.containsKey(configKey)) {
                     boolean filterPartiesWithX = sbDungCategory.get(configKey).getBoolean();
-                    String configKeyNew = "dungMarkPartiesWith" + dungClass;
                     if (filterPartiesWithX) {
-                        sbDungCategory.get(configKeyNew).set("if duplicated");
+                        String configKeyNew = "dungMarkPartiesWith" + dungClass;
+                        sbDungCategory.get(configKeyNew).set("if dupe: " + EnumChatFormatting.GOLD + "⬛");
                     }
                     sbDungCategory.remove(configKey);
+                    changedSomething = true;
                 }
             }
+        } else if ("0.12.0".equals(oldVersion) || "0.13.0-pre".equals(oldVersion)) { // matches config versions pre mod version 0.14.0
+            ConfigCategory sbDungCategory = cfg.getCategory("skyblockdungeons");
+            for (String dungClass : new String[]{"Archer", "Berserk", "Healer", "Mage", "Tank"}) {
+                String configKey = "dungMarkPartiesWith" + dungClass;
+                if (sbDungCategory.containsKey(configKey)) {
+                    String markPartiesWithXOld = sbDungCategory.get(configKey).getString();
+                    String markPartiesWithXNew;
+                    switch (markPartiesWithXOld) {
+                        case "always":
+                            markPartiesWithXNew = "always: " + EnumChatFormatting.GOLD + "⬛";
+                            break;
+                        case "if duplicated":
+                            markPartiesWithXNew = "if dupe: " + EnumChatFormatting.GOLD + "⬛";
+                            break;
+                        default:
+                            continue;
+                    }
+                    sbDungCategory.get(configKey).set(markPartiesWithXNew);
+                    changedSomething = true;
+                }
+            }
+        }
+        // else if (MathHelper.parseIntWithDefault(oldVersion, 9999) < newVersion) { // matches all versions >= 2
+        if (changedSomething) {
             cfg.save();
             syncFromFile();
         }
@@ -590,7 +617,7 @@ public class MooConfig {
                 "to make it easier to find the perfect party:",
                 "",
                 "Marks parties...",
-                "  ‣ you cannot join: " + EnumChatFormatting.RED + "⬛",
+                "  ‣ you cannot join, or decided to filter out: " + EnumChatFormatting.RED + "⬛",
                 "  ‣ that do not meet all your criteria: " + EnumChatFormatting.GOLD + "⬛",
                 "    ‣ with \"Dungeon Level Required\" below a certain level " + EnumChatFormatting.GRAY + "(if present)" + EnumChatFormatting.RESET + ": " + EnumChatFormatting.DARK_RED + EnumChatFormatting.BOLD + "ᐯ" + EnumChatFormatting.RESET,
                 "    ‣ with someone below a certain class level: " + EnumChatFormatting.RED + EnumChatFormatting.BOLD + "ᐯ" + EnumChatFormatting.RESET,
@@ -636,23 +663,43 @@ public class MooConfig {
                 new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.AQUA + "hyper").gray()));
 
         Property propDungMarkPartiesWithArcher = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungMarkPartiesWithArcher", "if duplicated", "Mark parties with Archer class?", new String[]{"always", "if duplicated", "do not mark"}),
+                "dungMarkPartiesWithArcher", "if dupe: " + EnumChatFormatting.GOLD + "⬛", "Mark parties with Archer class?",
+                new String[]{
+                        "if dupe: " + EnumChatFormatting.GOLD + "⬛", "always: " + EnumChatFormatting.GOLD + "⬛",
+                        "if dupe: " + EnumChatFormatting.RED + "⬛", "always: " + EnumChatFormatting.RED + "⬛",
+                        "do not mark"}),
                 new MooConfigPreview(DataHelper.DungeonClass.ARCHER));
 
         Property propDungMarkPartiesWithBerserk = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungMarkPartiesWithBerserk", "do not mark", "Mark parties with Berserk class?", new String[]{"always", "if duplicated", "do not mark"}),
+                "dungMarkPartiesWithBerserk", "do not mark", "Mark parties with Berserk class?",
+                new String[]{
+                        "if dupe: " + EnumChatFormatting.GOLD + "⬛", "always: " + EnumChatFormatting.GOLD + "⬛",
+                        "if dupe: " + EnumChatFormatting.RED + "⬛", "always: " + EnumChatFormatting.RED + "⬛",
+                        "do not mark"}),
                 new MooConfigPreview(DataHelper.DungeonClass.BERSERK));
 
         Property propDungMarkPartiesWithHealer = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungMarkPartiesWithHealer", "do not mark", "Mark parties with Healer class?", new String[]{"always", "if duplicated", "do not mark"}),
+                "dungMarkPartiesWithHealer", "do not mark", "Mark parties with Healer class?",
+                new String[]{
+                        "if dupe: " + EnumChatFormatting.GOLD + "⬛", "always: " + EnumChatFormatting.GOLD + "⬛",
+                        "if dupe: " + EnumChatFormatting.RED + "⬛", "always: " + EnumChatFormatting.RED + "⬛",
+                        "do not mark"}),
                 new MooConfigPreview(DataHelper.DungeonClass.HEALER));
 
         Property propDungMarkPartiesWithMage = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungMarkPartiesWithMage", "do not mark", "Mark parties with Mage class?", new String[]{"always", "if duplicated", "do not mark"}),
+                "dungMarkPartiesWithMage", "do not mark", "Mark parties with Mage class?",
+                new String[]{
+                        "if dupe: " + EnumChatFormatting.GOLD + "⬛", "always: " + EnumChatFormatting.GOLD + "⬛",
+                        "if dupe: " + EnumChatFormatting.RED + "⬛", "always: " + EnumChatFormatting.RED + "⬛",
+                        "do not mark"}),
                 new MooConfigPreview(DataHelper.DungeonClass.MAGE));
 
         Property propDungMarkPartiesWithTank = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungMarkPartiesWithTank", "do not mark", "Mark parties with Tank class?", new String[]{"always", "if duplicated", "do not mark"}),
+                "dungMarkPartiesWithTank", "do not mark", "Mark parties with Tank class?",
+                new String[]{
+                        "if dupe: " + EnumChatFormatting.GOLD + "⬛", "always: " + EnumChatFormatting.GOLD + "⬛",
+                        "if dupe: " + EnumChatFormatting.RED + "⬛", "always: " + EnumChatFormatting.RED + "⬛",
+                        "do not mark"}),
                 new MooConfigPreview(DataHelper.DungeonClass.TANK));
 
         Property propDungSendWrongFloorWarning = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
@@ -1078,13 +1125,13 @@ public class MooConfig {
             case "unide": // "unideal " + EnumChatFormatting.GOLD + "⬛"
                 return DataHelper.PartyType.UNIDEAL;
             case "block": // "block " + EnumChatFormatting.RED + "⬛"
-                return DataHelper.PartyType.UNJOINABLE;
+                return DataHelper.PartyType.UNJOINABLE_OR_BLOCK;
             default: // "do not mark"
                 return DataHelper.PartyType.NONE;
         }
     }
 
-    public static Setting filterDungPartiesWithDupes(DataHelper.DungeonClass dungeonClass) {
+    public static Mark dungeonPartyMarker(DataHelper.DungeonClass dungeonClass) {
         String setting;
         switch (dungeonClass) {
             case ARCHER:
@@ -1107,12 +1154,16 @@ public class MooConfig {
                 break;
         }
         switch (setting) {
-            case "always":
-                return Setting.ALWAYS;
-            case "if duplicated":
-                return Setting.SPECIAL;
+            case "if dupe: §6⬛":
+                return Mark.UNIDEAL_DUPE;
+            case "always: §6⬛":
+                return Mark.UNIDEAL_ALWAYS;
+            case "if dupe: §c⬛":
+                return Mark.BLOCK_DUPE;
+            case "always: §c⬛":
+                return Mark.BLOCK_ALWAYS;
             default: // do not mark
-                return Setting.DISABLED;
+                return Mark.DO_NOT_MARK;
         }
     }
 
@@ -1161,6 +1212,16 @@ public class MooConfig {
             if (Cowlection.MODID.equals(e.modID)) {
                 syncFromGui();
             }
+        }
+    }
+
+    public enum Mark {
+        UNIDEAL_ALWAYS, UNIDEAL_DUPE, //
+        BLOCK_ALWAYS, BLOCK_DUPE, //
+        DO_NOT_MARK;
+
+        public boolean ifDuped() {
+            return this == UNIDEAL_DUPE || this == BLOCK_DUPE;
         }
     }
 
