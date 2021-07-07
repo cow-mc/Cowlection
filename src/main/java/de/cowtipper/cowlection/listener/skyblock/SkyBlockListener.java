@@ -74,7 +74,7 @@ public class SkyBlockListener {
     // example: " §a42§7x §fLeather §7for §6436.8 coins"
     private static final Pattern BAZAAR_SELL_ALL_PATTERN = Pattern.compile("^(?:§[0-9a-fl-or])* (?:§[0-9a-fl-or])+([0-9,]+)(?:§[0-9a-fl-or])+x (?:§[0-9a-fl-or])+.+ (?:§[0-9a-fl-or])+for (?:§[0-9a-fl-or])+([0-9,.]+) coins$");
     private static final Pattern BAZAAR_TARGET_AMOUNT_PATTERN = Pattern.compile("^O(?:ff|rd)er amount: ([\\d,]+)x$");
-    private static final Pattern BAZAAR_FILLED_PATTERN = Pattern.compile("^Filled: ([\\d,k]+)/(?:[\\d,k]+) \\(?([\\d.]+)%[)!]$");
+    private static final Pattern BAZAAR_FILLED_PATTERN = Pattern.compile("^Filled: ([\\d,.k]+)/(?:[\\d,.k]+) \\(?([\\d.]+)%[)!]$");
     List<BestiaryEntry> bestiaryOverview = null;
     private final NumberFormat numberFormatter;
     private final Cowlection main;
@@ -184,7 +184,7 @@ public class SkyBlockListener {
                 IInventory inventory = chestContainer.getLowerChestInventory();
                 String inventoryName = (inventory.hasCustomName() ? EnumChatFormatting.getTextWithoutFormattingCodes(inventory.getDisplayName().getUnformattedTextForChat()) : inventory.getName());
 
-                if (inventoryName.endsWith("➜ Graphs")) {
+                if (inventoryName.contains("➜ G")) {
                     // bazaar interface with graphs
                     drawGraph = true;
                 }

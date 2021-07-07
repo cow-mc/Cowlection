@@ -320,9 +320,13 @@ public final class Utils {
                 reforge = reforge.substring(0, modifierSuffix);
             }
             int reforgeInItemName = originalItemName.indexOf(reforge);
-            if (reforgeInItemName == -1 && reforge.equals("Light") && extraAttributes.getString("id").startsWith("HEAVY_")) {
+            String sbId = extraAttributes.getString("id");
+            if (reforgeInItemName == -1 && reforge.equals("Light") && sbId.startsWith("HEAVY_")) {
                 // special case: heavy armor with light reforge
                 reforgeInItemName = originalItemName.indexOf("Heavy");
+            } else if (reforgeInItemName > 10 && reforge.equals("Heavy") && sbId.startsWith("SUPER_HEAVY_")) {
+                // special case: super heavy armor with heavy reforge
+                reforgeInItemName = originalItemName.indexOf("Super Heavy");
             }
 
             if (reforgeInItemName > 0 && !originalItemName.contains(EnumChatFormatting.STRIKETHROUGH.toString())) {
@@ -331,16 +335,18 @@ public final class Utils {
                 int reforgeLength = reforge.length();
                 String reforgePrefix = null;
                 // special cases for reforge + item name
-                if (reforge.equals("Heavy") && extraAttributes.getString("id").startsWith("HEAVY_")) {
+                if (reforge.equals("Heavy") && sbId.startsWith("HEAVY_")) {
                     reforgePrefix = "Extremely ";
-                } else if (reforge.equals("Light") && extraAttributes.getString("id").startsWith("HEAVY_")) {
+                } else if (reforge.equals("Light") && sbId.startsWith("HEAVY_")) {
                     reforgePrefix = "Not So ";
-                } else if ((reforge.equals("Wise") && extraAttributes.getString("id").startsWith("WISE_DRAGON_"))
-                        || (reforge.equals("Strong") && extraAttributes.getString("id").startsWith("STRONG_DRAGON_"))) {
+                } else if (reforge.equals("Heavy") && sbId.startsWith("SUPER_HEAVY_")) {
+                    reforgePrefix = "Thicc ";
+                } else if ((reforge.equals("Wise") && sbId.startsWith("WISE_DRAGON_"))
+                        || (reforge.equals("Strong") && sbId.startsWith("STRONG_DRAGON_"))) {
                     reforgePrefix = "Very ";
-                } else if (reforge.equals("Superior") && extraAttributes.getString("id").startsWith("SUPERIOR_DRAGON_")) {
+                } else if (reforge.equals("Superior") && sbId.startsWith("SUPERIOR_DRAGON_")) {
                     reforgePrefix = "Highly ";
-                } else if (reforge.equals("Perfect") && extraAttributes.getString("id").startsWith("PERFECT_")) {
+                } else if (reforge.equals("Perfect") && sbId.startsWith("PERFECT_")) {
                     reforgePrefix = "Absolutely ";
                 }
                 if (reforgePrefix != null) {
