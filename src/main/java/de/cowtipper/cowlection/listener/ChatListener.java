@@ -16,7 +16,6 @@ import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
-import net.minecraft.util.StringUtils;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
@@ -119,7 +118,7 @@ public class ChatListener {
                     if (copyWithFormatting) {
                         chatData = main.getChatHelper().cleanChatComponent(chatComponent);
                     } else {
-                        chatData = StringUtils.stripControlCodes(chatComponent.getUnformattedText());
+                        chatData = EnumChatFormatting.getTextWithoutFormattingCodes(chatComponent.getUnformattedText());
                         if (chatData.startsWith(": ")) {
                             chatData = chatData.substring(2);
                         }

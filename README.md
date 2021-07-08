@@ -14,6 +14,7 @@ It is a collection of different features mainly focused on Hypixel SkyBlock. üê
 | Search through your Minecraft log files                                 | `/moo search` (click the `?` for more info) |
 | Stalk a player (check online status, current game, ...)                 | `/moo stalk`                            |
 | Toggle join/leave notifications for friends, guild members or best friends separately | `/moo config` &rarr; Notifications |
+| Show all client-side commands added by all installed mods               | `/commandslist`                         |
 | Copy chat component                                                     | <kbd>ALT</kbd> + <kbd>right click</kbd><br>Hold <kbd>shift</kbd> to copy full component |
 | Copy inventories to clipboard as JSON                                   | <kbd>CTRL</kbd> + <kbd>C</kbd> (whole inventory)<br><kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>C</kbd> (single item) |
 | Copy info of "the thing" you're looking at (NPC or mob + nearby "text-only" armor stands; armor stand, placed skull, banner, sign, dropped item, item in item frame, map on wall) | `/moo whatAmILookingAt` |

@@ -1,10 +1,7 @@
 package de.cowtipper.cowlection;
 
 import de.cowtipper.cowlection.chesttracker.ChestTracker;
-import de.cowtipper.cowlection.command.MooCommand;
-import de.cowtipper.cowlection.command.ReplyCommand;
-import de.cowtipper.cowlection.command.ShrugCommand;
-import de.cowtipper.cowlection.command.TabCompletableCommand;
+import de.cowtipper.cowlection.command.*;
 import de.cowtipper.cowlection.config.CredentialStorage;
 import de.cowtipper.cowlection.config.MooConfig;
 import de.cowtipper.cowlection.handler.DungeonCache;
@@ -75,6 +72,7 @@ public class Cowlection {
         MinecraftForge.EVENT_BUS.register(new ChatListener(this));
         MinecraftForge.EVENT_BUS.register(new PlayerListener(this));
         ClientCommandHandler.instance.registerCommand(new MooCommand(this));
+        ClientCommandHandler.instance.registerCommand(new NumerousCommandsCommand());
         ClientCommandHandler.instance.registerCommand(new ReplyCommand());
         ClientCommandHandler.instance.registerCommand(new ShrugCommand(this));
         for (String tabCompletableNamesCommand : MooConfig.tabCompletableNamesCommands) {

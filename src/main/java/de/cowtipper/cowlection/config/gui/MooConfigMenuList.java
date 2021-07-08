@@ -5,7 +5,7 @@ import de.cowtipper.cowlection.config.MooConfigCategory;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.util.StringUtils;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.fml.client.GuiScrollingList;
 
 /**
@@ -54,7 +54,7 @@ public class MooConfigMenuList extends GuiScrollingList {
     @Override
     protected void drawSlot(int idx, int right, int top, int height, Tessellator tess) {
         MooConfigCategory configCategory = MooConfig.getConfigCategories().get(idx);
-        String name = StringUtils.stripControlCodes(configCategory.getMenuDisplayName());
+        String name = EnumChatFormatting.getTextWithoutFormattingCodes(configCategory.getMenuDisplayName());
         FontRenderer font = Minecraft.getMinecraft().fontRendererObj;
 
         font.drawString(font.trimStringToWidth(name, listWidth - 10), this.left + 3, top + 2, 0xFFFFFF);
