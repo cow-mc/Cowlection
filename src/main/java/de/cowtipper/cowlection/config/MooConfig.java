@@ -585,7 +585,7 @@ public class MooConfig {
                 "dungOverlayEnabled", true, "Enable Dungeon performance overlay?"));
 
         Property propDungOverlayPositionX = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungOverlayPositionX", 1, "Dungeon performance overlay position: x value", 0, 1000),
+                "dungOverlayPositionX", 6, "Dungeon performance overlay position: x value", 0, 1000),
                 null, "‰", // per mille
                 (slider) -> {
                     MooConfig.dungOverlayPositionX = slider.getValueInt();
@@ -593,7 +593,7 @@ public class MooConfig {
                 });
 
         Property propDungOverlayPositionY = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungOverlayPositionY", 1, "Dungeon performance overlay position: y value", 0, 1000),
+                "dungOverlayPositionY", 200, "Dungeon performance overlay position: y value", 0, 1000),
                 null, "‰", // per mille
                 (slider) -> {
                     MooConfig.dungOverlayPositionY = slider.getValueInt();

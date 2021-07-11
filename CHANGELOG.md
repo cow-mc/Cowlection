@@ -16,9 +16,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Added data for Enderman slayer, Voidling minions, and Hard Stone minions
 - New keybindings to...
   1) run `/moo waila` command (disabled by default; MC Options > Controls > `Cowlection`)
-  2) copy a single item to clipboard as JSON with <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>C</kbd>
+  2) copy a single item to clipboard as JSON with <kbd>CTRL</kbd> + <kbd>C</kbd>
      - must be enabled in `/moo config > General > Copy inventories with CTRL + C` first
-     - *reminder:* <kbd>CTRL</kbd> + <kbd>C</kbd> (without <kbd>SHIFT</kbd>) copies the whole inventory
+     - changed 'copy whole inventory' keybinding to <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>C</kbd> (with <kbd>SHIFT</kbd>)
 - New config options for older features:
   - Output of `/moo waila` and copied inventory data can now also be saved to files, instead of being copied to clipboard
   - Bazaar: order 'Sell Inventory/Sacks Now' tooltips ascending or descending

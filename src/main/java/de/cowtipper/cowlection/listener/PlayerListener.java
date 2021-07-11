@@ -67,18 +67,7 @@ public class PlayerListener {
     public void onKeyboardInput(GuiScreenEvent.KeyboardInputEvent.Pre e) {
         if (MooConfig.enableCopyInventory && Keyboard.getEventKeyState() && Keyboard.getEventKey() == Keyboard.KEY_C && GuiScreen.isCtrlKeyDown()) {
             if (GuiScreen.isShiftKeyDown()) {
-                // ctrl + shift + C
-                if (e.gui instanceof GuiContainer) {
-                    Slot slotUnderMouse = GuiHelper.getSlotUnderMouse((GuiContainer) e.gui);
-                    if (slotUnderMouse != null && slotUnderMouse.getHasStack()) {
-                        ItemStack itemUnderMouse = slotUnderMouse.getStack();
-                        NBTTagCompound itemNbt = new NBTTagCompound();
-                        itemUnderMouse.writeToNBT(itemNbt);
-                        Utils.copyToClipboardOrSaveAsFile(itemUnderMouse.getDisplayName() + EnumChatFormatting.RESET + EnumChatFormatting.GREEN, "item_" + itemUnderMouse.getDisplayName(), itemNbt, false);
-                    }
-                }
-            } else {
-                // ctrl + C
+                // ctrl + shift + C: Copy inventory
                 IInventory inventory;
                 String inventoryName;
                 if (e.gui instanceof GuiChest) {
@@ -106,6 +95,17 @@ public class PlayerListener {
                     }
                 }
                 Utils.copyToClipboardOrSaveAsFile(items.tagCount() + " items from '" + inventoryName + "'", "inventory_" + inventoryName, items, false);
+            } else {
+                // ctrl + C: Copy one item
+                if (e.gui instanceof GuiContainer) {
+                    Slot slotUnderMouse = GuiHelper.getSlotUnderMouse((GuiContainer) e.gui);
+                    if (slotUnderMouse != null && slotUnderMouse.getHasStack()) {
+                        ItemStack itemUnderMouse = slotUnderMouse.getStack();
+                        NBTTagCompound itemNbt = new NBTTagCompound();
+                        itemUnderMouse.writeToNBT(itemNbt);
+                        Utils.copyToClipboardOrSaveAsFile(itemUnderMouse.getDisplayName() + EnumChatFormatting.RESET + EnumChatFormatting.GREEN, "item_" + itemUnderMouse.getDisplayName(), itemNbt, false);
+                    }
+                }
             }
         }
     }
