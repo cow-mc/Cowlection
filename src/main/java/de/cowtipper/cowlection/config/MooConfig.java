@@ -7,6 +7,7 @@ import de.cowtipper.cowlection.command.TabCompletableCommand;
 import de.cowtipper.cowlection.config.gui.MooConfigGui;
 import de.cowtipper.cowlection.config.gui.MooConfigPreview;
 import de.cowtipper.cowlection.data.DataHelper;
+import de.cowtipper.cowlection.partyfinder.Rule;
 import de.cowtipper.cowlection.util.MooChatComponent;
 import de.cowtipper.cowlection.util.Utils;
 import net.minecraft.client.Minecraft;
@@ -118,13 +119,13 @@ public class MooConfig {
     public static boolean dungPartiesSize;
     public static int dungDungeonReqMin;
     public static int dungClassMin;
-    private static String dungMarkPartiesWithCarry;
-    private static String dungMarkPartiesWithHyperion;
     private static String dungMarkPartiesWithArcher;
     private static String dungMarkPartiesWithBerserk;
     private static String dungMarkPartiesWithHealer;
     private static String dungMarkPartiesWithMage;
     private static String dungMarkPartiesWithTank;
+    public static boolean dungPartyFinderRuleEditorSimplified;
+    public static boolean dungPartyFinderRuleEditorShowOpenButton;
     public static boolean dungSendWrongFloorWarning;
 
     private static Configuration cfg = null;
@@ -220,6 +221,32 @@ public class MooConfig {
                     sbDungCategory.get(configKey).set(markPartiesWithXNew);
                     changedSomething = true;
                 }
+            }
+            Property dungMarkPartiesWithCarry = sbDungCategory.get("dungMarkPartiesWithCarry");
+            if (dungMarkPartiesWithCarry != null) {
+                if (!"do not mark".equals(dungMarkPartiesWithCarry.getString())) {
+                    for (Rule rule : main.getPartyFinderRules().getRules()) {
+                        if (rule.getTriggerText().contains("carr")) {
+                            rule.setPartyType(DataHelper.PartyType.getByFancyString(dungMarkPartiesWithCarry.getString()));
+                            rule.setEnabled(true);
+                        }
+                    }
+                }
+                sbDungCategory.remove("dungMarkPartiesWithCarry");
+                changedSomething = true;
+            }
+            Property dungMarkPartiesWithHyperion = sbDungCategory.get("dungMarkPartiesWithHyperion");
+            if (dungMarkPartiesWithHyperion != null) {
+                if (!"do not mark".equals(dungMarkPartiesWithHyperion.getString())) {
+                    for (Rule rule : main.getPartyFinderRules().getRules()) {
+                        if (rule.getTriggerText().contains("hyp")) {
+                            rule.setPartyType(DataHelper.PartyType.getByFancyString(dungMarkPartiesWithHyperion.getString()));
+                            rule.setEnabled(true);
+                        }
+                    }
+                }
+                sbDungCategory.remove("dungMarkPartiesWithHyperion");
+                changedSomething = true;
             }
         }
         // else if (MathHelper.parseIntWithDefault(oldVersion, 9999) < newVersion) { // matches all versions >= 2
@@ -651,17 +678,6 @@ public class MooConfig {
                         .setMinValue(0).setMaxValue(50),
                 new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.RED + EnumChatFormatting.BOLD + "ᐯ").gray()));
 
-        Property propDungMarkPartiesWithCarry = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungMarkPartiesWithCarry", "do not mark", "Mark parties with carry in the notes",
-                new String[]{"suitable " + EnumChatFormatting.GREEN + "⬛", "unideal " + EnumChatFormatting.GOLD + "⬛", "block " + EnumChatFormatting.RED + "⬛", "do not mark"}),
-                new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.AQUA + "carry"
-                        + EnumChatFormatting.GRAY + " or " + EnumChatFormatting.GREEN + "carry " + EnumChatFormatting.GRAY + "('free' carries)").gray()));
-
-        Property propDungMarkPartiesWithHyperion = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungMarkPartiesWithHyperion", "do not mark", "Mark parties with hyperion in the notes",
-                new String[]{"suitable " + EnumChatFormatting.GREEN + "⬛", "unideal " + EnumChatFormatting.GOLD + "⬛", "block " + EnumChatFormatting.RED + "⬛", "do not mark"}),
-                new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.AQUA + "hyper").gray()));
-
         Property propDungMarkPartiesWithArcher = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "dungMarkPartiesWithArcher", "if dupe: " + EnumChatFormatting.GOLD + "⬛", "Mark parties with Archer class?",
                 new String[]{
@@ -701,6 +717,12 @@ public class MooConfig {
                         "if dupe: " + EnumChatFormatting.RED + "⬛", "always: " + EnumChatFormatting.RED + "⬛",
                         "do not mark"}),
                 new MooConfigPreview(DataHelper.DungeonClass.TANK));
+
+        Property propDungPartyFinderRuleEditorSimplified = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "dungPartyFinderRuleEditorSimplified", true, "Use simplified version of rules editor?"));
+
+        Property propDungPartyFinderRuleEditorShowOpenButton = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "dungPartyFinderRuleEditorShowOpenButton", true, "Show button to open rules editor?"));
 
         Property propDungSendWrongFloorWarning = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "dungSendWrongFloorWarning", true, "Send warning when entering wrong floor?"));
@@ -780,13 +802,13 @@ public class MooConfig {
             dungPartiesSize = propDungPartiesSize.getBoolean();
             dungDungeonReqMin = propDungDungeonReqMin.getInt();
             dungClassMin = propDungClassMin.getInt();
-            dungMarkPartiesWithCarry = propDungMarkPartiesWithCarry.getString();
-            dungMarkPartiesWithHyperion = propDungMarkPartiesWithHyperion.getString();
             dungMarkPartiesWithArcher = propDungMarkPartiesWithArcher.getString();
             dungMarkPartiesWithBerserk = propDungMarkPartiesWithBerserk.getString();
             dungMarkPartiesWithHealer = propDungMarkPartiesWithHealer.getString();
             dungMarkPartiesWithMage = propDungMarkPartiesWithMage.getString();
             dungMarkPartiesWithTank = propDungMarkPartiesWithTank.getString();
+            dungPartyFinderRuleEditorSimplified = propDungPartyFinderRuleEditorSimplified.getBoolean();
+            dungPartyFinderRuleEditorShowOpenButton = propDungPartyFinderRuleEditorShowOpenButton.getBoolean();
             dungSendWrongFloorWarning = propDungSendWrongFloorWarning.getBoolean();
 
             if (!hasOpenedConfigGui && (!propDungOverlayEnabled.isDefault() || !propDungOverlayPositionX.isDefault() || !propDungOverlayPositionY.isDefault() || !propDungOverlayGuiScale.isDefault())) {
@@ -872,13 +894,13 @@ public class MooConfig {
         propDungPartiesSize.set(dungPartiesSize);
         propDungDungeonReqMin.set(dungDungeonReqMin);
         propDungClassMin.set(dungClassMin);
-        propDungMarkPartiesWithCarry.set(dungMarkPartiesWithCarry);
-        propDungMarkPartiesWithHyperion.set(dungMarkPartiesWithHyperion);
         propDungMarkPartiesWithArcher.set(dungMarkPartiesWithArcher);
         propDungMarkPartiesWithBerserk.set(dungMarkPartiesWithBerserk);
         propDungMarkPartiesWithHealer.set(dungMarkPartiesWithHealer);
         propDungMarkPartiesWithMage.set(dungMarkPartiesWithMage);
         propDungMarkPartiesWithTank.set(dungMarkPartiesWithTank);
+        propDungPartyFinderRuleEditorSimplified.set(dungPartyFinderRuleEditorSimplified);
+        propDungPartyFinderRuleEditorShowOpenButton.set(dungPartyFinderRuleEditorShowOpenButton);
         propDungSendWrongFloorWarning.set(dungSendWrongFloorWarning);
 
         if (saveToFile && cfg.hasChanged()) {
@@ -1107,28 +1129,6 @@ public class MooConfig {
 
     public static Setting getDungPartyFinderPlayerLookupDisplay() {
         return Setting.get(dungPartyFinderPlayerLookup);
-    }
-
-    public static DataHelper.PartyType getDungPartyFinderMarkCarry() {
-        return getPartyType(dungMarkPartiesWithCarry);
-    }
-
-    public static DataHelper.PartyType getDungPartyFinderMarkHyperion() {
-        return getPartyType(dungMarkPartiesWithHyperion);
-    }
-
-    private static DataHelper.PartyType getPartyType(String configValue) {
-        String configValueBeginning = configValue.length() >= 5 ? configValue.substring(0, 5) : "invalid";
-        switch (configValueBeginning) {
-            case "suita": // "suitable " + EnumChatFormatting.GREEN + "⬛"
-                return DataHelper.PartyType.SUITABLE;
-            case "unide": // "unideal " + EnumChatFormatting.GOLD + "⬛"
-                return DataHelper.PartyType.UNIDEAL;
-            case "block": // "block " + EnumChatFormatting.RED + "⬛"
-                return DataHelper.PartyType.UNJOINABLE_OR_BLOCK;
-            default: // "do not mark"
-                return DataHelper.PartyType.NONE;
-        }
     }
 
     public static Mark dungeonPartyMarker(DataHelper.DungeonClass dungeonClass) {

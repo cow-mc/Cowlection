@@ -109,18 +109,20 @@ public final class DataHelper {
     }
 
     public enum PartyType {
-        SUITABLE(0xff22B14C, 240),
-        UNIDEAL(0xffCD8032, 240),
-        UNJOINABLE_OR_BLOCK(0xffEB6E6E, 279),
-        CURRENT(0xff5FDE6C, 240),
-        NONE(0xffFF0000, 279);
+        NONE(0xffFF0000, 279, EnumChatFormatting.ITALIC + "none"),
+        SUITABLE(0xff22B14C, 240, "suitable " + EnumChatFormatting.GREEN + "⬛"),
+        UNIDEAL(0xffCD8032, 240, "unideal " + EnumChatFormatting.GOLD + "⬛"),
+        UNJOINABLE_OR_BLOCK(0xffEB6E6E, 279, "block " + EnumChatFormatting.RED + "⬛"),
+        CURRENT(0xff5FDE6C, 240, "current");
 
         private final float zIndex;
         private final int color;
+        private final String fancyString;
 
-        PartyType(int color, float zIndex) {
+        PartyType(int color, float zIndex, String fancyString) {
             this.color = color;
             this.zIndex = zIndex;
+            this.fancyString = fancyString;
         }
 
         public float getZIndex() {
@@ -129,6 +131,19 @@ public final class DataHelper {
 
         public int getColor() {
             return color;
+        }
+
+        public String toFancyString() {
+            return fancyString;
+        }
+
+        public static PartyType getByFancyString(String fancyString) {
+            for (PartyType partyType : values()) {
+                if (partyType.fancyString.equals(fancyString)) {
+                    return partyType;
+                }
+            }
+            return PartyType.NONE;
         }
     }
 

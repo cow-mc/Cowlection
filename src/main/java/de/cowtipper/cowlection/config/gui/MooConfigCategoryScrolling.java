@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import de.cowtipper.cowlection.Cowlection;
 import de.cowtipper.cowlection.config.MooConfig;
 import de.cowtipper.cowlection.config.MooConfigCategory;
+import de.cowtipper.cowlection.partyfinder.RuleEditorGui;
 import de.cowtipper.cowlection.search.GuiSearch;
 import de.cowtipper.cowlection.util.GuiHelper;
 import de.cowtipper.cowlection.util.Utils;
@@ -89,8 +90,8 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
 
             // add control buttons to navigate to other guis
             if ("Other settings".equals(subCategory.getDisplayName())) {
-                this.listEntries.add(new GuiSwitchEntry("gotoKeyBindings", "Controls", () -> mc.displayGuiScreen(new GuiControls(MooConfigCategoryScrolling.this.parent, mc.gameSettings))));
-                this.listEntries.add(new GuiSwitchEntry("gotoLogSearchConfig", "Log Search", () -> mc.displayGuiScreen(new GuiSearch(""))));
+                this.listEntries.add(new GuiSwitchEntry("gotoKeyBindings", "Controls ↗", () -> mc.displayGuiScreen(new GuiControls(MooConfigCategoryScrolling.this.parent, mc.gameSettings))));
+                this.listEntries.add(new GuiSwitchEntry("gotoLogSearchConfig", "Log Search ↗", () -> mc.displayGuiScreen(new GuiSearch(""))));
                 continue; // don't add properties to main config gui
             }
 
@@ -105,6 +106,9 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
             // add config elements
             for (Property configEntry : subCategory.getConfigEntries()) {
                 addConfigEntryToGui(subCategory, configEntry);
+                if ("dungMarkPartiesWithTank".equals(configEntry.getName())) {
+                    this.listEntries.add(new GuiSwitchEntry("gotoPartyFinderRulesEditor", "Rule editor ↗", () -> mc.displayGuiScreen(new RuleEditorGui())));
+                }
             }
         }
     }
@@ -216,13 +220,17 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
                                 if (labelWidth > this.maxListLabelWidth) {
                                     this.maxListLabelWidth = labelWidth;
                                 }
-                                this.listEntries.add(new GuiSwitchEntry("gotoLogSearchConfig", "Log Search", () -> mc.displayGuiScreen(new GuiSearch(""))));
+                                this.listEntries.add(new GuiSwitchEntry("gotoLogSearchConfig", "Log Search ↗", () -> mc.displayGuiScreen(new GuiSearch(""))));
                                 hasLogSearchBeenAdded = true;
                             } else if (hasLogSearchBeenAdded) {
                                 // already added the replacement-entry, thus don't increase entry counter
                                 --entryNr;
                             }
                         } else {
+                            if ("cowlection.config.dungPartyFinderRuleEditorSimplified".equals(configEntry.getLanguageKey())) {
+                                // add rule editor button to 'Use simplified editor' entry
+                                this.listEntries.add(new GuiSwitchEntry("gotoPartyFinderRulesEditor", "Rule editor ↗", () -> mc.displayGuiScreen(new RuleEditorGui())));
+                            }
                             addConfigEntryToGui(subCategory, configEntry);
                             // add preview for this entry
                             MooConfigPreview preview = subCategory.getPreview(configEntry);

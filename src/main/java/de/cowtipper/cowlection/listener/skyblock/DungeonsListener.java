@@ -8,6 +8,8 @@ import de.cowtipper.cowlection.config.gui.MooConfigGui;
 import de.cowtipper.cowlection.data.DataHelper;
 import de.cowtipper.cowlection.data.DataHelper.DungeonClass;
 import de.cowtipper.cowlection.handler.DungeonCache;
+import de.cowtipper.cowlection.partyfinder.Rule;
+import de.cowtipper.cowlection.partyfinder.RuleEditorGui;
 import de.cowtipper.cowlection.util.GuiHelper;
 import de.cowtipper.cowlection.util.TickDelay;
 import de.cowtipper.cowlection.util.Utils;
@@ -15,6 +17,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.SoundCategory;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.init.Items;
@@ -31,6 +34,7 @@ import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
+import net.minecraftforge.fml.client.config.GuiButtonExt;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -107,6 +111,7 @@ public class DungeonsListener {
     private final Pattern DUNGEON_CLASS_MILESTONE_PATTERN = Pattern.compile("^[A-Za-z]+ Milestone (.): ");
 
     private DungeonClass activeDungeonClass;
+    private GuiButton btnOpenRuleEditor;
 
     public DungeonsListener(Cowlection main) {
         this.main = main;
@@ -305,7 +310,7 @@ public class DungeonsListener {
             // not a player skull, don't draw party status indicator
             return;
         }
-        DataHelper.PartyType partyType = DataHelper.PartyType.NONE;
+        DataHelper.PartyType partyType = DataHelper.PartyType.SUITABLE;
 
         List<String> itemTooltip = item.getTooltip(Minecraft.getMinecraft().thePlayer, false);
         if (itemTooltip.size() < 5) {
@@ -356,20 +361,28 @@ public class DungeonsListener {
                     --partySize;
                 } else if (toolTipLineWithoutFormatting.startsWith("Note: ")) {
                     String partyNote = toolTipLineWithoutFormatting.toLowerCase();
-                    DataHelper.PartyType partyTypeCarry = MooConfig.getDungPartyFinderMarkCarry();
-                    DataHelper.PartyType partyTypeHyperion = MooConfig.getDungPartyFinderMarkHyperion();
-                    // TODO make trigger words in party notes configurable
-                    if (partyTypeCarry != DataHelper.PartyType.NONE && (partyNote.contains("carry") || partyNote.contains("carries"))) {
-                        partyType = partyTypeCarry;
-                        if (partyTypeCarry != DataHelper.PartyType.UNJOINABLE_OR_BLOCK) {
-                            middleText = (partyNote.contains("free") ? EnumChatFormatting.GREEN : "") + "carry";
-                        }
-                    } else if (partyTypeHyperion != DataHelper.PartyType.NONE && partyNote.contains("hyp")) {
-                        partyType = partyTypeHyperion;
-                        if (partyTypeHyperion != DataHelper.PartyType.UNJOINABLE_OR_BLOCK) {
-                            middleText = "hyper";
+
+                    StringBuilder middleTextBuilder = new StringBuilder();
+                    for (Rule rule : main.getPartyFinderRules().getRules()) {
+                        if (rule.isTriggered(partyNote)) {
+                            DataHelper.PartyType rulePartyType = rule.getPartyType();
+                            if (partyType == DataHelper.PartyType.UNJOINABLE_OR_BLOCK) {
+                                // party type cannot get worse: abort
+                                break;
+                            } else if (rulePartyType.compareTo(partyType) > 0) {
+                                // only "downgrade" party type from suitable > unideal > block
+                                partyType = rulePartyType;
+                            }
+                            String text = rule.getMiddleText();
+                            if (text != null) {
+                                if (middleTextBuilder.length() > 0) {
+                                    middleTextBuilder.append("§8,§r");
+                                }
+                                middleTextBuilder.append(text);
+                            }
                         }
                     }
+                    middleText = middleTextBuilder.toString();
                 } else if (toolTipLineWithoutFormatting.startsWith("Dungeon Level Required: ")) {
                     int minDungLevelReq = MathHelper.parseIntWithDefault(toolTipLineWithoutFormatting.substring(toolTipLineWithoutFormatting.lastIndexOf(' ') + 1), 100);
                     if (minDungLevelReq < MooConfig.dungDungeonReqMin) {
@@ -383,7 +396,7 @@ public class DungeonsListener {
                 GlStateManager.translate(0, 0, 281);
                 double scaleFactor = 0.5;
                 GlStateManager.scale(scaleFactor, scaleFactor, 0);
-                font.drawStringWithShadow(middleText, (float) ((x + 1) / scaleFactor), (float) ((y + 5) / scaleFactor), new Color(85, 240, 240, 255).getRGB());
+                font.drawStringWithShadow(middleText, (float) (x / scaleFactor), (float) ((y + 5) / scaleFactor), 0xFFffffff);
                 GlStateManager.popMatrix();
             }
             if (partyType != DataHelper.PartyType.UNJOINABLE_OR_BLOCK) {
@@ -467,6 +480,49 @@ public class DungeonsListener {
             }
         }
         return null;
+    }
+
+    @SubscribeEvent
+    public void onGuiInit(GuiScreenEvent.InitGuiEvent.Post e) {
+        if (MooConfig.dungPartyFinderRuleEditorShowOpenButton && e.gui instanceof GuiChest) {
+            // add "Open Rule Editor" button
+            GuiChest guiChest = (GuiChest) e.gui;
+
+            Container inventorySlots = guiChest.inventorySlots;
+            IInventory inventory = inventorySlots.getSlot(0).inventory;
+            if (inventory.getName().equals("Party Finder")) {
+                // formulas from GuiContainer#initGui (guiTop) and GuiChest (ySize)
+                int inventoryRows = inventory.getSizeInventory() / 9;
+                int ySize = 222 - 108 + inventoryRows * 18;
+                int guiTop = (guiChest.height - ySize) / 2;
+                btnOpenRuleEditor = new GuiButtonExt(8765, 3, guiTop, 74, 18, "Rule editor ↗");
+                e.buttonList.add(btnOpenRuleEditor);
+            } else {
+                btnOpenRuleEditor = null;
+            }
+        } else {
+            btnOpenRuleEditor = null;
+        }
+    }
+
+    @SubscribeEvent
+    public void onGuiButtonClick(GuiScreenEvent.ActionPerformedEvent.Post e) {
+        if (MooConfig.dungPartyFinderRuleEditorShowOpenButton && e.gui instanceof GuiChest && e.button.id == 8765 && "Rule editor ↗".equals(e.button.displayString)) {
+            Minecraft mc = Minecraft.getMinecraft();
+            mc.thePlayer.closeScreen();
+            mc.displayGuiScreen(new RuleEditorGui());
+        }
+    }
+
+    @SubscribeEvent
+    public void onGuiButtonHover(GuiScreenEvent.DrawScreenEvent.Post e) {
+        if (MooConfig.dungPartyFinderRuleEditorShowOpenButton && e.gui instanceof GuiChest && btnOpenRuleEditor != null && btnOpenRuleEditor.isMouseOver()) {
+            Minecraft mc = Minecraft.getMinecraft();
+            List<String> btnTooltip = new ArrayList<>();
+            btnTooltip.add("Open Cowlection's Party Notes Rule Editor");
+            btnTooltip.add(EnumChatFormatting.GRAY + "Want to remove this button? " + EnumChatFormatting.YELLOW + "/moo config editor");
+            GuiHelper.drawHoveringText(btnTooltip, e.mouseX, e.mouseY, mc.displayWidth, mc.displayHeight, 300);
+        }
     }
 
     // Events inside dungeons

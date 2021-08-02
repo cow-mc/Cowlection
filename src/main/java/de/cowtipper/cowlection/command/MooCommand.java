@@ -15,6 +15,7 @@ import de.cowtipper.cowlection.data.*;
 import de.cowtipper.cowlection.data.HySkyBlockStats.Profile.Pet;
 import de.cowtipper.cowlection.handler.DungeonCache;
 import de.cowtipper.cowlection.listener.skyblock.DungeonsPartyListener;
+import de.cowtipper.cowlection.partyfinder.RuleEditorGui;
 import de.cowtipper.cowlection.search.GuiSearch;
 import de.cowtipper.cowlection.util.*;
 import net.minecraft.client.Minecraft;
@@ -84,10 +85,9 @@ public class MooCommand extends CommandBase {
         if (args.length == 0) {
             main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, "Tried to say " + EnumChatFormatting.YELLOW + getCommandName() + EnumChatFormatting.GOLD + "? Use " + EnumChatFormatting.YELLOW + getCommandName() + " say [optional text]" + EnumChatFormatting.GOLD + " instead.\n"
                     + "Tried to use the command " + EnumChatFormatting.YELLOW + "/" + getCommandName() + EnumChatFormatting.GOLD + "? Use " + EnumChatFormatting.YELLOW + "/" + getCommandName() + " help" + EnumChatFormatting.GOLD + " for a list of available commands");
-            return;
         }
         //region sub commands: Best friends, friends & other players
-        if (args[0].equalsIgnoreCase("say")) {
+        else if (args[0].equalsIgnoreCase("say")) {
             // work-around so you can still say 'moo' in chat without triggering the client-side command
             String msg = CommandBase.buildString(args, 1);
             Minecraft.getMinecraft().thePlayer.sendChatMessage(getCommandName() + (!msg.isEmpty() ? " " + msg : ""));
@@ -129,7 +129,8 @@ public class MooCommand extends CommandBase {
             }
             handleWhatAmILookingAt(sender, showAllInfo);
         } else if (args[0].equalsIgnoreCase("dungeon") || args[0].equalsIgnoreCase("dung")
-                || /* dungeon party: */ args[0].equalsIgnoreCase("dp")) {
+                || /* dungeon party: */ args[0].equalsIgnoreCase("dp")
+                || /* dungeon party finder rules: */ args[0].equalsIgnoreCase("dr")) {
             handleDungeon(args);
         }
         //endregion
@@ -1025,6 +1026,9 @@ public class MooCommand extends CommandBase {
             }, 10 * 20);
             // register dungeon listener
             dungeonsPartyListener = new DungeonsPartyListener(main);
+        } else if (args.length == 2 && args[1].equalsIgnoreCase("rules")
+                || args.length == 1 && args[0].equalsIgnoreCase("dr")) {
+            displayGuiScreen(new RuleEditorGui());
         } else if (dungeonCache.isInDungeon()) {
             dungeonCache.sendDungeonPerformance();
         } else {
@@ -1137,6 +1141,7 @@ public class MooCommand extends CommandBase {
                 .appendSibling(createCmdHelpEntry("waila", "Copy the 'thing' you're looking at (optional keybinding: Minecraft controls > Cowlection)"))
                 .appendSibling(createCmdHelpEntry("dungeon", "SkyBlock Dungeons: display current dungeon performance"))
                 .appendSibling(createCmdHelpEntry("dungeon party", "SkyBlock Dungeons: Shows armor and dungeon info about current party members " + EnumChatFormatting.GRAY + "(alias: " + EnumChatFormatting.WHITE + "/" + getCommandName() + " dp" + EnumChatFormatting.GRAY + ") §d§l⚷"))
+                .appendSibling(createCmdHelpEntry("dungeon rules", "SkyBlock Dungeons: Edit rules for Party Finder " + EnumChatFormatting.GRAY + "(alias: " + EnumChatFormatting.WHITE + "/" + getCommandName() + " dr" + EnumChatFormatting.GRAY + ")"))
                 .appendSibling(createCmdHelpSection(3, "Miscellaneous"))
                 .appendSibling(createCmdHelpEntry("search", "Open Minecraft log search"))
                 .appendSibling(createCmdHelpEntry("worldage", "Check how long the current world is loaded"))
@@ -1182,7 +1187,7 @@ public class MooCommand extends CommandBase {
         } else if (args.length == 2 && args[0].equalsIgnoreCase("remove")) {
             return getListOfStringsMatchingLastWord(args, main.getFriendsHandler().getBestFriends());
         } else if (args.length == 2 && args[0].equalsIgnoreCase("dungeon")) {
-            return getListOfStringsMatchingLastWord(args, "party", "enter", "leave");
+            return getListOfStringsMatchingLastWord(args, "party", "rules", "enter", "leave");
         } else if (args.length == 2 && (args[0].equalsIgnoreCase("worldage") || args[0].equalsIgnoreCase("serverage"))) {
             return getListOfStringsMatchingLastWord(args, "off", "on", "disable", "enable");
         } else if (args.length == 2 && (args[0].equalsIgnoreCase("chestAnalyzer") || args[0].equalsIgnoreCase("chestAnalyser") || args[0].equalsIgnoreCase("analyzeChests") || args[0].equalsIgnoreCase("analyseChests"))) {

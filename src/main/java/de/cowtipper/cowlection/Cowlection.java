@@ -9,6 +9,7 @@ import de.cowtipper.cowlection.handler.FriendsHandler;
 import de.cowtipper.cowlection.handler.PlayerCache;
 import de.cowtipper.cowlection.listener.ChatListener;
 import de.cowtipper.cowlection.listener.PlayerListener;
+import de.cowtipper.cowlection.partyfinder.Rules;
 import de.cowtipper.cowlection.util.ChatHelper;
 import de.cowtipper.cowlection.util.VersionChecker;
 import net.minecraft.client.Minecraft;
@@ -41,6 +42,7 @@ public class Cowlection {
     private File modOutDir;
     private MooConfig config;
     private CredentialStorage moo;
+    private Rules partyFinderRules;
     private FriendsHandler friendsHandler;
     private VersionChecker versionChecker;
     private ChatHelper chatHelper;
@@ -64,6 +66,7 @@ public class Cowlection {
 
         friendsHandler = new FriendsHandler(this, new File(configDir, "friends.json"));
         moo = new CredentialStorage(new Configuration(new File(configDir, "do-not-share-me-with-other-players.cfg")));
+        partyFinderRules = new Rules(this, new File(configDir, "partyfinder-rules.json"));
         config = new MooConfig(this, new Configuration(new File(configDir, MODID + ".cfg"), "2"));
     }
 
@@ -101,6 +104,10 @@ public class Cowlection {
 
     public CredentialStorage getMoo() {
         return moo;
+    }
+
+    public Rules getPartyFinderRules() {
+        return partyFinderRules;
     }
 
     public FriendsHandler getFriendsHandler() {

@@ -13,6 +13,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - (Dungeons) player lookups:
   - added ironman icon ♲
   - added average secrets per completion
+- Dungeon Party Finder: customizable Party Notes filters (`/moo dungeon rules` or `/moo dr`)
+  - Add and edit additional rules to mark Dungeon parties based on their Party notes
 - Added data for Enderman slayer, Voidling minions, and Hard Stone minions
 - New keybindings to...
   1) run `/moo waila` command (disabled by default; MC Options > Controls > `Cowlection`)

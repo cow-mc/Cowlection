@@ -24,12 +24,15 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public final class Utils {
     public static final Pattern VALID_UUID_PATTERN = Pattern.compile("^(\\w{8})-(\\w{4})-(\\w{4})-(\\w{4})-(\\w{12})$");
     private static final Pattern VALID_USERNAME = Pattern.compile("^[\\w]{1,16}$");
+    private static final Pattern ALTERNATE_COLOR_CODES_PATTERN = Pattern.compile("&([0-9a-fk-or])");
+    private static final Pattern MC_COLOR_CODES_PATTERN = Pattern.compile("§([0-9a-fk-or])");
     private static final NavigableMap<Double, Character> NUMBER_SUFFIXES = new TreeMap<>();
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#,##0.#", new DecimalFormatSymbols(Locale.ENGLISH));
     private static final DecimalFormat NUMBER_FORMAT = new DecimalFormat("#,##0", new DecimalFormatSymbols(Locale.ENGLISH));
@@ -54,6 +57,22 @@ public final class Utils {
 
     public static String fancyCase(String string) {
         return WordUtils.capitalizeFully(string.replace('_', ' '), ' ', '-');
+    }
+
+    /**
+     * Replaces &colorCode with §colorCode
+     */
+    public static String toMcColorCodes(String string) {
+        Matcher matcher = ALTERNATE_COLOR_CODES_PATTERN.matcher(string);
+        return matcher.replaceAll("§$1");
+    }
+
+    /**
+     * Replaces §colorCode with &colorCode
+     */
+    public static String toHumanColorCodes(String string) {
+        Matcher matcher = MC_COLOR_CODES_PATTERN.matcher(string);
+        return matcher.replaceAll("&$1");
     }
 
     /**
