@@ -1,6 +1,7 @@
 package de.cowtipper.cowlection.config.gui;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import de.cowtipper.cowlection.Cowlection;
 import de.cowtipper.cowlection.config.MooConfig;
 import de.cowtipper.cowlection.config.MooConfigCategory;
@@ -49,6 +50,7 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
      * listEntryIndex => (sub-category) preview
      */
     private final NavigableMap<Integer, MooConfigPreview> listEntriesPreviews;
+    private final Set<String> newConfigOptions;
 
     private MooConfigCategoryScrolling(MooConfigGui parent, Minecraft mc, int marginLeft) {
         super(mc, parent.width - marginLeft, parent.height, 32, parent.height - 5, 20);
@@ -57,6 +59,10 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
         this.mc = mc;
 
         listEntriesPreviews = new TreeMap<>();
+        newConfigOptions = Sets.newHashSet("enableCopyInventory", "copyOrSaveWailaAndInventoryData", "maxLogFileSize", "maxLatestLogFileSize",
+                "chestAnalyzerShowLowestBinItems", "chestAnalyzerShowNoPriceItems", "bazaarSellAllOrderAscDesc", "bazaarShowItemsLeft",
+                "dungItemQualityShortenNonRandomized", "dungSendPerformanceOnEndScreen", "dungMarkPartiesWithArcher", "dungMarkPartiesWithBerserk", "dungMarkPartiesWithHealer", "dungMarkPartiesWithMage", "dungMarkPartiesWithTank",
+                "dungPartyFinderRuleEditorSimplified", "dungPartyFinderRuleEditorShowOpenButton", "dungSendWrongFloorWarning", "gotoKeyBindings");
         explanations = new HashMap<>();
         listEntries = new ArrayList<>();
     }
@@ -188,14 +194,16 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
         MooConfigCategory.SubCategory lastSubCategory = null;
         boolean hasLogSearchBeenAdded = false;
         int entryNr = 0;
+        boolean showNewConfigEntries = "new".equalsIgnoreCase(searchQuery);
         for (MooConfigCategory configCategory : MooConfig.getConfigCategories()) {
             for (MooConfigCategory.SubCategory subCategory : configCategory.getSubCategories()) {
                 // add config elements
                 for (Property configEntry : subCategory.getConfigEntries()) {
                     // search for search term in config property sub-category name, display name, tooltip
-                    if (StringUtils.containsIgnoreCase(subCategory.getDisplayName(), searchQuery)
-                            || StringUtils.containsIgnoreCase(I18n.format(configEntry.getLanguageKey()), searchQuery)
-                            || StringUtils.containsIgnoreCase(I18n.format(configEntry.getLanguageKey() + ".tooltip"), searchQuery)) {
+                    if ((showNewConfigEntries && newConfigOptions.contains(configEntry.getName())) ||
+                            !showNewConfigEntries && (StringUtils.containsIgnoreCase(subCategory.getDisplayName(), searchQuery)
+                                    || StringUtils.containsIgnoreCase(I18n.format(configEntry.getLanguageKey()), searchQuery)
+                                    || StringUtils.containsIgnoreCase(I18n.format(configEntry.getLanguageKey() + ".tooltip"), searchQuery))) {
                         if (configCategory != lastCategory) {
                             this.listEntries.add(new MooConfigCategoryScrolling.CategoryEntry("" + EnumChatFormatting.RESET + EnumChatFormatting.DARK_GRAY + "Config category: " + EnumChatFormatting.DARK_RED + EnumChatFormatting.BOLD + EnumChatFormatting.UNDERLINE + configCategory.getDisplayName(), false));
                             lastCategory = configCategory;
@@ -219,6 +227,10 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
                                 int labelWidth = mc.fontRendererObj.getStringWidth(I18n.format("cowlection.config.gotoLogSearchConfig"));
                                 if (labelWidth > this.maxListLabelWidth) {
                                     this.maxListLabelWidth = labelWidth;
+                                }
+                                if (showNewConfigEntries && newConfigOptions.contains("gotoKeyBindings")) {
+                                    this.listEntries.add(new GuiSwitchEntry("gotoKeyBindings", "Controls ↗", () -> mc.displayGuiScreen(new GuiControls(MooConfigCategoryScrolling.this.parent, mc.gameSettings))));
+                                    ++entryNr;
                                 }
                                 this.listEntries.add(new GuiSwitchEntry("gotoLogSearchConfig", "Log Search ↗", () -> mc.displayGuiScreen(new GuiSearch(""))));
                                 hasLogSearchBeenAdded = true;

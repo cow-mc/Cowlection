@@ -97,7 +97,7 @@ public class MooConfigGui extends GuiScreen {
      * Called by the controls from the buttonList when activated. (Mouse pressed for buttons)
      */
     @Override
-    protected void actionPerformed(GuiButton button) throws IOException {
+    protected void actionPerformed(GuiButton button) {
         if (button.enabled) {
             if (button.id == 6) { // close gui
                 this.mc.displayGuiScreen(null);

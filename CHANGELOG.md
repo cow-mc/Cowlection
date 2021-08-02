@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
      - must be enabled in `/moo config > General > Copy inventories with CTRL + C` first
      - changed 'copy whole inventory' keybinding to <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>C</kbd> (with <kbd>SHIFT</kbd>)
 - New config options for older features:
+  - ▶ `/moo config new`: show all new or changed config options
   - Output of `/moo waila` and copied inventory data can now also be saved to files, instead of being copied to clipboard
   - Bazaar: order 'Sell Inventory/Sacks Now' tooltips ascending or descending
   - MC Log file search (`/moo search`): maximum log file size to analyze
