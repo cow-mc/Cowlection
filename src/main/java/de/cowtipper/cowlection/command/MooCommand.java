@@ -1152,7 +1152,8 @@ public class MooCommand extends CommandBase {
                 .appendSibling(createCmdHelpEntry("update", "Check for new mod updates"))
                 .appendSibling(createCmdHelpEntry("updateHelp", "Show mod update instructions"))
                 .appendSibling(createCmdHelpEntry("version", "View results of last mod update check"))
-                .appendSibling(createCmdHelpEntry("directory", "Open Minecraft's mods directory"));
+                .appendSibling(createCmdHelpEntry("directory", "Open Minecraft's mods directory"))
+                .appendFreshSibling(new MooChatComponent("➡ /commandslist " + EnumChatFormatting.YELLOW + "to list all commands added by your installed mods.").lightPurple().setSuggestCommand("/commandslist"));
         sender.addChatMessage(usage);
     }
 

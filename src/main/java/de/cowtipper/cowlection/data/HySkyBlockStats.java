@@ -319,7 +319,7 @@ public class HySkyBlockStats {
             }
 
             private int getLevel() {
-                return XpTables.Pet.getLevel(tier, exp);
+                return XpTables.Pet.getLevel(tier, exp, "GOLDEN_DRAGON".equals(type));
             }
         }
 

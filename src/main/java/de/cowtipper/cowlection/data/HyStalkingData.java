@@ -91,31 +91,34 @@ public class HyStalkingData {
                 switch (mode) {
                     case "dynamic":
                         return "Private Island";
-                    case "hub":
-                        return "Hub";
                     case "combat_1":
                         return "Spider's Den";
                     case "combat_2":
                         return "Blazing Fortress";
                     case "combat_3":
                         return "The End";
+                    case "dungeon":
+                        return "Dungeons";
+                    case "dungeon_hub":
+                        return "Dungeons Hub";
                     case "farming_1":
-                        return "The Barn";
-                    case "farming_2":
-                        return "Mushroom Desert";
+                        return "The Farming Islands";
                     case "foraging_1":
-                        return "The Park";
+                        return "Floating Islands";
                     case "mining_1":
                         return "Gold Mine";
                     case "mining_2":
                         return "Deep Caverns";
                     case "mining_3":
                         return "Dwarven Mines";
+                    case "winter":
+                        return "Jerry's Workshop";
                     default:
                         // fall-through
                         break;
                 }
             }
+            // Crystal Hollows, Dark Auction, Hub
             return Utils.fancyCase(mode);
         }
 

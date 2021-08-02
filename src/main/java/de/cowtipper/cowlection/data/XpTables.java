@@ -259,7 +259,7 @@ public class XpTables {
                     12622930, 13639630, 14741330, 15933030, 17219730, 18606430, 20103130, 21719830, 23466530, 25353230); // 91-100
         }
 
-        public static int getLevel(String rarity, double exp) {
+        public static int getLevel(String rarity, double exp, boolean hasMaxLvl200) {
             DataHelper.SkyBlockRarity petRarity = DataHelper.SkyBlockRarity.valueOf(rarity);
             if (petRarity == DataHelper.SkyBlockRarity.MYTHIC) {
                 // special case: Mystic pets
@@ -267,7 +267,21 @@ public class XpTables {
             }
             TreeSet<Integer> xpToLevels = PET_XP.get(petRarity);
             if (xpToLevels != null) {
-                return xpToLevels.headSet((int) exp, true).size();
+                int petLevel = xpToLevels.headSet((int) exp, true).size();
+                if (hasMaxLvl200 && petRarity == DataHelper.SkyBlockRarity.LEGENDARY && petLevel == 100) {
+                    // after lvl 100: exp from lvl 99-100 for each level until lvl 200
+                    int overflowLevels = 1; // lvl 101 = 0 additional exp over lvl 100
+                    double expOverLvl100 = exp - xpToLevels.last();
+                    if (expOverLvl100 >= 1) {
+                        overflowLevels += 1; // lvl 102 = 1 additional exp over lvl 100
+                        expOverLvl100 -= 1;
+                        overflowLevels += Math.min(98, (int) (expOverLvl100 / 1886700));
+                    }
+                    if (overflowLevels > 0) {
+                        petLevel += overflowLevels;
+                    }
+                }
+                return petLevel;
             } else {
                 return -1;
             }
@@ -276,9 +290,14 @@ public class XpTables {
         public static int getTotalExp(DataHelper.SkyBlockRarity rarity, int level, int exp) {
             TreeSet<Integer> xpToLevels = PET_XP.get(rarity);
             if (xpToLevels != null) {
-                for (int xpToLevel : xpToLevels) {
-                    if (level-- <= 1) {
-                        return xpToLevel + exp;
+                if (level > 100) {
+                    int expOverLvl100 = (level >= 102 ? 1 : 0) + Math.max(0, (level - 102) * 1886700);
+                    return xpToLevels.last() + expOverLvl100 + exp;
+                } else {
+                    for (int xpToLevel : xpToLevels) {
+                        if (level-- <= 1) {
+                            return xpToLevel + exp;
+                        }
                     }
                 }
             }

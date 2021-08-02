@@ -419,6 +419,7 @@ public final class DataHelper {
         minions.put("a897f4e0ed295df1c711450b42766bb11835b17770fc90f84f29330ab4a908d1", "Hard Stone IX");
         minions.put("5c2e3ff6d131440211dfdff76ad15007bc91243a8359d6a67b784e37f900d7f0", "Hard Stone X");
         minions.put("b37997c9ab7c8d6aa55626d2f1c274b6ded842a6e0a4b1671ef743d2527fa73a", "Hard Stone XI");
+        minions.put("c2ed3f2bf20b85828b7742460f8c78fd2001ca0380c455b86dadeb80f28bccbd", "Hard Stone XII");
 
         minions.put("bbc571c5527336352e2fee2b40a9edfa2e809f64230779aa01253c6aa535881b", "Wheat I");
         minions.put("c62b0508b3fef406833d519da8b08ee078604c78b8ca6e9c138760041fa861bf", "Wheat II");
