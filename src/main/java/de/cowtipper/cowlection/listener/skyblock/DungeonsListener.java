@@ -123,7 +123,7 @@ public class DungeonsListener {
         if (e.itemStack == null || e.toolTip == null) {
             return;
         }
-        boolean toggleKeyBindingPressed = MooConfig.isDungeonItemTooltipToggleKeyBindingPressed();
+        boolean toggleKeyBindingPressed = MooConfig.isDungeonItemTooltipToggleKeyBindingPressed() && !main.getDungeonCache().isInDungeon();
         MooConfig.Setting showItemQualityAndFloorDisplay = MooConfig.getShowItemQualityAndFloorDisplay();
         boolean showItemQualityAndFloor = showItemQualityAndFloorDisplay == MooConfig.Setting.ALWAYS
                 || (showItemQualityAndFloorDisplay == MooConfig.Setting.SPECIAL && toggleKeyBindingPressed);

@@ -376,11 +376,13 @@ public final class Utils {
                     reforgeLength = reforgePrefix.length() - 1;
                 }
 
-                if (strikethrough) {
-                    modifiedItemName.insert(reforgeInItemName, grayedOutFormatting)
-                            .insert(reforgeInItemName + reforgeLength + grayedOutFormatting.length(), originalItemName.substring(0, reforgeInItemName));
-                } else {
-                    modifiedItemName.delete(reforgeInItemName, reforgeInItemName + reforgeLength);
+                if(reforgeInItemName >= 0) {
+                    if (strikethrough) {
+                        modifiedItemName.insert(reforgeInItemName, grayedOutFormatting)
+                                .insert(reforgeInItemName + reforgeLength + grayedOutFormatting.length(), originalItemName.substring(0, reforgeInItemName));
+                    } else {
+                        modifiedItemName.delete(reforgeInItemName, reforgeInItemName + reforgeLength);
+                    }
                 }
             }
         }
