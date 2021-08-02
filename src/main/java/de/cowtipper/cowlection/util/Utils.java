@@ -4,9 +4,12 @@ import com.mojang.realmsclient.util.Pair;
 import de.cowtipper.cowlection.Cowlection;
 import de.cowtipper.cowlection.config.MooConfig;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraftforge.common.util.Constants;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -398,6 +401,29 @@ public final class Utils {
             }
             hit = sb.indexOf(search);
         }
+    }
+
+    /**
+     * Replacement for ItemStack#getTooltip that doesn't get affected by other mods
+     */
+    public static List<String> getItemTooltip(ItemStack item) {
+        List<String> tooltip = new ArrayList<>();
+        // display name:
+        tooltip.add(item.getDisplayName());
+
+        // lore:
+        if (item.hasTagCompound() && item.getTagCompound().hasKey("display", Constants.NBT.TAG_COMPOUND)) {
+            NBTTagCompound nbtTagCompound = item.getTagCompound().getCompoundTag("display");
+            if (nbtTagCompound.getTagId("Lore") == Constants.NBT.TAG_LIST) {
+                NBTTagList nbtLore = nbtTagCompound.getTagList("Lore", Constants.NBT.TAG_STRING);
+                if (nbtLore.tagCount() > 0) {
+                    for (int line = 0; line < nbtLore.tagCount(); ++line) {
+                        tooltip.add(nbtLore.getStringTagAt(line));
+                    }
+                }
+            }
+        }
+        return tooltip;
     }
 
     public static void copyToClipboardOrSaveAsFile(String what, String fileName, NBTBase data, boolean sortData) {

@@ -269,7 +269,7 @@ public class DungeonsListener {
                     // couldn't detect dungeon class indicator
                     return;
                 }
-                for (String toolTipLine : dungeonClassIndicator.getTooltip(Minecraft.getMinecraft().thePlayer, false)) {
+                for (String toolTipLine : Utils.getItemTooltip(dungeonClassIndicator)) {
                     String line = EnumChatFormatting.getTextWithoutFormattingCodes(toolTipLine);
                     if (line.startsWith("Currently Selected: ")) {
                         String selectedClassName = line.substring(line.lastIndexOf(' ') + 1);
@@ -312,7 +312,7 @@ public class DungeonsListener {
         }
         DataHelper.PartyType partyType = DataHelper.PartyType.SUITABLE;
 
-        List<String> itemTooltip = item.getTooltip(Minecraft.getMinecraft().thePlayer, false);
+        List<String> itemTooltip = Utils.getItemTooltip(item);
         if (itemTooltip.size() < 5) {
             // not a valid dungeon party tooltip
             return;
@@ -474,7 +474,7 @@ public class DungeonsListener {
         }
         // an update might have moved the item to another slot, search for it:
         for (int checkedSlot = 0; checkedSlot < inventory.getSizeInventory(); checkedSlot++) {
-            item = inventory.getStackInSlot(slot);
+            item = inventory.getStackInSlot(checkedSlot);
             if (item != null && item.hasDisplayName() && itemDisplayName.equals(EnumChatFormatting.getTextWithoutFormattingCodes(item.getDisplayName()))) {
                 return item;
             }
@@ -609,7 +609,7 @@ public class DungeonsListener {
                 Slot hoveredSlot = GuiHelper.getSlotUnderMouse(guiChest);
                 if (hoveredSlot != null && hoveredSlot.getHasStack()) {
                     // clicked on an item
-                    List<String> itemToolTip = hoveredSlot.getStack().getTooltip(Minecraft.getMinecraft().thePlayer, false);
+                    List<String> itemToolTip = Utils.getItemTooltip(hoveredSlot.getStack());
                     if (itemToolTip.size() < 5 || hoveredSlot.getStack().getItem() != Items.skull) {
                         // not a valid dungeon party tooltip
                         return;
@@ -636,9 +636,9 @@ public class DungeonsListener {
                     String clickedItemName = EnumChatFormatting.getTextWithoutFormattingCodes(hoveredSlot.getStack().getDisplayName());
                     if (clickedItemName.equals("Confirm Group")) {
                         // created dungeon party group
-                        ItemStack selectedFloorItem = getStackInSlotOrByName(inventory, 12, "Select Floor");
+                        ItemStack selectedFloorItem = getStackInSlotOrByName(inventory, 13, "Select Floor");
                         if (selectedFloorItem != null) {
-                            List<String> itemToolTip = selectedFloorItem.getTooltip(Minecraft.getMinecraft().thePlayer, false);
+                            List<String> itemToolTip = Utils.getItemTooltip(selectedFloorItem);
                             if (itemToolTip.size() < 5) {
                                 // not a valid dungeon floor tooltip
                                 return;

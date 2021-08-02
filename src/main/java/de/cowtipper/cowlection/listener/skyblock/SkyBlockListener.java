@@ -139,7 +139,7 @@ public class SkyBlockListener {
                     }
                 } else {
                     // check if item is inside Bazaar
-                    List<String> lore = itemStack.getTooltip(Minecraft.getMinecraft().thePlayer, false);
+                    List<String> lore = Utils.getItemTooltip(itemStack);
                     if (lore.size() > 5 && lore.get(1).endsWith(" commodity")) {
                         // item is a Bazaar commodity
                         itemBaseName = itemStack.getDisplayName();
