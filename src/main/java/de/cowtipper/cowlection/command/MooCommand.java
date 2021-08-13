@@ -1013,42 +1013,38 @@ public class MooCommand extends CommandBase {
             String firstSentence;
             EnumChatFormatting color;
             EnumChatFormatting colorSecondary;
-            if (CredentialStorage.isMooValid) {
-                firstSentence = "[" + Cowlection.MODNAME + "] You already set your Hypixel API key. Run " + EnumChatFormatting.DARK_GREEN + "/" + getCommandName() + " apikey check " + EnumChatFormatting.GREEN + "to see usage statistics.";
-                color = EnumChatFormatting.GREEN;
-                colorSecondary = EnumChatFormatting.DARK_GREEN;
+            if (CredentialStorage.isMooValid && StringUtils.isNotEmpty(CredentialStorage.moo)) {
+                firstSentence = EnumChatFormatting.GREEN + "[" + Cowlection.MODNAME + "] You already set your Hypixel API key. Requesting API usage statistics...";
+                color = EnumChatFormatting.GRAY;
+                colorSecondary = EnumChatFormatting.YELLOW;
+
+                ApiUtils.fetchApiKeyInfo(CredentialStorage.moo, hyApiKey -> {
+                    if (hyApiKey != null && hyApiKey.isSuccess()) {
+                        HyApiKey.Record apiKeyRecord = hyApiKey.getRecord();
+                        if (apiKeyRecord != null) {
+                            main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "[" + Cowlection.MODNAME + "] Your Hypixel API key was used to execute a total of " + EnumChatFormatting.DARK_GREEN + Utils.formatNumber(apiKeyRecord.getTotalQueries())
+                                    + EnumChatFormatting.GREEN + " API requests. In the last minute, " + EnumChatFormatting.DARK_GREEN + apiKeyRecord.getQueriesInPastMin() + EnumChatFormatting.GREEN + " out of maximum " + EnumChatFormatting.DARK_GREEN + apiKeyRecord.getLimit() + EnumChatFormatting.GREEN + " allowed requests were made.");
+                        } else {
+                            main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "[" + Cowlection.MODNAME + "] Your Hypixel API key seems to be valid, but processing usage statistics failed.");
+                        }
+                    } else {
+                        String cause = hyApiKey != null ? hyApiKey.getCause() : null;
+                        Cowlection.getInstance().getChatHelper().sendMessage(EnumChatFormatting.RED, "[" + Cowlection.MODNAME + "] Failed to check API key usage statistics: " + (cause != null ? cause : "unknown cause :c"));
+                    }
+                });
             } else {
                 firstSentence = "[" + Cowlection.MODNAME + "] You haven't set your Hypixel API key yet or the API key is invalid.";
                 color = EnumChatFormatting.RED;
                 colorSecondary = EnumChatFormatting.DARK_RED;
             }
-            main.getChatHelper().sendMessage(color, firstSentence + " Use " + colorSecondary + "/api new" + color + " to request a new API key from Hypixel or use " + colorSecondary + "/" + this.getCommandName() + " apikey <key>" + color + " to manually set your existing API key.");
+            main.getChatHelper().sendMessage(color, firstSentence + color + " Use " + colorSecondary + "/api new" + color + " to request a new API key from Hypixel or use " + colorSecondary + "/" + this.getCommandName() + " apikey <key>" + color + " to manually set your existing API key.");
         } else {
             String key = args[1];
-            if ("check".equalsIgnoreCase(key)) {
-                if (StringUtils.isNotEmpty(CredentialStorage.moo)) {
-                    ApiUtils.fetchApiKeyInfo(CredentialStorage.moo, hyApiKey -> {
-                        if (hyApiKey != null && hyApiKey.isSuccess()) {
-                            HyApiKey.Record apiKeyRecord = hyApiKey.getRecord();
-                            if (apiKeyRecord != null) {
-                                main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "[" + Cowlection.MODNAME + "] Your Hypixel API key was used to execute a total of " + EnumChatFormatting.DARK_GREEN + Utils.formatNumber(apiKeyRecord.getTotalQueries())
-                                        + EnumChatFormatting.GREEN + " API requests. In the last minute, " + EnumChatFormatting.DARK_GREEN + apiKeyRecord.getQueriesInPastMin() + EnumChatFormatting.GREEN + " out of maximum " + EnumChatFormatting.DARK_GREEN + apiKeyRecord.getLimit() + EnumChatFormatting.GREEN + " allowed requests were made.");
-                            } else {
-                                main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "[" + Cowlection.MODNAME + "] Your Hypixel API key seems to be valid, but processing usage statistics failed.");
-                            }
-                        } else {
-                            String cause = hyApiKey != null ? hyApiKey.getCause() : null;
-                            Cowlection.getInstance().getChatHelper().sendMessage(EnumChatFormatting.RED, "[" + Cowlection.MODNAME + "] Failed to check API key usage statistics: " + (cause != null ? cause : "unknown cause :c"));
-                        }
-                    });
-                } else {
-                    throw new MooCommandException("You haven't set your Hypixel API key yet. Use " + EnumChatFormatting.DARK_RED + "/api new" + EnumChatFormatting.RED + " to request a new API key from Hypixel or use " + EnumChatFormatting.DARK_RED + "/" + this.getCommandName() + " apikey <key>" + EnumChatFormatting.RED + " to manually set your existing API key.");
-                }
-            } else if (Utils.isValidUuid(key)) {
+            if (Utils.isValidUuid(key)) {
                 main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, "[" + Cowlection.MODNAME + "] Validating API key...");
                 main.getMoo().setMooIfValid(key, true);
             } else {
-                throw new SyntaxErrorException("[" + Cowlection.MODNAME + "] That doesn't look like a valid API key... Did you want check your API key usage statistics? Run /" + getCommandName() + " apikey check");
+                throw new SyntaxErrorException("[" + Cowlection.MODNAME + "] That doesn't look like a valid API key... Did you want check your API key usage statistics? Run /" + getCommandName() + " apikey");
             }
         }
     }
@@ -1220,8 +1216,6 @@ public class MooCommand extends CommandBase {
             return getListOfStringsMatchingLastWord(args, "off", "on", "disable", "enable");
         } else if (args.length == 2 && (args[0].equalsIgnoreCase("chestAnalyzer") || args[0].equalsIgnoreCase("chestAnalyser") || args[0].equalsIgnoreCase("analyzeChests") || args[0].equalsIgnoreCase("analyseChests"))) {
             return getListOfStringsMatchingLastWord(args, "stop");
-        } else if (args.length == 2 && args[0].equalsIgnoreCase("apikey")) {
-            return getListOfStringsMatchingLastWord(args, "check");
         }
         String commandArg = args[0].toLowerCase();
         if (args.length == 2 && (commandArg.equals("s") || commandArg.equals("ss") || commandArg.equals("namechangecheck") || commandArg.contains("stalk") || commandArg.contains("askpolitely"))) { // stalk & stalkskyblock + namechangecheck

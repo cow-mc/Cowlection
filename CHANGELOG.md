@@ -37,8 +37,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - MC Log file search now skips large files to prevent huge log files from blocking the search
 - Dungeon Party Finder: Each dungeon class can now also be blocked or blocked if duplicated (= red party background)
 - Disabled dungeon tooltip cleaner inside dungeons (+ fixed a rare crash)
-- Improved error messages for API errors
-  - also added new sub-command `/moo apikey check` to see API key usage statistics
+- Improved error messages for API errors and API related messages
+  - also added API key usage statistics to `/moo apikey`
 
 ### Fixed
 - 'Show Dungeon item base stats' feature now works with HPB'd items and master stars
