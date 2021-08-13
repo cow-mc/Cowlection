@@ -1,11 +1,11 @@
-package de.cowtipper.cowlection.event;
+package de.cowtipper.cowlection.error;
 
 import net.minecraftforge.fml.common.eventhandler.Event;
 
-public class ApiErrorEvent extends Event {
+public class ApiAskPolitelyErrorEvent extends Event {
     private final String playerName;
 
-    public ApiErrorEvent(String playerName) {
+    public ApiAskPolitelyErrorEvent(String playerName) {
         this.playerName = playerName;
     }
 

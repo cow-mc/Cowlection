@@ -10,7 +10,9 @@ import de.cowtipper.cowlection.chesttracker.LowestBinsCache;
 import de.cowtipper.cowlection.command.exception.ThrowingConsumer;
 import de.cowtipper.cowlection.config.CredentialStorage;
 import de.cowtipper.cowlection.data.*;
-import de.cowtipper.cowlection.event.ApiErrorEvent;
+import de.cowtipper.cowlection.error.ApiAskPolitelyErrorEvent;
+import de.cowtipper.cowlection.error.ApiHttpErrorEvent;
+import de.cowtipper.cowlection.error.ApiHttpErrorException;
 import net.minecraftforge.common.MinecraftForge;
 import org.apache.http.HttpStatus;
 
@@ -50,7 +52,7 @@ public class ApiUtils {
                 return GsonUtils.fromJson(reader, Friend.class);
             }
         } catch (IOException | JsonSyntaxException e) {
-            e.printStackTrace();
+            handleApiException(e);
         }
         return null;
     }
@@ -70,7 +72,7 @@ public class ApiUtils {
                 }
             }
         } catch (IOException | JsonSyntaxException e) {
-            e.printStackTrace();
+            handleApiException(e);
         }
         return null;
     }
@@ -85,7 +87,7 @@ public class ApiUtils {
                 return GsonUtils.fromJson(reader, HyStalkingData.class);
             }
         } catch (IOException | JsonSyntaxException e) {
-            e.printStackTrace();
+            handleApiException(e);
         }
         return null;
     }
@@ -100,7 +102,7 @@ public class ApiUtils {
                 return GsonUtils.fromJson(reader, HySkyBlockStats.class);
             }
         } catch (IOException | JsonSyntaxException e) {
-            e.printStackTrace();
+            handleApiException(e);
         }
         return null;
     }
@@ -115,7 +117,7 @@ public class ApiUtils {
                 return GsonUtils.fromJson(reader, HyBazaarData.class);
             }
         } catch (IOException | JsonSyntaxException e) {
-            e.printStackTrace();
+            handleApiException(e);
         }
         return null;
     }
@@ -130,7 +132,7 @@ public class ApiUtils {
                 return GsonUtils.fromJson(reader, LowestBinsCache.class);
             }
         } catch (IOException | JsonSyntaxException e) {
-            e.printStackTrace();
+            handleApiException(e);
         }
         return new LowestBinsCache();
     }
@@ -145,9 +147,9 @@ public class ApiUtils {
                 return GsonUtils.fromJson(reader, HyPlayerData.class);
             }
         } catch (IOException | JsonSyntaxException e) {
-            e.printStackTrace();
-            ApiErrorEvent event = new ApiErrorEvent(stalkedPlayer.getName());
+            ApiAskPolitelyErrorEvent event = new ApiAskPolitelyErrorEvent(stalkedPlayer.getName());
             MinecraftForge.EVENT_BUS.post(event);
+            handleApiException(e);
         }
         return null;
     }
@@ -162,9 +164,16 @@ public class ApiUtils {
                 return GsonUtils.fromJson(reader, HyApiKey.class);
             }
         } catch (IOException | JsonSyntaxException e) {
-            e.printStackTrace();
+            handleApiException(e);
         }
         return null;
+    }
+
+    private static void handleApiException(Exception e) {
+        e.printStackTrace();
+        if (e instanceof ApiHttpErrorException) {
+            MinecraftForge.EVENT_BUS.post(new ApiHttpErrorEvent(e.getMessage(), ((ApiHttpErrorException) e).getUrl()));
+        }
     }
 
     private static BufferedReader makeApiCall(String url) throws IOException {
@@ -177,9 +186,13 @@ public class ApiUtils {
         if (connection.getResponseCode() == HttpStatus.SC_NO_CONTENT) { // http status 204
             return null;
         } else if (connection.getResponseCode() == HttpStatus.SC_BAD_GATEWAY && url.startsWith("https://api.hypixel.net/")) { // http status 502 (cloudflare)
-            throw new IOException("Couldn't contact Hypixel API (502 Bad Gateway). API might be down, check https://status.hypixel.net for info.");
+            throw new ApiHttpErrorException("Couldn't contact Hypixel API (502 Bad Gateway). API might be down, check https://status.hypixel.net for info.", "https://status.hypixel.net");
+        } else if (connection.getResponseCode() == HttpStatus.SC_SERVICE_UNAVAILABLE) { // http status 503 Service Unavailable
+            int queryParamStart = url.indexOf('?', 10);
+            String baseUrl = queryParamStart > 0 ? url.substring(0, queryParamStart) : url;
+            throw new ApiHttpErrorException("Couldn't contact the API (503 Service unavailable). API might be down, or you might be blocked by Cloudflare, check if you can reach: " + baseUrl, url);
         } else if (connection.getResponseCode() == HttpStatus.SC_BAD_GATEWAY && url.startsWith("https://moulberry.codes/")) { // http status 502 (cloudflare)
-            throw new IOException("Couldn't contact Moulberry's API (502 Bad Gateway). API might be down, check if " + LOWEST_BINS + " is reachable.");
+            throw new ApiHttpErrorException("Couldn't contact Moulberry's API (502 Bad Gateway). API might be down, check if " + LOWEST_BINS + " is reachable.", LOWEST_BINS);
         } else {
             BufferedReader reader;
             InputStream errorStream = connection.getErrorStream();

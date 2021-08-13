@@ -3,7 +3,8 @@ package de.cowtipper.cowlection.listener;
 import de.cowtipper.cowlection.Cowlection;
 import de.cowtipper.cowlection.config.CredentialStorage;
 import de.cowtipper.cowlection.config.MooConfig;
-import de.cowtipper.cowlection.event.ApiErrorEvent;
+import de.cowtipper.cowlection.error.ApiAskPolitelyErrorEvent;
+import de.cowtipper.cowlection.error.ApiHttpErrorEvent;
 import de.cowtipper.cowlection.listener.skyblock.DungeonsListener;
 import de.cowtipper.cowlection.listener.skyblock.SkyBlockListener;
 import de.cowtipper.cowlection.util.*;
@@ -41,6 +42,7 @@ public class PlayerListener {
     private boolean isPlayerJoiningServer;
     private boolean isOnSkyBlock;
     private AbortableRunnable checkScoreboard;
+    private long nextApiErrorMessage;
 
     public PlayerListener(Cowlection main) {
         this.main = main;
@@ -123,8 +125,23 @@ public class PlayerListener {
     }
 
     @SubscribeEvent
-    public void onApiError(ApiErrorEvent e) {
+    public void onApiAskPolitelyError(ApiAskPolitelyErrorEvent e) {
         main.getFriendsHandler().addErroredApiRequest(e.getPlayerName());
+    }
+
+    @SubscribeEvent
+    public void onApiHttpError(ApiHttpErrorEvent e) {
+        if (nextApiErrorMessage < System.currentTimeMillis() && Minecraft.getMinecraft().thePlayer != null) {
+            this.nextApiErrorMessage = System.currentTimeMillis() + 3000;
+            MooChatComponent hoverComponent = new MooChatComponent.KeyValueTooltipComponent("Click to visit", e.getBaseUrl());
+            if (e.hasUrlKey()) {
+                String eyeCatcher = "" + EnumChatFormatting.LIGHT_PURPLE + EnumChatFormatting.OBFUSCATED + "#" + EnumChatFormatting.RESET + EnumChatFormatting.RED;
+                hoverComponent.appendFreshSibling(new MooChatComponent(eyeCatcher + " Warning! " + eyeCatcher + " If you're streaming or sharing your screen:").red()
+                        .appendFreshSibling(new MooChatComponent("Clicking this will reveal your Hypixel " + EnumChatFormatting.DARK_RED + "API key" + EnumChatFormatting.RED + "!").red()));
+            }
+            main.getChatHelper().sendMessage(new MooChatComponent(e.getMessage()).red()
+                    .setUrl(e.getUrl(), hoverComponent));
+        }
     }
 
     @SubscribeEvent

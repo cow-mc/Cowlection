@@ -45,12 +45,12 @@ public class CredentialStorage {
                 // api key is valid!
                 Cowlection.getInstance().getMoo().setMoo(moo);
                 if (commandTriggered) {
-                    Cowlection.getInstance().getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Successfully verified API key ✔");
+                    Cowlection.getInstance().getChatHelper().sendMessage(EnumChatFormatting.GREEN, "[" + Cowlection.MODNAME + "] Successfully verified API key ✔");
                 }
             } else if (commandTriggered) {
                 // api key is invalid
                 String cause = hyApiKey != null ? hyApiKey.getCause() : null;
-                Cowlection.getInstance().getChatHelper().sendMessage(EnumChatFormatting.RED, "Failed to verify API key: " + (cause != null ? cause : "unknown cause :c"));
+                Cowlection.getInstance().getChatHelper().sendMessage(EnumChatFormatting.RED, "[" + Cowlection.MODNAME + "] Failed to verify API key: " + (cause != null ? cause : "unknown cause :c"));
             }
         });
     }
