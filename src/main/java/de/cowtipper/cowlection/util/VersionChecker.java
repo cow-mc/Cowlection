@@ -116,7 +116,12 @@ public class VersionChecker {
                     .setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/moo directory"))
                     .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.YELLOW + "Open mods directory with command " + EnumChatFormatting.GOLD + "/moo directory\n➜ Click to open mods directory"))));
 
-            statusMsg = text.appendSibling(download).appendSibling(spacer).appendSibling(changelog).appendSibling(spacer).appendSibling(updateInstructions).appendSibling(spacer).appendSibling(openModsDirectory);
+            IChatComponent discord = new ChatComponentText("[Cowshed Discord]").setChatStyle(new ChatStyle()
+                    .setColor(EnumChatFormatting.AQUA).setBold(true)
+                    .setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, Cowlection.INVITE_URL))
+                    .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.YELLOW + "Need help? Join the Cowshed discord!"))));
+
+            statusMsg = text.appendSibling(download).appendSibling(spacer).appendSibling(changelog).appendSibling(spacer).appendSibling(updateInstructions).appendSibling(spacer).appendSibling(openModsDirectory).appendSibling(spacer).appendSibling(discord);
         }
 
         if (statusMsg != null) {

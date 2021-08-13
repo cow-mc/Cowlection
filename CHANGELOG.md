@@ -29,6 +29,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Toggle: display dungeon performance summary at the end of a dungeon
   - Toggle: send warning when queued and entered dungeon floors are different
   - Toggle: shorten item quality info for non-randomized items
+- New sub-command `/moo discord`: Cowshed discord server invite
 
 ### Changed
 - Disabled `M` keybinding in MC Options > Controls > Cowlection by default to avoid conflicts

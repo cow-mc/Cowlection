@@ -36,6 +36,7 @@ public class Cowlection {
     public static final String VERSION = "@VERSION@";
     public static final String MODNAME = "@MODNAME@";
     public static final String GITURL = "@GITURL@";
+    public static final String INVITE_URL = "https://discord.gg/fU2tFPf";
     public static KeyBinding[] keyBindings;
     private static Cowlection instance;
     private File modsDir;

@@ -147,7 +147,7 @@ public class RuleEditorGui extends GuiScreen {
             guiDefaultAll.setButtonDelay(60);
             mc.displayGuiScreen(guiDefaultAll);
         } else if (button == btnHelp) {
-            GuiConfirmOpenLink guiHelp = new GuiConfirmOpenLink(this, "https://discord.gg/fU2tFPf", 50000000, true);
+            GuiConfirmOpenLink guiHelp = new GuiConfirmOpenLink(this, Cowlection.INVITE_URL, 50000000, true);
             guiHelp.disableSecurityWarning();
             mc.displayGuiScreen(guiHelp);
         } else if (button == btnClose) {
@@ -199,9 +199,9 @@ public class RuleEditorGui extends GuiScreen {
                 rules.resetToDefault();
             } else if (id == 50000000) {
                 try {
-                    Desktop.getDesktop().browse(new URI("https://discord.gg/fU2tFPf"));
+                    Desktop.getDesktop().browse(new URI(Cowlection.INVITE_URL));
                 } catch (Throwable throwable) {
-                    Cowlection.getInstance().getLogger().error("Couldn't open link https://discord.gg/fU2tFPf", throwable);
+                    Cowlection.getInstance().getLogger().error("Couldn't open link " + Cowlection.INVITE_URL, throwable);
                 }
             } else if (id < 9000000) {
                 // user confirmed rule deletion
