@@ -522,6 +522,7 @@ public class DungeonsListener {
             btnTooltip.add("Open Cowlection's Party Notes Rule Editor");
             btnTooltip.add(EnumChatFormatting.GRAY + "Want to remove this button? " + EnumChatFormatting.YELLOW + "/moo config editor");
             GuiHelper.drawHoveringText(btnTooltip, e.mouseX, e.mouseY, mc.displayWidth, mc.displayHeight, 300);
+            GlStateManager.disableLighting();
         }
     }
 

@@ -276,7 +276,7 @@ public class DungeonsPartyListener {
                     averageSecretsPerCompletion = Utils.formatDecimal(foundSecrets / (1d * totalDungeonCompletions));
                 }
 
-                playerTooltip.append("\n").append(EnumChatFormatting.GRAY).append("Found secrets: ").append(EnumChatFormatting.GOLD).append(foundSecrets);
+                playerTooltip.append("\n").append(EnumChatFormatting.GRAY).append("Found secrets: ").append(EnumChatFormatting.GOLD).append(Utils.formatNumber(foundSecrets));
                 if (averageSecretsPerCompletion != null) {
                     playerTooltip.append(EnumChatFormatting.GRAY).append(" (").append(EnumChatFormatting.YELLOW).append(averageSecretsPerCompletion).append(EnumChatFormatting.GRAY).append("/completion)");
                 }

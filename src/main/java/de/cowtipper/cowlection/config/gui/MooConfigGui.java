@@ -9,6 +9,7 @@ import net.minecraft.client.audio.SoundEventAccessorComposite;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
@@ -18,6 +19,7 @@ import org.lwjgl.input.Keyboard;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * Main config gui containing:
@@ -184,10 +186,15 @@ public class MooConfigGui extends GuiScreen {
         if (currentConfigCategoryGui != null) {
             currentConfigCategoryGui.drawScreen(mouseX, mouseY, partialTicks);
         }
-        if (btnClose.isMouseOver()) {
-            GuiHelper.drawHoveringText(Arrays.asList(EnumChatFormatting.RED + "Save & close settings", "" + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + "Hint:" + EnumChatFormatting.RESET + " alternatively press ESC"), mouseX, mouseY, width, height, 300);
-        }
         fieldSearchQuery.drawTextBox();
+        if (btnClose.isMouseOver()) {
+            GuiHelper.drawHoveringText(Arrays.asList(EnumChatFormatting.RED + "Save & close settings", ""
+                    + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + "Hint:" + EnumChatFormatting.RESET + " alternatively press ESC"), mouseX, mouseY, width, height, 300);
+        } else if (mouseX >= fieldSearchQuery.xPosition && mouseX <= fieldSearchQuery.xPosition + fieldSearchQuery.width
+                && mouseY >= fieldSearchQuery.yPosition && mouseY <= fieldSearchQuery.yPosition + fieldSearchQuery.height) {
+            GuiHelper.drawHoveringText(Collections.singletonList("" + EnumChatFormatting.GREEN + EnumChatFormatting.ITALIC + "Hint:" + EnumChatFormatting.RESET
+                    + " Search for \"" + EnumChatFormatting.GOLD + "new" + EnumChatFormatting.RESET + "\" to show new or changed config entries"), mouseX, mouseY, width, height, 300);
+        }
     }
 
     @Override
@@ -247,6 +254,7 @@ public class MooConfigGui extends GuiScreen {
     @Override
     public void renderToolTip(ItemStack stack, int x, int y) {
         super.renderToolTip(stack, x, y);
+        GlStateManager.disableLighting();
     }
 
     @Override

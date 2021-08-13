@@ -51,24 +51,28 @@ public class NumerousCommandsGui extends GuiScreen {
             }
             lines.add("" + EnumChatFormatting.UNDERLINE + EnumChatFormatting.ITALIC + "Commands" + EnumChatFormatting.RESET + EnumChatFormatting.GRAY + " (" + modInfo.getCommandsCount() + ")");
             Collection<CommandInfo> commands = modInfo.getCommands();
-            for (CommandInfo cmd : commands) {
-                String cmdNameAndAliases = EnumChatFormatting.YELLOW + " ‣ /" + cmd.getName();
-                if (cmd.getAliases().size() > 0) {
-                    cmdNameAndAliases += EnumChatFormatting.DARK_GRAY + " (" + (cmd.getAliases().size() == 1 ? "alias" : "aliases") + ": " + EnumChatFormatting.GRAY + Joiner.on(", ").join(cmd.getAliases()) + EnumChatFormatting.DARK_GRAY + ")";
-                }
-                lines.add(cmdNameAndAliases);
-                String cmdUsage = cmd.getUsage();
-                if (cmdUsage != null) {
-                    if (cmdUsage.contains("\n")) {
-                        addKeyValue("Usage", "", false);
-                        for (String usageLine : cmdUsage.split("\n")) {
-                            lines.add("       " + usageLine);
-                        }
-                    } else {
-                        addKeyValue("Usage", cmdUsage, false);
+            if (commands.size() == 0) {
+                lines.add(EnumChatFormatting.YELLOW + " ‣ This mod either has no client-side commands, or doesn't use Forge's command registry");
+            } else {
+                for (CommandInfo cmd : commands) {
+                    String cmdNameAndAliases = EnumChatFormatting.YELLOW + " ‣ /" + cmd.getName();
+                    if (cmd.getAliases().size() > 0) {
+                        cmdNameAndAliases += EnumChatFormatting.DARK_GRAY + " (" + (cmd.getAliases().size() == 1 ? "alias" : "aliases") + ": " + EnumChatFormatting.GRAY + Joiner.on(", ").join(cmd.getAliases()) + EnumChatFormatting.DARK_GRAY + ")";
                     }
-                } else if (cmd.isListCommandsCommand()) {
-                    addKeyValue("Usage", EnumChatFormatting.GREEN + "You have just used this command to open this GUI", false);
+                    lines.add(cmdNameAndAliases);
+                    String cmdUsage = cmd.getUsage();
+                    if (cmdUsage != null) {
+                        if (cmdUsage.contains("\n")) {
+                            addKeyValue("Usage", "", false);
+                            for (String usageLine : cmdUsage.split("\n")) {
+                                lines.add("       " + usageLine);
+                            }
+                        } else {
+                            addKeyValue("Usage", cmdUsage, false);
+                        }
+                    } else if (cmd.isListCommandsCommand()) {
+                        addKeyValue("Usage", EnumChatFormatting.GREEN + "You have just used this command to open this GUI", false);
+                    }
                 }
             }
         }

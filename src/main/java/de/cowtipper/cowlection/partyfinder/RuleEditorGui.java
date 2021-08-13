@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import de.cowtipper.cowlection.Cowlection;
 import de.cowtipper.cowlection.config.MooConfig;
+import de.cowtipper.cowlection.config.gui.MooConfigGui;
 import de.cowtipper.cowlection.data.DataHelper;
 import de.cowtipper.cowlection.util.Utils;
 import net.minecraft.client.Minecraft;
@@ -38,10 +39,11 @@ import java.util.regex.Pattern;
 public class RuleEditorGui extends GuiScreen {
     private final Rules rules;
     private RulesListGui rulesList;
+    private GuiButton btnBackToConfig;
     private GuiUnicodeGlyphButton btnUndoAll;
     private GuiUnicodeGlyphButton btnDefaultAll;
-    private GuiButtonExt btnHelp;
-    private GuiButtonExt btnClose;
+    private GuiButton btnHelp;
+    private GuiButton btnClose;
     private static float lastScrollDistance;
     private final boolean expertMode;
     private final static List<String> colorCodesExplanation;
@@ -66,6 +68,8 @@ public class RuleEditorGui extends GuiScreen {
         Keyboard.enableRepeatEvents(true);
         this.buttonList.clear();
 
+        // back to config button
+        this.buttonList.add(this.btnBackToConfig = new GuiButtonExt(10, this.width - 149, 4, 50, 20, EnumChatFormatting.GREEN + "config ↗"));
         // undo all button
         this.buttonList.add(this.btnUndoAll = new GuiUnicodeGlyphButton(2002, this.width - 94, 4, 20, 20, "", GuiUtils.UNDO_CHAR, 2));
         // reset all button
@@ -73,7 +77,7 @@ public class RuleEditorGui extends GuiScreen {
         // help button
         this.buttonList.add(this.btnHelp = new GuiButtonExt(1, this.width - 47, 4, 20, 20, "?"));
         // close button
-        this.buttonList.add(this.btnClose = new GuiButtonExt(1, this.width - 25, 4, 20, 20, EnumChatFormatting.RED + "X"));
+        this.buttonList.add(this.btnClose = new GuiButtonExt(2, this.width - 25, 4, 20, 20, EnumChatFormatting.RED + "X"));
 
         updateLastScrollDistance();
         // scrollable commands list
@@ -90,7 +94,9 @@ public class RuleEditorGui extends GuiScreen {
         this.drawString(this.fontRendererObj, "Dungeon Party Finder: Rules editor", 30, 6, 0xFFCC00);
         GlStateManager.popMatrix();
         this.rulesList.drawScreen(mouseX, mouseY, partialTicks);
-        if (btnUndoAll.isMouseOver()) {
+        if (btnBackToConfig.isMouseOver()) {
+            drawHoveringText(Arrays.asList("Go to Party Finder config options", EnumChatFormatting.YELLOW + " ‣ /moo config party finder"), mouseX, mouseY);
+        } else if (btnUndoAll.isMouseOver()) {
             drawHoveringText(Collections.singletonList("Undo all changes"), mouseX, mouseY);
         } else if (btnDefaultAll.isMouseOver()) {
             drawHoveringText(Collections.singletonList("Reset rules to default"), mouseX, mouseY);
@@ -123,7 +129,10 @@ public class RuleEditorGui extends GuiScreen {
 
     @Override
     protected void actionPerformed(GuiButton button) {
-        if (button == btnUndoAll) {
+        if (button == btnBackToConfig) {
+            rules.saveToFile();
+            mc.displayGuiScreen(new MooConfigGui("party finder"));
+        } else if (button == btnUndoAll) {
             GuiYesNo guiUndoAll = new GuiYesNo(this,
                     EnumChatFormatting.BOLD + "Discard " + EnumChatFormatting.RED + EnumChatFormatting.BOLD + "all " + EnumChatFormatting.RESET + EnumChatFormatting.BOLD + "changes?",
                     EnumChatFormatting.RED + "This action cannot be reverted!",

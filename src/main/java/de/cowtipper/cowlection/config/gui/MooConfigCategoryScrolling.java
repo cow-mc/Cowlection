@@ -604,8 +604,10 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
         public void checkHover(int mouseX, int mouseY) {
             if (undoHoverChecker != null && undoHoverChecker.checkHover(mouseX, mouseY)) {
                 GuiHelper.drawHoveringText(Collections.singletonList(I18n.format("fml.configgui.tooltip.undoChanges")), mouseX, mouseY, parent.width, parent.height, 300);
+                GlStateManager.disableLighting();
             } else if (defaultHoverChecker != null && defaultHoverChecker.checkHover(mouseX, mouseY)) {
                 GuiHelper.drawHoveringText(Collections.singletonList(I18n.format("fml.configgui.tooltip.resetToDefault")), mouseX, mouseY, parent.width, parent.height, 300);
+                GlStateManager.disableLighting();
             }
         }
 

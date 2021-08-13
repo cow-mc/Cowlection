@@ -169,7 +169,9 @@ public class ChatListener {
             Matcher dungeonPartyFinderJoinedMatcher = DUNGEON_FINDER_JOINED_PATTERN.matcher(message);
             if (privateMessageMatcher.find()) {
                 messageSender = privateMessageMatcher.group(1);
-                this.lastPMSender = messageSender;
+                if (!"stash".equals(messageSender)) {
+                    this.lastPMSender = messageSender;
+                }
             } else if (chatMessageMatcher.find()) {
                 messageSender = chatMessageMatcher.group(1);
             } else if (partyOrGameInviteMatcher.find()) {
