@@ -376,7 +376,7 @@ public final class Utils {
                     reforgeLength = reforgePrefix.length() - 1;
                 }
 
-                if(reforgeInItemName >= 0) {
+                if (reforgeInItemName >= 0) {
                     if (strikethrough) {
                         modifiedItemName.insert(reforgeInItemName, grayedOutFormatting)
                                 .insert(reforgeInItemName + reforgeLength + grayedOutFormatting.length(), originalItemName.substring(0, reforgeInItemName));
@@ -437,6 +437,7 @@ public final class Utils {
             try {
                 File target = getTimestampedFileForDirectory(fileName, "json");
                 if (target == null) {
+                    Cowlection.getInstance().getChatHelper().sendMessage(EnumChatFormatting.RED, "An error occurred while saving " + what);
                     return;
                 }
                 Files.write(target.toPath(), nbt.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE_NEW);

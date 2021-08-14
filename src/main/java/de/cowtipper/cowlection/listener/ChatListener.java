@@ -139,7 +139,8 @@ public class ChatListener {
                 lastTypedChars += eventCharacter;
                 if (lastTypedChars.equalsIgnoreCase("/r ")) {
                     // replace /r with /msg <last user>
-                    main.getChatHelper().sendAboveChatMessage("Sending message to " + lastPMSender + "!");
+                    main.getChatHelper().sendAboveChatMessage("Sending message to " + lastPMSender + "! "
+                            + EnumChatFormatting.GRAY + "Alternatively use /rr");
                     Minecraft.getMinecraft().displayGuiScreen(new GuiChat("/w " + lastPMSender + " "));
                 }
             } else if (Keyboard.getEventKey() == Keyboard.KEY_BACK) { // Backspace

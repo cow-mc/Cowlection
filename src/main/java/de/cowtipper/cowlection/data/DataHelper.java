@@ -574,6 +574,7 @@ public final class DataHelper {
         minions.put("204b03b60b99d675da18c4238d3031b6139c3763dcb59ba09129e6b3367d9f59", "Fishing IX");
         minions.put("593aa3e4eaa3911456d25aab27ce63908fe7a57d880a55884498c3c6a67549b0", "Fishing X");
         minions.put("46efc2d1ebb53ed1242081f22614a7e3ac983b9f6159814e6bcbc73ce7e3132a", "Fishing XI");
+        minions.put("12ed654c6c1945e15faa5d59897d41876f303af9812b99aa7b768be9fcff4ccd", "Fishing XII");
 
         minions.put("196063a884d3901c41f35b69a8c9f401c61ac9f6330f964f80c35352c3e8bfb0", "Zombie I");
         minions.put("c01613ba2e99ee8326b5ceae77efb1e9afa6ae541f38b4ed63e79ecb01e725f0", "Zombie II");

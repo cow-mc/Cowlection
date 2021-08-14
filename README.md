@@ -16,7 +16,7 @@ It is a collection of different features mainly focused on Hypixel SkyBlock. üê
 | Toggle join/leave notifications for friends, guild members or best friends separately | `/moo config` &rarr; Notifications |
 | Show all client-side commands added by all installed mods               | `/commandslist`                         |
 | Copy chat component                                                     | <kbd>ALT</kbd> + <kbd>right click</kbd><br>Hold <kbd>shift</kbd> to copy full component |
-| Copy inventories to clipboard as JSON                                   | <kbd>CTRL</kbd> + <kbd>C</kbd> (whole inventory)<br><kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>C</kbd> (single item) |
+| Copy inventories to clipboard as JSON                                   | <kbd>CTRL</kbd> + <kbd>C</kbd> (single item)<br><kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>C</kbd> (whole inventory) |
 | Copy info of "the thing" you're looking at (NPC or mob + nearby "text-only" armor stands; armor stand, placed skull, banner, sign, dropped item, item in item frame, map on wall) | `/moo whatAmILookingAt` |
 | Tab-completable usernames for several commands (e.g. `/party`, `/invite`, ...) | `/moo config` &rarr; `Commands with Tab-completable usernames` for full list of commands |
 | Auto-replace `/r` with `/w <latest username>`                           | `/r `, use `/rr` to avoid auto-replacement |

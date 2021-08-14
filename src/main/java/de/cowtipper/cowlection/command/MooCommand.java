@@ -806,7 +806,7 @@ public class MooCommand extends CommandBase {
                                 int second = patternId & 0x3F;
                                 bannerHash.append(base64Alphabet.charAt(first)).append(base64Alphabet.charAt(second));
                             }
-                            main.getChatHelper().sendMessage(new MooChatComponent("➡ View banner on needcoolshoes.com").green().setUrl("https://www.needcoolshoes.com/banner?=" + bannerHash));
+                            main.getChatHelper().sendMessage(new MooChatComponent("➡ View this banner on needcoolshoes.com").green().setUrl("https://www.needcoolshoes.com/banner?=" + bannerHash));
                         } catch (IndexOutOfBoundsException e) {
                             main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Failed to parse banner data (unknown banner pattern).");
                         }

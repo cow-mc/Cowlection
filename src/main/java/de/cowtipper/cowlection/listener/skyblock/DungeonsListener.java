@@ -461,6 +461,7 @@ public class DungeonsListener {
                 (partyType != DataHelper.PartyType.CURRENT
                         || (/*partyType == PartyType.CURRENT &&*/ Minecraft.getSystemTime() % 1000 < 600))) {
             GlStateManager.pushMatrix();
+            GlStateManager.enableDepth();
             GlStateManager.translate(0, 0, partyType.getZIndex());
             Gui.drawRect(x, y, x + 16, y + 16, partyType.getColor());
             GlStateManager.popMatrix();
