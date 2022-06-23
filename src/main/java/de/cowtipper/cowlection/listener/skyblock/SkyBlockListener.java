@@ -789,7 +789,7 @@ public class SkyBlockListener {
     }
 
     private enum ItemLookupType {
-        WIKI("wiki", "https://hypixel-skyblock.fandom.com/wiki/Special:Search?search="),
+        WIKI("wiki", "https://wiki.hypixel.net/"),
         PRICE("price info", "https://stonks.gg/search?input="),
         INVALID("nothing", "https://google.com/search?q=");
 
