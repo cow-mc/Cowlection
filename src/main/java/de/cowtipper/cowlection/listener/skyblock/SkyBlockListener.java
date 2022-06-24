@@ -156,6 +156,7 @@ public class SkyBlockListener {
                             .setUrl(link, itemLookupType.description + ": " + EnumChatFormatting.WHITE + link));
 
                     if (MooConfig.lookupItemDirectly) {
+                        link = link.replace('+', '_');
                         boolean success = openLink(link);
                         if (!success) {
                             main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Error: couldn't open your browser");
