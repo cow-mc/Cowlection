@@ -423,7 +423,7 @@ public class MooCommand extends CommandBase {
                 }
 
                 String gameModeIcon = activeProfile.getGameModeIcon();
-                MooChatComponent sbStats = new MooChatComponent("SkyBlock stats of " + stalkedPlayer.getName() + EnumChatFormatting.RESET + EnumChatFormatting.GRAY + " (" + (gameModeIcon.isEmpty() ? "" : EnumChatFormatting.getTextWithoutFormattingCodes(gameModeIcon) + ", ") + activeProfile.getCuteName() + ")").gold().bold().setUrl("https://sky.shiiyu.moe/stats/" + stalkedPlayer.getName() + "/" + activeProfile.getCuteName(), "Click to view SkyBlock stats on sky.shiiyu.moe")
+                MooChatComponent sbStats = new MooChatComponent("SkyBlock stats of " + stalkedPlayer.getName() + EnumChatFormatting.RESET + EnumChatFormatting.GRAY + " (" + (gameModeIcon.isEmpty() ? "" : gameModeIcon + EnumChatFormatting.GRAY + ", ") + activeProfile.getCuteName() + ")").gold().bold().setUrl("https://sky.shiiyu.moe/stats/" + stalkedPlayer.getName() + "/" + activeProfile.getCuteName(), "Click to view SkyBlock stats on sky.shiiyu.moe")
                         .appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Coins", coinsBankAndPurse).setHover(wealthHover));
                 // highest skill + skill average:
                 if (highestSkill != null) {
@@ -625,9 +625,9 @@ public class MooCommand extends CommandBase {
                 // profile age:
                 sbStats.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Profile age", fancyFirstJoined.first()).setHover(new MooChatComponent.KeyValueTooltipComponent("Join date", (fancyFirstJoined.second() == null ? "today" : fancyFirstJoined.second()))));
                 // last save:
-                Pair<String, String> fancyLastSave = member.getFancyLastSave();
-                sbStats.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Last save", fancyLastSave.first() + " ago").setHover(new MooChatComponent.KeyValueTooltipComponent("Last save", (fancyLastSave.second() == null ? "today" : fancyLastSave.second()))
-                        .appendFreshSibling(new MooChatComponent("= last time " + stalkedPlayer.getName() + " has played SkyBlock.").white())));
+                Pair<String, String> fancyLastSave = activeProfile.getFancyLastSave();
+                sbStats.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Last profile save", fancyLastSave != null ? fancyLastSave.first() + " ago" : "unknown").setHover(new MooChatComponent.KeyValueTooltipComponent("Last profile save", fancyLastSave != null ? (fancyLastSave.second() == null ? "today" : fancyLastSave.second()) : "unknown")
+                        .appendFreshSibling(new MooChatComponent("= last time " + (activeProfile.coopCount() == 0 ? stalkedPlayer.getName() : "someone " + EnumChatFormatting.RED + "from " + stalkedPlayer.getName() + "'s profile" + EnumChatFormatting.WHITE) + " has played SkyBlock.").white())));
 
                 main.getChatHelper().sendMessage(sbStats);
             } else {

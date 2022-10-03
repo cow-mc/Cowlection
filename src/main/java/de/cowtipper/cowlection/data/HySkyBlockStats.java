@@ -49,19 +49,18 @@ public class HySkyBlockStats {
         if (profiles == null) {
             return null;
         }
-        Profile lastSavedProfile = null;
-        long latestSave = -1;
         for (Profile profile : profiles) {
-            long lastProfileSave = profile.getMember(uuid).last_save;
-            if (latestSave < lastProfileSave) {
-                lastSavedProfile = profile;
-                latestSave = lastProfileSave;
+            if (profile.selected) {
+                return profile;
             }
         }
-        return lastSavedProfile;
+        // no selected profile
+        return null;
     }
 
     public static class Profile {
+        public boolean selected;
+        private long last_save;
         private String cute_name;
         private Map<String, Member> members;
         private String game_mode;
@@ -87,7 +86,10 @@ public class HySkyBlockStats {
             } else if ("ironman".equals(game_mode)) {
                 return EnumChatFormatting.GRAY + "♲";
             }
-            return "";
+        }
+
+        public Pair<String, String> getFancyLastSave() {
+            return (last_save > 0) ? Utils.getDurationAsWords(last_save) : null;
         }
 
         public double getCoinBank() {
@@ -127,7 +129,6 @@ public class HySkyBlockStats {
         }
 
         public static class Member {
-            private long last_save;
             private long first_join;
             private double coin_purse;
             private NbtData inv_armor;
@@ -156,10 +157,6 @@ public class HySkyBlockStats {
 
             public Pair<String, String> getFancyFirstJoined() {
                 return Utils.getDurationAsWords(first_join);
-            }
-
-            public Pair<String, String> getFancyLastSave() {
-                return Utils.getDurationAsWords(last_save);
             }
 
             public double getCoinPurse() {
@@ -477,7 +474,7 @@ public class HySkyBlockStats {
                  */
                 public String getSummary(boolean isMasterFloor) {
                     String floorCompletion;
-                    if (tier_completions != null) {
+                    if (tier_completions != null && tier_completions.size() > 0) {
                         int highestTierCompletions = tier_completions.get(String.valueOf(highest_tier_completed));
                         floorCompletion = "" + highestTierCompletions + EnumChatFormatting.GRAY + "x " + EnumChatFormatting.YELLOW + "Floor " + (MooConfig.useRomanNumerals() ? Utils.convertArabicToRoman(highest_tier_completed) : highest_tier_completed);
                     } else {

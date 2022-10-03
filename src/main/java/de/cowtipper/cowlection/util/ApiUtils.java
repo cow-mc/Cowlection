@@ -1,6 +1,6 @@
 package de.cowtipper.cowlection.util;
 
-import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.mojang.util.UUIDTypeAdapter;
@@ -28,7 +28,7 @@ import java.util.concurrent.Executors;
 public class ApiUtils {
     public static final String UUID_NOT_FOUND = "UUID-NOT-FOUND";
     private static final String NAME_TO_UUID_URL = "https://api.mojang.com/users/profiles/minecraft/";
-    private static final String UUID_TO_NAME_URL = "https://api.mojang.com/user/profiles/%s/names";
+    private static final String UUID_TO_NAME_URL = "https://api.mojang.com/user/profile/%s";
     private static final String ONLINE_STATUS_URL = "https://api.hypixel.net/status?key=%s&uuid=%s";
     private static final String SKYBLOCK_STATS_URL = "https://api.hypixel.net/skyblock/profiles?key=%s&uuid=%s";
     private static final String BAZAAR_URL = "https://api.hypixel.net/skyblock/bazaar";
@@ -66,9 +66,9 @@ public class ApiUtils {
             if (reader == null) {
                 return UUID_NOT_FOUND;
             } else {
-                JsonArray nameHistoryData = new JsonParser().parse(reader).getAsJsonArray();
-                if (nameHistoryData.size() > 0) {
-                    return nameHistoryData.get(nameHistoryData.size() - 1).getAsJsonObject().get("name").getAsString();
+                JsonObject profile = new JsonParser().parse(reader).getAsJsonObject();
+                if (profile.has("name")) {
+                    return profile.get("name").getAsString();
                 }
             }
         } catch (IOException | JsonSyntaxException e) {
