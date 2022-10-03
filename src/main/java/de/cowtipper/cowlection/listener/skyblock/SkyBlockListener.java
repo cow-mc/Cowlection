@@ -213,7 +213,7 @@ public class SkyBlockListener {
                 // pet in pets menu
                 for (int i = e.toolTip.size() - 1; i >= 0; i--) {
                     String loreLine = EnumChatFormatting.getTextWithoutFormattingCodes(e.toolTip.get(i));
-                    if (loreLine.startsWith("--------------------")) { // exp bar to next level
+                    if (loreLine.startsWith("                    ")) { // exp bar to next level
                         int beginPetExp = loreLine.indexOf(' ');
                         int endPetExp = loreLine.indexOf('/');
                         if (beginPetExp < 0 || endPetExp < 0) {
@@ -364,9 +364,9 @@ public class SkyBlockListener {
                             for (int loreLineNr = 0; loreLineNr < loreList.tagCount(); ++loreLineNr) {
                                 String loreLineFormatted = loreList.getStringTagAt(loreLineNr);
                                 String loreLine = EnumChatFormatting.getTextWithoutFormattingCodes(loreLineFormatted);
-                                if (loreLine.startsWith("-------------------- ")) {
+                                if (loreLine.startsWith("                    ")) { // bar to next level
                                     try {
-                                        String progress = loreLine.substring("-------------------- ".length());
+                                        String progress = loreLine.substring(loreLine.lastIndexOf(' ') + 1);
                                         int divider = progress.indexOf('/');
                                         if (divider > 0) {
                                             bestiaryOverview.add(new BestiaryEntry(TIER_SUFFIX_PATTERN.matcher(item.getDisplayName()).replaceFirst(""),

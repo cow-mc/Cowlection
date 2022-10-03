@@ -25,6 +25,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fixed various API related issues caused by updates since the last release of Cowlection:
   - determining the active/selected profile
   - Minecraft username lookup by uuid changed since username history API got removed
+- Fixed GUI related issues caused by updates since the last release of Cowlection:
+  - Fixed detection for `/bestiary` overview
 
 ## [1.8.9-0.14.0] - 14.08.2021
 ### Added
