@@ -36,10 +36,7 @@ import net.minecraft.item.ItemMap;
 import net.minecraft.item.ItemSkull;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.*;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityBanner;
-import net.minecraft.tileentity.TileEntitySign;
-import net.minecraft.tileentity.TileEntitySkull;
+import net.minecraft.tileentity.*;
 import net.minecraft.util.*;
 import net.minecraft.world.storage.MapData;
 import net.minecraftforge.common.util.Constants;
@@ -402,7 +399,7 @@ public class MooCommand extends CommandBase {
                         highestSkill = skill;
                         highestLevel = level;
                     }
-                    if (!skill.equals("Carpentry") && !skill.equals("Runecrafting")) {
+                    if (!skill.equals("Runecrafting") && !skill.equals("Social")) {
                         skillLevelsSum += level;
                     }
                 }
@@ -435,7 +432,7 @@ public class MooCommand extends CommandBase {
                     }
                     double skillAverage = XpTables.Skill.getSkillAverage(skillLevelsSum);
                     sbStats.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Skill average", String.format("%.1f", skillAverage))
-                            .setHover(new MooChatComponent("Average skill level over all non-cosmetic skills\n(all except Carpentry and Runecrafting)").gray()));
+                            .setHover(new MooChatComponent("Average skill level over all non-cosmetic skills\n(all except Runecrafting and Social)").gray()));
                 } else {
                     sbStats.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Highest Skill", "API access disabled"));
                 }
@@ -729,7 +726,7 @@ public class MooCommand extends CommandBase {
         }
         StringBuilder analysisResults = new StringBuilder("Found ").append(EnumChatFormatting.GOLD).append(detectedMinionCount).append(EnumChatFormatting.YELLOW).append(" minions");
         if (minionsWithSkinCount > 0) {
-            analysisResults.append(" + ").append(EnumChatFormatting.GOLD).append(minionsWithSkinCount).append(EnumChatFormatting.YELLOW).append(" unknown minions with skins");
+            analysisResults.append(" + ").append(EnumChatFormatting.GOLD).append(minionsWithSkinCount).append(EnumChatFormatting.YELLOW).append(" unknown minions");
         }
         analysisResults.append(" on this island");
         detectedMinions.entrySet().stream()
@@ -755,6 +752,20 @@ public class MooCommand extends CommandBase {
                     analysisResults.append("\n  ").append(EnumChatFormatting.GOLD).append(minionWithSkin.getValue()).append(minionWithSkin.getValue() > 1 ? "✕ " : "⨉ ")
                             .append(EnumChatFormatting.RED).append("Unknown minion ").append(EnumChatFormatting.YELLOW).append("(new or with minion skin) ").append(tierColor).append(minionTier);
                 });
+        // Tile entities (chests/hoppers)
+        int chestCount = 0;
+        int hopperCount = 0;
+        for (TileEntity tileEntity : sender.getEntityWorld().loadedTileEntityList) {
+            if (tileEntity instanceof TileEntityChest) {
+                ++chestCount;
+            } else if (tileEntity instanceof TileEntityHopper) {
+                ++hopperCount;
+            }
+        }
+        analysisResults.append("\n").append(EnumChatFormatting.YELLOW).append("Found ")
+                .append(EnumChatFormatting.GOLD).append(chestCount).append(EnumChatFormatting.YELLOW).append(" chests and ")
+                .append(EnumChatFormatting.GOLD).append(hopperCount).append(EnumChatFormatting.YELLOW).append(" hoppers nearby.");
+
         main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, analysisResults.toString());
     }
 

@@ -83,8 +83,16 @@ public class HySkyBlockStats {
         public String getGameModeIcon() {
             if (StringUtils.isNullOrEmpty(game_mode)) {
                 return "";
-            } else if ("ironman".equals(game_mode)) {
-                return EnumChatFormatting.GRAY + "♲";
+            }
+            switch (game_mode) {
+                case "bingo":
+                    return EnumChatFormatting.DARK_PURPLE + "Ⓑ";
+                case "ironman":
+                    return EnumChatFormatting.GRAY + "♲";
+                case "island": // stranded
+                    return EnumChatFormatting.GREEN + "☀";
+                default:
+                    return EnumChatFormatting.ITALIC + Utils.fancyCase(game_mode);
             }
         }
 
@@ -143,6 +151,7 @@ public class HySkyBlockStats {
             private double experience_skill_alchemy = -1;
             private double experience_skill_carpentry = -1;
             private double experience_skill_runecrafting = -1;
+            private double experience_skill_social2 = -1;
             private double experience_skill_taming = -1;
             private Map<String, SlayerBossDetails> slayer_bosses;
             private List<Pet> pets;
@@ -195,6 +204,9 @@ public class HySkyBlockStats {
                 }
                 if (experience_skill_runecrafting >= 0) {
                     skills.put(XpTables.Skill.RUNECRAFTING, XpTables.Skill.RUNECRAFTING.getLevel(experience_skill_runecrafting));
+                }
+                if (experience_skill_social2 >= 0) {
+                    skills.put(XpTables.Skill.SOCIAL, XpTables.Skill.SOCIAL.getLevel(experience_skill_social2));
                 }
                 if (experience_skill_taming >= 0) {
                     skills.put(XpTables.Skill.TAMING, XpTables.Skill.TAMING.getLevel(experience_skill_taming));
@@ -263,7 +275,7 @@ public class HySkyBlockStats {
                             String itemName = nbtDisplay.getString("Name");
                             armorList.add(0, itemName);
                         } else {
-                            armorList.add(0, "" + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + "(empty)");
+                            armorList.add(0, "" + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + "(empty slot)");
                         }
                     }
                 }

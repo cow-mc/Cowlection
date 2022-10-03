@@ -94,7 +94,7 @@ public class HyStalkingData {
                     case "combat_1":
                         return "Spider's Den";
                     case "combat_2":
-                        return "Blazing Fortress";
+                        return "Crimson Isle";
                     case "combat_3":
                         return "The End";
                     case "dungeon":

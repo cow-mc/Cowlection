@@ -74,7 +74,7 @@ public class SkyBlockListener {
     // example: " §a42§7x §fLeather §7for §6436.8 coins"
     private static final Pattern BAZAAR_SELL_ALL_PATTERN = Pattern.compile("^(?:§[0-9a-fl-or])* (?:§[0-9a-fl-or])+([0-9,]+)(?:§[0-9a-fl-or])+x (?:§[0-9a-fl-or])+.+ (?:§[0-9a-fl-or])+for (?:§[0-9a-fl-or])+([0-9,.]+) coins$");
     private static final Pattern BAZAAR_TARGET_AMOUNT_PATTERN = Pattern.compile("^O(?:ff|rd)er amount: ([\\d,]+)x$");
-    private static final Pattern BAZAAR_FILLED_PATTERN = Pattern.compile("^Filled: ([\\d,.k]+)/(?:[\\d,.k]+) \\(?([\\d.]+)%[)!]$");
+    private static final Pattern BAZAAR_FILLED_PATTERN = Pattern.compile("^Filled: ([\\d,.k]+)/[\\d,.k]+ \\(?([\\d.]+)%[)!]$");
     List<BestiaryEntry> bestiaryOverview = null;
     private final NumberFormat numberFormatter;
     private final Cowlection main;
@@ -306,9 +306,16 @@ public class SkyBlockListener {
                         if (!MooConfig.isTooltipToggleKeyBindingPressed()) {
                             break;
                         }
-                    case ALWAYS:
-                        e.toolTip.add(index, "Item age: " + EnumChatFormatting.DARK_GRAY + ((MooConfig.tooltipItemAgeShortened) ? Utils.getDurationAsWord(dateTime.toEpochSecond() * 1000) : Utils.getDurationAsWords(dateTime.toEpochSecond() * 1000).first()));
+                    case ALWAYS: {
+                        long itemCreationTimestamp = dateTime.toEpochSecond() * 1000;
+                        long itemAgeInMs = System.currentTimeMillis() - itemCreationTimestamp;
+
+                        String itemAge = itemAgeInMs >= 60_000
+                                ? (MooConfig.tooltipItemAgeShortened ? Utils.getDurationAsWord(itemCreationTimestamp) : Utils.getDurationAsWords(itemCreationTimestamp).first())
+                                : "<1 minute";
+                        e.toolTip.add(index, "Item age: " + EnumChatFormatting.DARK_GRAY + itemAge);
                         break;
+                    }
                     default:
                         // do nothing
                         break;

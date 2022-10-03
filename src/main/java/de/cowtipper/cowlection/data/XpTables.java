@@ -4,10 +4,44 @@ import java.util.*;
 
 public class XpTables {
     public enum Skill {
-        FARMING, MINING, COMBAT, FORAGING, FISHING, ENCHANTING, ALCHEMY, CARPENTRY, RUNECRAFTING(true), TAMING;
-        private final boolean alternativeXpFormula;
+        FARMING, MINING, COMBAT, FORAGING, FISHING, ENCHANTING, ALCHEMY, CARPENTRY, RUNECRAFTING(SkillXpTable.RC), SOCIAL(SkillXpTable.SOCIAL), TAMING;
+        private final SkillXpTable skillXpTable;
+
+        Skill() {
+            this(SkillXpTable.DEFAULT);
+        }
+
+        Skill(SkillXpTable skillXpTable) {
+            this.skillXpTable = skillXpTable;
+        }
+
+        public int getLevel(double exp) {
+            return getLevel(exp, skillXpTable == SkillXpTable.DEFAULT ? 50 : 25);
+        }
+
+        public int getLevel(double exp, int maxLevel) {
+            return Math.min(skillXpTable.getLevel(exp), maxLevel);
+        }
+
+        public static double getSkillAverage(int skillLevelsSum) {
+            return skillLevelsSum / (getSkillCount() * 1d);
+        }
+
+        /**
+         * Amount of skills without cosmetic skills (Runecrafting, Social)
+         *
+         * @return amount of existing skills
+         */
+        private static int getSkillCount() {
+            return values().length - 2;
+        }
+    }
+
+    private enum SkillXpTable {
+        DEFAULT, RC, SOCIAL;
         private static final TreeMap<Integer, Integer> XP_TO_LEVEL = new TreeMap<>();
-        private static final TreeMap<Integer, Integer> XP_TO_LEVEL_ALTERNATIVE = new TreeMap<>();
+        private static final TreeMap<Integer, Integer> XP_TO_LEVEL_RC = new TreeMap<>();
+        private static final TreeMap<Integer, Integer> XP_TO_LEVEL_SOCIAL = new TreeMap<>();
 
         static {
             // exp data taken from https://api.hypixel.net/resources/skyblock/skills
@@ -73,122 +107,145 @@ public class XpTables {
             XP_TO_LEVEL.put(104672425, 59);
             XP_TO_LEVEL.put(111672425, 60);
 
-            XP_TO_LEVEL_ALTERNATIVE.put(0, 0);
-            XP_TO_LEVEL_ALTERNATIVE.put(50, 1);
-            XP_TO_LEVEL_ALTERNATIVE.put(150, 2);
-            XP_TO_LEVEL_ALTERNATIVE.put(275, 3);
-            XP_TO_LEVEL_ALTERNATIVE.put(435, 4);
-            XP_TO_LEVEL_ALTERNATIVE.put(635, 5);
-            XP_TO_LEVEL_ALTERNATIVE.put(885, 6);
-            XP_TO_LEVEL_ALTERNATIVE.put(1200, 7);
-            XP_TO_LEVEL_ALTERNATIVE.put(1600, 8);
-            XP_TO_LEVEL_ALTERNATIVE.put(2100, 9);
-            XP_TO_LEVEL_ALTERNATIVE.put(2725, 10);
-            XP_TO_LEVEL_ALTERNATIVE.put(3510, 11);
-            XP_TO_LEVEL_ALTERNATIVE.put(4510, 12);
-            XP_TO_LEVEL_ALTERNATIVE.put(5760, 13);
-            XP_TO_LEVEL_ALTERNATIVE.put(7325, 14);
-            XP_TO_LEVEL_ALTERNATIVE.put(9325, 15);
-            XP_TO_LEVEL_ALTERNATIVE.put(11825, 16);
-            XP_TO_LEVEL_ALTERNATIVE.put(14950, 17);
-            XP_TO_LEVEL_ALTERNATIVE.put(18950, 18);
-            XP_TO_LEVEL_ALTERNATIVE.put(23950, 19);
-            XP_TO_LEVEL_ALTERNATIVE.put(30200, 20);
-            XP_TO_LEVEL_ALTERNATIVE.put(38050, 21);
-            XP_TO_LEVEL_ALTERNATIVE.put(47850, 22);
-            XP_TO_LEVEL_ALTERNATIVE.put(60100, 23);
-            XP_TO_LEVEL_ALTERNATIVE.put(75400, 24);
-            XP_TO_LEVEL_ALTERNATIVE.put(94450, 25);
-        }
+            XP_TO_LEVEL_RC.put(0, 0);
+            XP_TO_LEVEL_RC.put(50, 1);
+            XP_TO_LEVEL_RC.put(150, 2);
+            XP_TO_LEVEL_RC.put(275, 3);
+            XP_TO_LEVEL_RC.put(435, 4);
+            XP_TO_LEVEL_RC.put(635, 5);
+            XP_TO_LEVEL_RC.put(885, 6);
+            XP_TO_LEVEL_RC.put(1200, 7);
+            XP_TO_LEVEL_RC.put(1600, 8);
+            XP_TO_LEVEL_RC.put(2100, 9);
+            XP_TO_LEVEL_RC.put(2725, 10);
+            XP_TO_LEVEL_RC.put(3510, 11);
+            XP_TO_LEVEL_RC.put(4510, 12);
+            XP_TO_LEVEL_RC.put(5760, 13);
+            XP_TO_LEVEL_RC.put(7325, 14);
+            XP_TO_LEVEL_RC.put(9325, 15);
+            XP_TO_LEVEL_RC.put(11825, 16);
+            XP_TO_LEVEL_RC.put(14950, 17);
+            XP_TO_LEVEL_RC.put(18950, 18);
+            XP_TO_LEVEL_RC.put(23950, 19);
+            XP_TO_LEVEL_RC.put(30200, 20);
+            XP_TO_LEVEL_RC.put(38050, 21);
+            XP_TO_LEVEL_RC.put(47850, 22);
+            XP_TO_LEVEL_RC.put(60100, 23);
+            XP_TO_LEVEL_RC.put(75400, 24);
+            XP_TO_LEVEL_RC.put(94450, 25);
 
-        Skill() {
-            this(false);
-        }
-
-        Skill(boolean alternativeXpFormula) {
-            this.alternativeXpFormula = alternativeXpFormula;
+            XP_TO_LEVEL_SOCIAL.put(0, 0);
+            XP_TO_LEVEL_SOCIAL.put(50, 1);
+            XP_TO_LEVEL_SOCIAL.put(150, 2);
+            XP_TO_LEVEL_SOCIAL.put(300, 3);
+            XP_TO_LEVEL_SOCIAL.put(550, 4);
+            XP_TO_LEVEL_SOCIAL.put(1050, 5);
+            XP_TO_LEVEL_SOCIAL.put(1800, 6);
+            XP_TO_LEVEL_SOCIAL.put(2800, 7);
+            XP_TO_LEVEL_SOCIAL.put(4050, 8);
+            XP_TO_LEVEL_SOCIAL.put(5550, 9);
+            XP_TO_LEVEL_SOCIAL.put(7550, 10);
+            XP_TO_LEVEL_SOCIAL.put(10050, 11);
+            XP_TO_LEVEL_SOCIAL.put(13050, 12);
+            XP_TO_LEVEL_SOCIAL.put(16800, 13);
+            XP_TO_LEVEL_SOCIAL.put(21300, 14);
+            XP_TO_LEVEL_SOCIAL.put(27300, 15);
+            XP_TO_LEVEL_SOCIAL.put(35300, 16);
+            XP_TO_LEVEL_SOCIAL.put(45300, 17);
+            XP_TO_LEVEL_SOCIAL.put(57800, 18);
+            XP_TO_LEVEL_SOCIAL.put(72800, 19);
+            XP_TO_LEVEL_SOCIAL.put(92800, 20);
+            XP_TO_LEVEL_SOCIAL.put(117800, 21);
+            XP_TO_LEVEL_SOCIAL.put(147800, 22);
+            XP_TO_LEVEL_SOCIAL.put(182800, 23);
+            XP_TO_LEVEL_SOCIAL.put(222800, 24);
+            XP_TO_LEVEL_SOCIAL.put(272800, 25);
         }
 
         public int getLevel(double exp) {
-            if (alternativeXpFormula) {
-                return getLevel(exp, 25);
-            } else {
-                return getLevel(exp, 50);
+            TreeMap<Integer, Integer> currentXpTable = XP_TO_LEVEL;
+            if (this == RC) {
+                currentXpTable = XP_TO_LEVEL_RC;
+            } else if (this == SOCIAL) {
+                currentXpTable = XP_TO_LEVEL_SOCIAL;
             }
-        }
 
-        public int getLevel(double exp, int maxLevel) {
-            if (alternativeXpFormula) {
-                return Math.min(XP_TO_LEVEL_ALTERNATIVE.floorEntry((int) exp).getValue(), maxLevel);
-            } else {
-                return Math.min(XP_TO_LEVEL.floorEntry((int) exp).getValue(), maxLevel);
-            }
-        }
-
-        public static double getSkillAverage(int skillLevelsSum) {
-            return skillLevelsSum / (getSkillCount() * 1d);
-        }
-
-        /**
-         * Amount of skills without cosmetic skills (Carpentry, Runecrafting)
-         *
-         * @return amount of existing skills
-         */
-        private static int getSkillCount() {
-            return values().length - 2;
+            return currentXpTable.floorEntry((int) exp).getValue();
         }
     }
 
     public enum Slayer {
-        ZOMBIE, SPIDER, WOLF(true), ENDERMAN(true);
-        private final boolean alternativeXpFormula;
+        ZOMBIE(SlayerXpTable.ZOMBIE), SPIDER(SlayerXpTable.SPIDER), WOLF, ENDERMAN, BLAZE;
+        private final SlayerXpTable slayerXpTable;
+
+        Slayer() {
+            this(SlayerXpTable.DEFAULT);
+        }
+
+        Slayer(SlayerXpTable slayerXpTable) {
+            this.slayerXpTable = slayerXpTable;
+        }
+
+        public int getLevel(double exp) {
+            return this.slayerXpTable.getLevel(exp);
+        }
+    }
+
+    private enum SlayerXpTable {
+        DEFAULT, ZOMBIE, SPIDER;
+
         /**
-         * Valid for Zombie + Spider
+         * Valid for Wolf + Enderman + Blaze
          */
         private static final TreeMap<Integer, Integer> XP_TO_LEVEL = new TreeMap<>();
-        /**
-         * Valid for Wolf
-         */
-        private static final TreeMap<Integer, Integer> XP_TO_LEVEL_ALTERNATIVE = new TreeMap<>();
+        private static final TreeMap<Integer, Integer> XP_TO_LEVEL_ZOMBIE = new TreeMap<>();
+        private static final TreeMap<Integer, Integer> XP_TO_LEVEL_SPIDER = new TreeMap<>();
 
         static {
+            // exp data taken from https://wiki.hypixel.net/Slayer
             XP_TO_LEVEL.put(0, 0);
-            XP_TO_LEVEL.put(5, 1);
-            XP_TO_LEVEL.put(15, 2);
-            XP_TO_LEVEL.put(200, 3);
-            XP_TO_LEVEL.put(1000, 4);
+            XP_TO_LEVEL.put(10, 1);
+            XP_TO_LEVEL.put(30, 2);
+            XP_TO_LEVEL.put(250, 3);
+            XP_TO_LEVEL.put(1500, 4);
             XP_TO_LEVEL.put(5000, 5);
             XP_TO_LEVEL.put(20000, 6);
             XP_TO_LEVEL.put(100000, 7);
             XP_TO_LEVEL.put(400000, 8);
             XP_TO_LEVEL.put(1000000, 9);
 
-            XP_TO_LEVEL_ALTERNATIVE.put(0, 0);
-            XP_TO_LEVEL_ALTERNATIVE.put(5, 1);
-            XP_TO_LEVEL_ALTERNATIVE.put(15, 2);
-            XP_TO_LEVEL_ALTERNATIVE.put(200, 3);
-            XP_TO_LEVEL_ALTERNATIVE.put(1500, 4);
-            XP_TO_LEVEL_ALTERNATIVE.put(5000, 5);
-            XP_TO_LEVEL_ALTERNATIVE.put(20000, 6);
-            XP_TO_LEVEL_ALTERNATIVE.put(100000, 7);
-            XP_TO_LEVEL_ALTERNATIVE.put(400000, 8);
-            XP_TO_LEVEL_ALTERNATIVE.put(1000000, 9);
-        }
+            XP_TO_LEVEL_ZOMBIE.put(0, 0);
+            XP_TO_LEVEL_ZOMBIE.put(5, 1);
+            XP_TO_LEVEL_ZOMBIE.put(15, 2);
+            XP_TO_LEVEL_ZOMBIE.put(200, 3);
+            XP_TO_LEVEL_ZOMBIE.put(1000, 4);
+            XP_TO_LEVEL_ZOMBIE.put(5000, 5);
+            XP_TO_LEVEL_ZOMBIE.put(20000, 6);
+            XP_TO_LEVEL_ZOMBIE.put(100000, 7);
+            XP_TO_LEVEL_ZOMBIE.put(400000, 8);
+            XP_TO_LEVEL_ZOMBIE.put(1000000, 9);
 
-        Slayer() {
-            this(false);
-        }
-
-        Slayer(boolean alternativeXpFormula) {
-            this.alternativeXpFormula = alternativeXpFormula;
+            XP_TO_LEVEL_SPIDER.put(0, 0);
+            XP_TO_LEVEL_SPIDER.put(5, 1);
+            XP_TO_LEVEL_SPIDER.put(25, 2);
+            XP_TO_LEVEL_SPIDER.put(200, 3);
+            XP_TO_LEVEL_SPIDER.put(1000, 4);
+            XP_TO_LEVEL_SPIDER.put(5000, 5);
+            XP_TO_LEVEL_SPIDER.put(20000, 6);
+            XP_TO_LEVEL_SPIDER.put(100000, 7);
+            XP_TO_LEVEL_SPIDER.put(400000, 8);
+            XP_TO_LEVEL_SPIDER.put(1000000, 9);
         }
 
         public int getLevel(double exp) {
-            if (alternativeXpFormula) {
-                return XP_TO_LEVEL_ALTERNATIVE.floorEntry((int) exp).getValue();
-            } else {
-                return XP_TO_LEVEL.floorEntry((int) exp).getValue();
+            TreeMap<Integer, Integer> currentXpTable = XP_TO_LEVEL;
+            if (this == ZOMBIE) {
+                currentXpTable = XP_TO_LEVEL_ZOMBIE;
+            } else if (this == SPIDER) {
+                currentXpTable = XP_TO_LEVEL_SPIDER;
             }
+
+            return currentXpTable.floorEntry((int) exp).getValue();
         }
     }
 

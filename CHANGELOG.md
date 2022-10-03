@@ -3,6 +3,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.8.9-0.15.0] - unreleased
+
+### Added
+
+- Added data for new content since the last release of Cowlection:
+  - `/moo stalkskyblock`:
+    - added stranded and bingo mode
+    - added Social skill (exp wasn't available on the API before)
+    - updated skill average calculation (carpentry is no longer a 'cosmetic' skill)
+    - added new slayers (enderman + blaze)
+  - `/moo analyzeIsland`: added new minions (mainly Crimson Isle related)
+- `/moo analyzeIsland`: Added chests and hopper counters
+
+### Changed
+
+- `/moo stalkskyblock`: replaced "last played" with "last time *someone* played on the selected profile"
+
+### Fixed
+
+- Fixed various API related issues caused by updates since the last release of Cowlection:
+  - determining the active/selected profile
+  - Minecraft username lookup by uuid changed since username history API got removed
+
 ## [1.8.9-0.14.0] - 14.08.2021
 ### Added
 - New command: `/commandslist` to list all client-side commands added by all installed mods
@@ -359,6 +382,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 *Note:* The 'best friends' list is currently available via <kbd>ESC</kbd> > Mod Options > Cowlection > Config > bestFriends.
 
+[1.8.9-0.15.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.14.0...master
 [1.8.9-0.14.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.13.0...v1.8.9-0.14.0
 [1.8.9-0.13.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.12.0...v1.8.9-0.13.0
 [1.8.9-0.12.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.11.0...v1.8.9-0.12.0
