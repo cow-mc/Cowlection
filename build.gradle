@@ -6,13 +6,9 @@ buildscript {
             name = "forge"
             url = "https://maven.minecraftforge.net/"
         }
-        maven {
-            name = "jitpack"
-            url = "https://jitpack.io/"
-        }
     }
     dependencies {
-        classpath "com.github.asbyth:ForgeGradle:6f53277"
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
     }
 }
 apply plugin: 'net.minecraftforge.gradle.forge'
