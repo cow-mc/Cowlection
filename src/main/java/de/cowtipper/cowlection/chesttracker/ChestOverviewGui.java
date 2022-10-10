@@ -1,6 +1,8 @@
 package de.cowtipper.cowlection.chesttracker;
 
+import com.google.common.collect.Lists;
 import de.cowtipper.cowlection.Cowlection;
+import de.cowtipper.cowlection.chesttracker.data.ItemData;
 import de.cowtipper.cowlection.config.MooConfig;
 import de.cowtipper.cowlection.search.GuiTooltip;
 import de.cowtipper.cowlection.util.*;
@@ -17,14 +19,22 @@ import net.minecraftforge.fml.client.config.GuiButtonExt;
 import net.minecraftforge.fml.client.config.GuiCheckBox;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import org.apache.commons.lang3.StringUtils;
+import org.lwjgl.input.Mouse;
 
 import java.io.IOException;
 import java.util.*;
 
 public class ChestOverviewGui extends GuiScreen {
+    private static final String SEARCH_QUERY_PLACE_HOLDER = "Search for...";
+
     private ItemOverview itemOverview;
     private List<GuiTooltip> guiTooltips;
+    private GuiTextField fieldSearchQuery;
+    private String searchQuery;
+    private boolean isPlaceholderSearchQuery;
     private GuiButton btnClose;
+    private GuiButton btnHelp;
     private GuiButton btnUpdatePrices;
     private GuiButton btnCopy;
     private GuiCheckBox chkShowNoPriceItems;
@@ -32,6 +42,7 @@ public class ChestOverviewGui extends GuiScreen {
     private GuiCheckBox chkShowBazaarItems;
     private GuiButton btnBazaarInstantOrOffer;
     private boolean useBazaarInstantSellPrices;
+    private GuiCheckBox chkShowNpcItems;
     private AbortableRunnable updatePrices;
     private final String screenTitle;
     private final Cowlection main;
@@ -47,28 +58,46 @@ public class ChestOverviewGui extends GuiScreen {
     public void initGui() {
         this.guiTooltips = new ArrayList<>();
         // close
-        this.buttonList.add(this.btnClose = new GuiButtonExt(1, this.width - 25, 3, 22, 20, EnumChatFormatting.RED + "X"));
+        this.buttonList.add(this.btnClose = new GuiButtonExt(1, this.width - 25, 3, 20, 20, EnumChatFormatting.RED + "X"));
         addTooltip(btnClose, Arrays.asList(EnumChatFormatting.RED + "Close interface", "" + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + "Hint:" + EnumChatFormatting.RESET + " alternatively press ESC"));
+        // help
+        this.buttonList.add(this.btnHelp = new GuiButtonExt(2, this.width - 47, 3, 20, 20, "?"));
+        addTooltip(btnHelp, Arrays.asList("" + EnumChatFormatting.GOLD + EnumChatFormatting.BOLD + screenTitle,
+                EnumChatFormatting.GRAY + "You can set the default settings via " + EnumChatFormatting.YELLOW + "/moo config chest",
+                "",
+                EnumChatFormatting.WHITE + "  ‣ " + EnumChatFormatting.GOLD + "double click" + EnumChatFormatting.WHITE + ": highlight chests with selected item; hover over the chat message to see chest coords",
+                EnumChatFormatting.WHITE + "  ‣ " + EnumChatFormatting.GOLD + "right click" + EnumChatFormatting.WHITE + ": exclude item from sell value calculation"));
         // update prices
-        this.buttonList.add(this.btnUpdatePrices = new GuiButton(20, this.width - 125, 5, 90, 16, "⟳ Update prices"));
-        addTooltip(btnUpdatePrices, Arrays.asList(EnumChatFormatting.YELLOW + "‣ Get latest Bazaar prices from Hypixel API", EnumChatFormatting.WHITE + "   (only once per minute)",
-                EnumChatFormatting.YELLOW + "‣ Get latest lowest BINs from Moulberry's API", EnumChatFormatting.WHITE + "   (only once every 5 minutes)"));
+        this.buttonList.add(this.btnUpdatePrices = new GuiButton(20, this.width - 145, 5, 90, 16, "⟳ Update prices"));
+        addTooltip(btnUpdatePrices, Arrays.asList(EnumChatFormatting.YELLOW + "‣ Get latest " + EnumChatFormatting.GOLD + "Bazaar prices " + EnumChatFormatting.YELLOW + "from Hypixel API", EnumChatFormatting.WHITE + "   (only once per minute)",
+                EnumChatFormatting.YELLOW + "‣ Get latest " + EnumChatFormatting.GOLD + "lowest BINs " + EnumChatFormatting.YELLOW + "from Moulberry's API", EnumChatFormatting.WHITE + "   (only once every 5 minutes)",
+                EnumChatFormatting.YELLOW + "‣ Get latest " + EnumChatFormatting.GOLD + "NPC sell prices " + EnumChatFormatting.YELLOW + "from Hypixel API", EnumChatFormatting.WHITE + "   (only once every 15 minutes)"));
         // copy to clipboard
-        this.buttonList.add(this.btnCopy = new GuiButton(21, this.width - 240, 5, 110, 16, "⎘ Copy to clipboard"));
+        this.buttonList.add(this.btnCopy = new GuiButton(21, this.width - 222, 5, 74, 16, "⎘ Copy data"));
         addTooltip(btnCopy, Collections.singletonList(EnumChatFormatting.YELLOW + "Copied data can be pasted into e.g. Google Spreadsheets"));
+        // input: search
+        this.fieldSearchQuery = new GuiTextField(23, this.fontRendererObj, this.width - 330, 6, 100, 15);
+        addTooltip(fieldSearchQuery, Collections.singletonList(EnumChatFormatting.YELLOW + "Search by item name and item id"));
+        this.fieldSearchQuery.setMaxStringLength(42);
+        this.isPlaceholderSearchQuery = StringUtils.isEmpty(searchQuery) || SEARCH_QUERY_PLACE_HOLDER.equals(searchQuery);
+        this.fieldSearchQuery.setText(isPlaceholderSearchQuery ? SEARCH_QUERY_PLACE_HOLDER : searchQuery);
 
         // toggle: use insta-sell or sell offer prices
-        this.buttonList.add(this.btnBazaarInstantOrOffer = new GuiButton(15, this.width - 165, this.height - 52, 130, 14, MooConfig.useInstantSellBazaarPrices() ? "Use Instant-Sell prices" : "Use Sell Offer prices"));
-        addTooltip(btnBazaarInstantOrOffer, Collections.singletonList(EnumChatFormatting.YELLOW + "Use " + EnumChatFormatting.GOLD + "Instant-Sell " + EnumChatFormatting.YELLOW + "or " + EnumChatFormatting.GOLD + "Sell Offer" + EnumChatFormatting.YELLOW + " prices?"));
+        this.buttonList.add(this.btnBazaarInstantOrOffer = new GuiButton(15, this.width - 78, this.height - 51, 75, 12, MooConfig.useInstantSellBazaarPrices() ? "via Insta-Sell" : "via Sell Offer"));
+        addTooltip(btnBazaarInstantOrOffer, Collections.singletonList(EnumChatFormatting.WHITE + "Bazaar items: " + EnumChatFormatting.YELLOW + "Use " + EnumChatFormatting.GOLD + "Instant-Sell " + EnumChatFormatting.YELLOW + "or " + EnumChatFormatting.GOLD + "Sell Offer" + EnumChatFormatting.YELLOW + " prices?"));
         // checkbox: show/hide Bazaar items
-        this.buttonList.add(this.chkShowBazaarItems = new GuiCheckBox(10, this.width - 162, this.height - 36, " Show Bazaar items", MooConfig.chestAnalyzerShowBazaarItems));
+        this.buttonList.add(this.chkShowBazaarItems = new GuiCheckBox(10, this.width - 162, this.height - 50, " Bazaar items", MooConfig.chestAnalyzerShowBazaarItems));
         addTooltip(chkShowBazaarItems, Collections.singletonList(EnumChatFormatting.YELLOW + "Should items with a " + EnumChatFormatting.GOLD + "Bazaar " + EnumChatFormatting.YELLOW + "price be displayed?"));
         // checkbox: show/hide lowest BIN items
-        this.buttonList.add(this.chkShowLowestBinItems = new GuiCheckBox(10, this.width - 162, this.height - 25, " Show lowest BIN items", MooConfig.chestAnalyzerShowLowestBinItems));
+        this.buttonList.add(this.chkShowLowestBinItems = new GuiCheckBox(11, this.width - 162, this.height - 39, " lowest BIN items", MooConfig.chestAnalyzerShowLowestBinItems));
         addTooltip(chkShowLowestBinItems, Collections.singletonList(EnumChatFormatting.YELLOW + "Should items with a " + EnumChatFormatting.GOLD + "lowest BIN " + EnumChatFormatting.YELLOW + "price be displayed?"));
+        // checkbox: show/hide NPC items
+        this.buttonList.add(this.chkShowNpcItems = new GuiCheckBox(12, this.width - 162, this.height - 28, " NPC items", MooConfig.chestAnalyzerShowNpcItems));
+        addTooltip(chkShowNpcItems, Lists.newArrayList(EnumChatFormatting.YELLOW + "Should items with an " + EnumChatFormatting.GOLD + "NPC sell " + EnumChatFormatting.YELLOW + "price be displayed?",
+                EnumChatFormatting.RED + "(NPC sell price is only used if an item has neither a Bazaar nor lowest BIN price, or if one of them is hidden)"));
         // checkbox: show/hide items without a price
-        this.buttonList.add(this.chkShowNoPriceItems = new GuiCheckBox(10, this.width - 162, this.height - 14, " Show items without price", MooConfig.chestAnalyzerShowNoPriceItems));
-        addTooltip(chkShowNoPriceItems, Collections.singletonList(EnumChatFormatting.YELLOW + "Should items " + EnumChatFormatting.GOLD + "without " + EnumChatFormatting.YELLOW + "a Bazaar or BIN price be displayed?"));
+        this.buttonList.add(this.chkShowNoPriceItems = new GuiCheckBox(13, this.width - 162, this.height - 15, " items without price", MooConfig.chestAnalyzerShowNoPriceItems));
+        addTooltip(chkShowNoPriceItems, Collections.singletonList(EnumChatFormatting.YELLOW + "Should items " + EnumChatFormatting.GOLD + "without " + EnumChatFormatting.YELLOW + "a Bazaar, BIN, or NPC price be displayed?"));
         // main item gui
         this.itemOverview = new ItemOverview();
     }
@@ -79,10 +108,23 @@ public class ChestOverviewGui extends GuiScreen {
     }
 
     @Override
+    public void updateScreen() {
+        super.updateScreen();
+        fieldSearchQuery.updateCursorCounter();
+    }
+
+    @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        btnUpdatePrices.enabled = updatePrices == null && (main.getChestTracker().allowUpdateBazaar() || main.getChestTracker().allowUpdateLowestBins());
+        btnUpdatePrices.enabled = updatePrices == null && main.getChestTracker().allowAnyPriceUpdate();
         itemOverview.drawScreen(mouseX, mouseY, partialTicks);
         this.drawString(this.fontRendererObj, this.screenTitle, itemOverview.getLeftX(), 10, 0xFFCC00);
+        this.fieldSearchQuery.drawTextBox();
+        // left of checkboxes: price type indicators
+        this.drawString(this.fontRendererObj, ItemData.PriceType.BAZAAR.getIndicator(), chkShowBazaarItems.xPosition - 5 - this.fontRendererObj.getStringWidth(ItemData.PriceType.BAZAAR.getIndicator()), chkShowBazaarItems.yPosition + 2, 0x666666);
+        this.drawString(this.fontRendererObj, ItemData.PriceType.LOWEST_BIN.getIndicator(), chkShowLowestBinItems.xPosition - 5 - this.fontRendererObj.getStringWidth(ItemData.PriceType.LOWEST_BIN.getIndicator()), chkShowLowestBinItems.yPosition + 2, 0x666666);
+        this.drawString(this.fontRendererObj, ItemData.PriceType.NPC_SELL.getIndicator(), chkShowNpcItems.xPosition - 5 - this.fontRendererObj.getStringWidth(ItemData.PriceType.NPC_SELL.getIndicator()), chkShowNpcItems.yPosition + 2, 0x666666);
+        this.drawString(this.fontRendererObj, ItemData.PriceType.NONE.getIndicator(), chkShowNoPriceItems.xPosition - 5 - this.fontRendererObj.getStringWidth(ItemData.PriceType.NONE.getIndicator()), chkShowNoPriceItems.yPosition + 2, 0x666666);
+
         super.drawScreen(mouseX, mouseY, partialTicks);
         itemOverview.drawScreenPost(mouseX, mouseY);
         for (GuiTooltip guiTooltip : guiTooltips) {
@@ -112,14 +154,17 @@ public class ChestOverviewGui extends GuiScreen {
         if (button.enabled) {
             if (button == btnClose) {
                 this.mc.displayGuiScreen(null);
+            } else if (button == btnHelp) {
+                mc.displayGuiScreen(new GuiChat("/moo config chest"));
             } else if (button == btnUpdatePrices) {
                 btnUpdatePrices.enabled = false;
-                EnumSet<ChestTracker.Updating> updating = this.main.getChestTracker().refreshPriceCache();
-                if (updating.size() > 1) {
+                EnumSet<ItemData.PriceType> updating = this.main.getChestTracker().refreshPriceCache();
+                if (updating.size() > 0) {
                     updatePrices = new AbortableRunnable() {
                         private int retries = 20 * 20; // retry for up to 20 seconds
                         private final long previousBazaarUpdate = ChestTracker.lastBazaarUpdate;
                         private final long previousLowestBinsUpdate = ChestTracker.lastLowestBinsUpdate;
+                        private final long previousNpcSellUpdate = ChestTracker.lastNpcSellUpdate;
 
                         @SubscribeEvent
                         public void onTickCheckPriceDataUpdated(TickEvent.ClientTickEvent e) {
@@ -130,8 +175,9 @@ public class ChestOverviewGui extends GuiScreen {
                                     return;
                                 }
                                 retries--;
-                                if (updating.contains(ChestTracker.Updating.BAZAAR) && previousBazaarUpdate == ChestTracker.lastBazaarUpdate
-                                        || updating.contains(ChestTracker.Updating.LOWEST_BINS) && previousLowestBinsUpdate == ChestTracker.lastLowestBinsUpdate) {
+                                if (updating.contains(ItemData.PriceType.BAZAAR) && previousBazaarUpdate == ChestTracker.lastBazaarUpdate
+                                        || updating.contains(ItemData.PriceType.LOWEST_BIN) && previousLowestBinsUpdate == ChestTracker.lastLowestBinsUpdate
+                                        || updating.contains(ItemData.PriceType.NPC_SELL) && previousNpcSellUpdate == ChestTracker.lastNpcSellUpdate) {
                                     // cache(s) have not updated yet, retry next tick
                                     return;
                                 }
@@ -158,22 +204,33 @@ public class ChestOverviewGui extends GuiScreen {
                     };
                     new TickDelay(updatePrices, 20); // 1 second delay + retrying for 20 seconds, making sure price data got updated
                 }
-            } else if (button == chkShowNoPriceItems || button == chkShowLowestBinItems || button == chkShowBazaarItems) {
+            } else if (button == chkShowNoPriceItems || button == chkShowNpcItems || button == chkShowLowestBinItems || button == chkShowBazaarItems) {
                 this.itemOverview.reloadItemData();
             } else if (button == btnCopy) {
-                StringBuilder allItemData = new StringBuilder("Item\tItem (formatted)\tAmount\tPrice (instant-sell)\tValue (instant-sell)\tPrice (sell offer)\tValue (sell offer)\tPrice (lowest BIN)\tValue (lowest BIN)");
+                StringBuilder allItemData = new StringBuilder("Item\tItem (formatted)\tAmount\tPrice (instant-sell)\tValue (instant-sell)\tPrice (sell offer)\tValue (sell offer)\tPrice (lowest BIN)\tValue (lowest BIN)\tPrice (NPC sell)\tValue(NPC sell)");
                 for (ItemData itemData : itemOverview.itemDataHolder) {
                     allItemData.append(itemData.toCopyableFormat());
                 }
                 allItemData.append("\n\n").append("Bazaar value (instant-sell):\t").append(itemOverview.summedValueInstaSell)
                         .append("\n").append("Bazaar value (sell offer):\t").append(itemOverview.summedValueSellOffer)
-                        .append("\n").append("Auction House value (lowest BINs):\t").append(itemOverview.summedValueLowestBins);
+                        .append("\n").append("Auction House value (lowest BINs):\t").append(itemOverview.summedValueLowestBins)
+                        .append("\n").append("NPC sell value (NPC sell):\t").append(itemOverview.summedValueNpcSell);
                 GuiScreen.setClipboardString(allItemData.toString());
             } else if (button == btnBazaarInstantOrOffer) {
-                this.btnBazaarInstantOrOffer.displayString = this.useBazaarInstantSellPrices ? "Use Sell Offer prices" : "Use Instant-Sell prices";
+                this.btnBazaarInstantOrOffer.displayString = this.useBazaarInstantSellPrices ? "via Sell Offer" : "via Insta-Sell";
                 this.useBazaarInstantSellPrices = !this.useBazaarInstantSellPrices;
                 this.itemOverview.reloadItemData();
             }
+        }
+    }
+
+    @Override
+    protected void keyTyped(char typedChar, int keyCode) throws IOException {
+        super.keyTyped(typedChar, keyCode);
+        if (this.fieldSearchQuery.textboxKeyTyped(typedChar, keyCode)) {
+            searchQuery = this.fieldSearchQuery.getText();
+            isPlaceholderSearchQuery = SEARCH_QUERY_PLACE_HOLDER.equals(searchQuery);
+            itemOverview.reloadItemData();
         }
     }
 
@@ -199,6 +256,15 @@ public class ChestOverviewGui extends GuiScreen {
     }
 
     @Override
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+        super.mouseClicked(mouseX, mouseY, mouseButton);
+        this.fieldSearchQuery.mouseClicked(mouseX, mouseY, mouseButton);
+        if (this.fieldSearchQuery.isFocused() && this.isPlaceholderSearchQuery) {
+            this.fieldSearchQuery.setText("");
+        }
+    }
+
+    @Override
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
 
@@ -218,12 +284,14 @@ public class ChestOverviewGui extends GuiScreen {
         private long summedValueInstaSell;
         private long summedValueSellOffer;
         private long summedValueLowestBins;
+        private long summedValueNpcSell;
         private long summedTotalValue;
         private boolean showBazaarItems;
         private boolean showLowestBinItems;
+        private boolean showNpcItems;
 
         ItemOverview() {
-            super(ChestOverviewGui.this.mc, ChestOverviewGui.this.width, ChestOverviewGui.this.height, 32, ChestOverviewGui.this.height - 54, 16);
+            super(ChestOverviewGui.this.mc, ChestOverviewGui.this.width, ChestOverviewGui.this.height, 26, ChestOverviewGui.this.height - 54, 16);
             this.setShowSelectionBox(false);
             // space above first entry for control buttons
             int headerPadding = 20;
@@ -233,29 +301,51 @@ public class ChestOverviewGui extends GuiScreen {
         }
 
         private void reloadItemData() {
+            showBazaarItems = ChestOverviewGui.this.chkShowBazaarItems.isChecked();
+            showLowestBinItems = ChestOverviewGui.this.chkShowLowestBinItems.isChecked();
+            showNpcItems = ChestOverviewGui.this.chkShowNpcItems.isChecked();
+
+            EnumSet<ItemData.PriceType> visiblePriceTypes = EnumSet.of(
+                    showBazaarItems ? ItemData.PriceType.BAZAAR : ItemData.PriceType.NONE,
+                    showLowestBinItems ? ItemData.PriceType.LOWEST_BIN : ItemData.PriceType.NONE,
+                    showNpcItems ? ItemData.PriceType.NPC_SELL : ItemData.PriceType.NONE
+            );
+
             boolean useInstantSellPrices = ChestOverviewGui.this.useBazaarInstantSellPrices;
-            itemDataHolder = main.getChestTracker().getAnalysisResult(orderBy, orderDesc, useInstantSellPrices);
+            itemDataHolder = main.getChestTracker().getAnalysisResult((isPlaceholderSearchQuery ? null : ChestOverviewGui.this.searchQuery), orderBy, orderDesc, visiblePriceTypes, useInstantSellPrices);
             summedValueInstaSell = 0;
             summedValueSellOffer = 0;
             summedValueLowestBins = 0;
+            summedValueNpcSell = 0;
             summedTotalValue = 0;
-            showBazaarItems = ChestOverviewGui.this.chkShowBazaarItems.isChecked();
-            showLowestBinItems = ChestOverviewGui.this.chkShowLowestBinItems.isChecked();
             boolean showNoPriceItems = ChestOverviewGui.this.chkShowNoPriceItems.isChecked();
 
             for (Iterator<ItemData> iterator = itemDataHolder.iterator(); iterator.hasNext(); ) {
                 ItemData itemData = iterator.next();
+                boolean isVisibleItem = !itemData.isHidden();
                 switch (itemData.getPriceType()) {
                     case BAZAAR:
-                        summedValueInstaSell += itemData.getBazaarInstantSellValue();
-                        summedValueSellOffer += itemData.getBazaarSellOfferValue();
+                        if (isVisibleItem) {
+                            summedValueInstaSell += itemData.getBazaarInstantSellValue();
+                            summedValueSellOffer += itemData.getBazaarSellOfferValue();
+                        }
                         if (showBazaarItems) {
                             continue;
                         }
                         break;
                     case LOWEST_BIN:
-                        summedValueLowestBins += itemData.getLowestBinValue();
+                        if (isVisibleItem) {
+                            summedValueLowestBins += itemData.getLowestBinValue();
+                        }
                         if (showLowestBinItems) {
+                            continue;
+                        }
+                        break;
+                    case NPC_SELL:
+                        if (isVisibleItem) {
+                            summedValueNpcSell += itemData.getNpcSellValue();
+                        }
+                        if (showNpcItems) {
                             continue;
                         }
                         break;
@@ -273,6 +363,9 @@ public class ChestOverviewGui extends GuiScreen {
             }
             if (showBazaarItems) {
                 summedTotalValue += (useInstantSellPrices ? summedValueInstaSell : summedValueSellOffer);
+            }
+            if (showNpcItems) {
+                summedTotalValue += summedValueNpcSell;
             }
         }
 
@@ -357,6 +450,26 @@ public class ChestOverviewGui extends GuiScreen {
         }
 
         @Override
+        public void handleMouseInput() {
+            super.handleMouseInput();
+            if (Mouse.getEventButton() == /* right click */ 1 && Mouse.getEventButtonState() && this.isMouseYWithinSlotBounds(this.mouseY)) {
+                int slotLeft = (this.width - this.getListWidth()) / 2;
+                int slotRight = (this.width + this.getListWidth()) / 2;
+                int k = this.mouseY - this.top - this.headerPadding + (int) this.amountScrolled - 4;
+                int clickedSlot = k / this.slotHeight;
+
+                if (clickedSlot < this.getSize() && this.mouseX >= slotLeft && this.mouseX <= slotRight && clickedSlot >= 0 && k >= 0) {
+                    // right-clicked a slot
+                    ItemData itemData = itemDataHolder.get(clickedSlot);
+                    if (itemData != null) {
+                        main.getChestTracker().toggleHiddenStateForItem(itemData.getKey());
+                        this.reloadItemData();
+                    }
+                }
+            }
+        }
+
+        @Override
         protected boolean isSelected(int slotIndex) {
             return false;
         }
@@ -371,12 +484,12 @@ public class ChestOverviewGui extends GuiScreen {
         }
 
         @Override
-        protected void drawSlot(int entryID, int x, int y, int z, int mouseXIn, int mouseYIn) {
+        protected void drawSlot(int entryId, int x, int y, int z, int mouseXIn, int mouseYIn) {
             if (!isMouseYWithinSlotBounds(y + 5)) {
                 // slot isn't visible anyways...
                 return;
             }
-            ItemData itemData = itemDataHolder.get(entryID);
+            ItemData itemData = itemDataHolder.get(entryId);
 
             // render item icon without shadows
             GlStateManager.enableRescaleNormal();
@@ -393,46 +506,53 @@ public class ChestOverviewGui extends GuiScreen {
             if (itemName.length() != itemData.getName().length()) {
                 itemName += "…";
             }
-            fontRenderer.drawStringWithShadow(itemName, itemNameXPos, y + 1, entryID % 2 == 0 ? 0xFFFFFF : 0x909090);
-            fontRenderer.drawStringWithShadow(itemAmount, amountXPos, y + 1, entryID % 2 == 0 ? 0xFFFFFF : 0x909090);
+            fontRenderer.drawStringWithShadow(itemName, itemNameXPos, y + 1, entryId % 2 == 0 ? 0xFFFFFF : 0x909090);
+            fontRenderer.drawStringWithShadow(itemAmount, amountXPos, y + 1, entryId % 2 == 0 ? 0xFFFFFF : 0x909090);
 
             boolean useInstantSellPrices = ChestOverviewGui.this.useBazaarInstantSellPrices;
             double itemPrice = itemData.getPrice(useInstantSellPrices);
             String bazaarOrBinPrice = itemPrice > 0 ? Utils.formatDecimal(itemPrice) : EnumChatFormatting.DARK_GRAY + "?";
-            fontRenderer.drawStringWithShadow(bazaarOrBinPrice, x + Column.PRICE_EACH.getXOffset() - fontRenderer.getStringWidth(bazaarOrBinPrice), y + 1, entryID % 2 == 0 ? 0xFFFFFF : 0x909090);
+            fontRenderer.drawStringWithShadow(bazaarOrBinPrice, x + Column.PRICE_EACH.getXOffset() - fontRenderer.getStringWidth(bazaarOrBinPrice), y + 1, entryId % 2 == 0 ? 0xFFFFFF : 0x909090);
 
             double itemValue = itemData.getPriceSum(useInstantSellPrices);
             String bazaarOrBinValue = itemPrice > 0 ? Utils.formatNumber(itemValue) : EnumChatFormatting.DARK_GRAY + "?";
-            fontRenderer.drawStringWithShadow(bazaarOrBinValue, x + Column.PRICE_SUM.getXOffset() - fontRenderer.getStringWidth(bazaarOrBinValue), y + 1, entryID % 2 == 0 ? 0xFFFFFF : 0x909090);
+            fontRenderer.drawStringWithShadow(bazaarOrBinValue, x + Column.PRICE_SUM.getXOffset() - fontRenderer.getStringWidth(bazaarOrBinValue), y + 1, entryId % 2 == 0 ? 0xFFFFFF : 0x909090);
+
+            String itemPriceType = itemData.getPriceType().getIndicator();
+            fontRenderer.drawStringWithShadow(itemPriceType, x + Column.PRICE_TYPE.getXOffset() - fontRenderer.getStringWidth(itemPriceType), y + 1, entryId % 2 == 0 ? 0xFFFFFF : 0x909090);
+
+            if (itemData.isHidden()) {
+                Gui.drawRect(x, y - 3, x + getListWidth(), y - 3 + slotHeight, 0xdd444444);
+            }
         }
 
         public void drawScreenPost(int mouseX, int mouseY) {
-            int xMin = getLeftX();
-            FontRenderer fontRenderer = ChestOverviewGui.this.fontRendererObj;
+            GlStateManager.pushMatrix();
+            float scaleFactor = 0.9f;
+            GlStateManager.scale(scaleFactor, scaleFactor, 0);
 
             boolean useInstantSellPrices = ChestOverviewGui.this.useBazaarInstantSellPrices;
 
-            String bazaarValueInstantSell = ((showBazaarItems && useInstantSellPrices) ? EnumChatFormatting.WHITE : EnumChatFormatting.DARK_GRAY) + "∑ Bazaar value (instant-sell prices): " + (summedValueInstaSell > 0 ? Utils.formatNumber(summedValueInstaSell) : EnumChatFormatting.DARK_GRAY + "―"); // sum
-            fontRenderer.drawStringWithShadow(bazaarValueInstantSell, xMin + 175 - fontRenderer.getStringWidth("∑ Bazaar value (instant-sell prices): "), ChestOverviewGui.this.height - 50, 0xdddddd);
-            String bazaarValueSellOffer = ((showBazaarItems && !useInstantSellPrices) ? EnumChatFormatting.WHITE : EnumChatFormatting.DARK_GRAY) + "∑ Bazaar value (sell offer prices): " + (summedValueSellOffer > 0 ? Utils.formatNumber(summedValueSellOffer) : EnumChatFormatting.DARK_GRAY + "―"); // sum
-            fontRenderer.drawStringWithShadow(bazaarValueSellOffer, xMin + 175 - fontRenderer.getStringWidth("∑ Bazaar value (sell offer prices): "), ChestOverviewGui.this.height - 39, 0xdddddd);
-            String lowestBinValue = ((showLowestBinItems) ? EnumChatFormatting.WHITE : EnumChatFormatting.DARK_GRAY) + "∑ Auction House value (lowest BINs): " + (summedValueLowestBins > 0 ? Utils.formatNumber(summedValueLowestBins) : EnumChatFormatting.DARK_GRAY + "―"); // sum
-            fontRenderer.drawStringWithShadow(lowestBinValue, xMin + 175 - fontRenderer.getStringWidth("∑ Auction House value (lowest BINs): "), ChestOverviewGui.this.height - 28, 0xdddddd);
-            String estimatedSellValue = ((showBazaarItems || showLowestBinItems) ? EnumChatFormatting.WHITE : EnumChatFormatting.DARK_GRAY)
-                    + "∑ estimated sell value ("
+            drawSummedValue(scaleFactor, showBazaarItems && useInstantSellPrices, summedValueInstaSell, "Bazaar value (instant-sell prices)", 52);
+            drawSummedValue(scaleFactor, showBazaarItems && !useInstantSellPrices, summedValueSellOffer, "Bazaar value (sell offer prices)", 43);
+            drawSummedValue(scaleFactor, showLowestBinItems, summedValueLowestBins, "Auction House value (lowest BINs)", 34);
+            drawSummedValue(scaleFactor, showNpcItems, summedValueNpcSell, "NPC value (NPC sell prices)", 25);
+
+            String estimatedTotalSellValue = "estimated sell value ("
                     + (showBazaarItems ? (useInstantSellPrices ? "insta" : "offer") : "")
                     + (showLowestBinItems ? (showBazaarItems ? "+" : "") + "BIN" : "")
-                    + "): ";
-            String totalValue = estimatedSellValue + (summedTotalValue > 0 ? EnumChatFormatting.WHITE + Utils.formatNumber(summedTotalValue) : EnumChatFormatting.DARK_GRAY + "―"); // sum
-            int estimatedTotalEndX = fontRenderer.drawStringWithShadow(totalValue, xMin + 175 - fontRenderer.getStringWidth(estimatedSellValue), ChestOverviewGui.this.height - 13, 0xdddddd);
+                    + (showNpcItems ? (showBazaarItems || showLowestBinItems ? "+" : "") + "NPC" : "") + ")";
+            int estimatedTotalEndX = drawSummedValue(scaleFactor, (showBazaarItems || showLowestBinItems || showNpcItems), summedTotalValue, estimatedTotalSellValue, 11);
 
-            drawRect(3, ChestOverviewGui.this.height - 16, estimatedTotalEndX + 2, ChestOverviewGui.this.height - 15, 0xff555555);
+            drawRect((int) (3 / scaleFactor), (int) ((ChestOverviewGui.this.height - 15) / scaleFactor), (int) ((estimatedTotalEndX + 2) / scaleFactor), (int) ((ChestOverviewGui.this.height - 14) / scaleFactor), 0xff555555);
+            GlStateManager.popMatrix();
 
             if (isMouseYWithinSlotBounds(mouseY)) {
                 int slotIndex = this.getSlotIndexFromScreenCoords(mouseX, mouseY);
 
                 if (slotIndex >= 0) {
                     // mouse is over a slot: maybe draw item tooltip
+                    int xMin = getLeftX();
                     int xMax = xMin + 16; // 16 = item icon width
                     if (mouseX < xMin || mouseX > xMax) {
                         // mouseX outside of valid item x values
@@ -447,6 +567,15 @@ public class ChestOverviewGui extends GuiScreen {
             }
         }
 
+        private int drawSummedValue(float scaleFactor, boolean isPriceTypeEnabled, long summedValue, String valueType, int yOffset) {
+            String valueText = (isPriceTypeEnabled ? EnumChatFormatting.WHITE : EnumChatFormatting.DARK_GRAY)
+                    + "∑ " + valueType + ": "
+                    + (summedValue > 0 ? Utils.formatNumber(summedValue) : EnumChatFormatting.DARK_GRAY + "-");
+            return ChestOverviewGui.this.fontRendererObj.drawStringWithShadow(valueText,
+                    Math.max(2, (getLeftX() + 175 - ChestOverviewGui.this.fontRendererObj.getStringWidth("∑ " + valueType + ": ")) / scaleFactor),
+                    (ChestOverviewGui.this.height - yOffset) / scaleFactor, 0xdddddd);
+        }
+
         /**
          * GuiSlot#drawScreen: x of slot
          */
@@ -458,8 +587,9 @@ public class ChestOverviewGui extends GuiScreen {
     public enum Column {
         ITEM_NAME("Item", 22),
         ITEM_AMOUNT("Amount", 200),
-        PRICE_EACH("Price", 260),
-        PRICE_SUM("Value", 330);
+        PRICE_EACH("Price", 275),
+        PRICE_SUM("Value", 360),
+        PRICE_TYPE("Type", 410);
 
         private final int xOffset;
         private final String name;

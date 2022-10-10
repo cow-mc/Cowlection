@@ -59,10 +59,7 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
         this.mc = mc;
 
         listEntriesPreviews = new TreeMap<>();
-        newConfigOptions = Sets.newHashSet("enableCopyInventory", "copyOrSaveWailaAndInventoryData", "maxLogFileSize", "maxLatestLogFileSize",
-                "chestAnalyzerShowLowestBinItems", "chestAnalyzerShowNoPriceItems", "bazaarSellAllOrderAscDesc", "bazaarShowItemsLeft",
-                "dungItemQualityShortenNonRandomized", "dungSendPerformanceOnEndScreen", "dungMarkPartiesWithArcher", "dungMarkPartiesWithBerserk", "dungMarkPartiesWithHealer", "dungMarkPartiesWithMage", "dungMarkPartiesWithTank",
-                "dungPartyFinderRuleEditorSimplified", "dungPartyFinderRuleEditorShowOpenButton", "dungSendWrongFloorWarning", "gotoKeyBindings");
+        newConfigOptions = Sets.newHashSet("chestAnalyzerShowNpcItems");
         explanations = new HashMap<>();
         listEntries = new ArrayList<>();
     }

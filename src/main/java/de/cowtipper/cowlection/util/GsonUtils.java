@@ -2,7 +2,7 @@ package de.cowtipper.cowlection.util;
 
 import com.google.gson.*;
 import com.mojang.util.UUIDTypeAdapter;
-import de.cowtipper.cowlection.chesttracker.LowestBinsCache;
+import de.cowtipper.cowlection.chesttracker.data.LowestBinsCache;
 import de.cowtipper.cowlection.data.HyPlayerData;
 import net.minecraft.nbt.*;
 import net.minecraftforge.common.util.Constants;

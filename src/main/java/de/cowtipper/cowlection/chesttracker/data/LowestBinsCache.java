@@ -1,4 +1,4 @@
-package de.cowtipper.cowlection.chesttracker;
+package de.cowtipper.cowlection.chesttracker.data;
 
 import java.util.HashMap;
 

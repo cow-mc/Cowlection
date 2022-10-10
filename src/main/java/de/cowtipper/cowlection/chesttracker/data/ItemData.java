@@ -1,4 +1,4 @@
-package de.cowtipper.cowlection.chesttracker;
+package de.cowtipper.cowlection.chesttracker.data;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
@@ -11,7 +11,9 @@ public class ItemData {
     private double bazaarInstantSellPrice = 0;
     private double bazaarSellOfferPrice = 0;
     private int lowestBin = 0;
+    private double npcPrice = 0;
     private PriceType priceType;
+    private boolean isHidden = false;
 
     public ItemData(String key, ItemStack itemStack) {
         this.key = key;
@@ -44,6 +46,8 @@ public class ItemData {
                 return useInstantSellPrices ? bazaarInstantSellPrice : bazaarSellOfferPrice;
             case LOWEST_BIN:
                 return lowestBin;
+            case NPC_SELL:
+                return npcPrice;
             default:
                 return 0;
         }
@@ -55,6 +59,8 @@ public class ItemData {
                 return useInstantSellPrices ? getBazaarInstantSellValue() : getBazaarSellOfferValue();
             case LOWEST_BIN:
                 return getLowestBinValue();
+            case NPC_SELL:
+                return getNpcSellValue();
             default:
                 return 0;
         }
@@ -75,6 +81,11 @@ public class ItemData {
         this.priceType = PriceType.LOWEST_BIN;
     }
 
+    public void setNpcPrice(double npcPrice) {
+        this.npcPrice = npcPrice;
+        this.priceType = PriceType.NPC_SELL;
+    }
+
     public ItemData addAmount(int stackSize) {
         this.amount += stackSize;
         return this;
@@ -92,12 +103,28 @@ public class ItemData {
         return (long) amount * lowestBin;
     }
 
+    public long getNpcSellValue() {
+        return (long) Math.floor((long) amount * npcPrice);
+    }
+
     public PriceType getPriceType() {
         return priceType;
     }
 
+    public boolean isHidden() {
+        return isHidden;
+    }
+
+    public void setHidden(boolean hidden) {
+        isHidden = hidden;
+    }
+
     public String toCopyableFormat() {
-        return "\n" + EnumChatFormatting.getTextWithoutFormattingCodes(name) + "\t" + name + "\t" + amount + "\t" + toCopyableFormat(bazaarInstantSellPrice) + "\t" + toCopyableFormat(getBazaarInstantSellValue()) + "\t" + toCopyableFormat(bazaarSellOfferPrice) + "\t" + toCopyableFormat(getBazaarSellOfferValue()) + "\t" + toCopyableFormat(lowestBin) + "\t" + toCopyableFormat(getLowestBinValue());
+        return "\n" + EnumChatFormatting.getTextWithoutFormattingCodes(name) + "\t" + name + "\t" + amount + "\t"
+                + toCopyableFormat(bazaarInstantSellPrice) + "\t" + toCopyableFormat(getBazaarInstantSellValue()) + "\t"
+                + toCopyableFormat(bazaarSellOfferPrice) + "\t" + toCopyableFormat(getBazaarSellOfferValue()) + "\t"
+                + toCopyableFormat(lowestBin) + "\t" + toCopyableFormat(getLowestBinValue()) + "\t"
+                + toCopyableFormat(npcPrice) + "\t" + toCopyableFormat(getNpcSellValue());
     }
 
     private String toCopyableFormat(double value) {
@@ -105,6 +132,16 @@ public class ItemData {
     }
 
     public enum PriceType {
-        BAZAAR, LOWEST_BIN, NONE
+        LOWEST_BIN("BIN"), BAZAAR("BZ"), NPC_SELL("NPC"), NONE("-");
+
+        private final String indicator;
+
+        PriceType(String indicator) {
+            this.indicator = indicator;
+        }
+
+        public String getIndicator() {
+            return indicator;
+        }
     }
 }

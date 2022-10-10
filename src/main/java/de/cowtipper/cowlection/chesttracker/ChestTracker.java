@@ -1,11 +1,16 @@
 package de.cowtipper.cowlection.chesttracker;
 
 import de.cowtipper.cowlection.Cowlection;
+import de.cowtipper.cowlection.chesttracker.data.HyBazaarData;
+import de.cowtipper.cowlection.chesttracker.data.HyItemsData;
+import de.cowtipper.cowlection.chesttracker.data.ItemData;
+import de.cowtipper.cowlection.chesttracker.data.LowestBinsCache;
 import de.cowtipper.cowlection.data.DataHelper;
 import de.cowtipper.cowlection.data.HySkyBlockStats;
 import de.cowtipper.cowlection.util.ApiUtils;
 import de.cowtipper.cowlection.util.GsonUtils;
 import de.cowtipper.cowlection.util.MooChatComponent;
+import de.cowtipper.cowlection.util.Utils;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -17,19 +22,23 @@ import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.Constants;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 
 public class ChestTracker {
     public static long lastBazaarUpdate;
     public static long lastLowestBinsUpdate;
+    public static long lastNpcSellUpdate;
     private final Map<BlockPos, List<ItemStack>> chestCache = new HashMap<>();
     private final Map<BlockPos, EnumFacing> doubleChestCache = new HashMap<>();
     private final Set<BlockPos> chestsWithWantedItem = new HashSet<>();
+    private final Set<String> hiddenItems = new HashSet<>();
     private Map<String, ItemData> analysisResult = new HashMap<>();
     private ChestInteractionListener chestInteractionListener;
     private HyBazaarData bazaarCache;
     private LowestBinsCache lowestBinsCache;
+    private Map<String, Double> npcSellCache;
     private final Cowlection main;
 
     public ChestTracker(Cowlection main) {
@@ -120,33 +129,61 @@ public class ChestTracker {
     /**
      * Returns ordered analysis result with prices
      */
-    public List<ItemData> getAnalysisResult(ChestOverviewGui.Column orderBy, boolean orderDesc, boolean useInstantSellPrices) {
+    public List<ItemData> getAnalysisResult(String searchQuery, ChestOverviewGui.Column orderBy, boolean orderDesc, EnumSet<ItemData.PriceType> visiblePriceTypes, boolean useInstantSellPrices) {
         List<ItemData> orderedAnalysisResult = new ArrayList<>();
-        // sort by bazaar value (most value first)
+
+        boolean checkBazaarPrices = bazaarCache != null && bazaarCache.isSuccess() && visiblePriceTypes.contains(ItemData.PriceType.BAZAAR);
+        boolean checkLowestBinPrices = lowestBinsCache != null && lowestBinsCache.size() > 0 && visiblePriceTypes.contains(ItemData.PriceType.LOWEST_BIN);
+        boolean checkNpcSellPrices = npcSellCache != null && npcSellCache.size() > 0 && visiblePriceTypes.contains(ItemData.PriceType.NPC_SELL);
+
+        boolean hasSearchQuery = StringUtils.isNotEmpty(searchQuery);
         for (Map.Entry<String, ItemData> itemEntry : analysisResult.entrySet()) {
+            ItemData itemData = itemEntry.getValue();
+
+            if (hasSearchQuery
+                    && !StringUtils.containsIgnoreCase(itemData.getKey(), searchQuery)
+                    && !StringUtils.containsIgnoreCase(EnumChatFormatting.getTextWithoutFormattingCodes(itemData.getName()), searchQuery)) {
+                // item doesn't match search query
+                continue;
+            }
             boolean foundPriceForItem = false;
-            if (bazaarCache != null && bazaarCache.isSuccess()) {
+
+            if (checkBazaarPrices) {
                 String productKey = itemEntry.getKey();
                 HyBazaarData.Product product = bazaarCache.getProduct(productKey);
                 if (product != null) {
                     // item is sold on bazaar!
-                    itemEntry.getValue().setBazaarInstantSellPrice(product.getInstantSellPrice());
-                    itemEntry.getValue().setBazaarSellOfferPrice(product.getSellOfferPrice());
+                    itemData.setBazaarInstantSellPrice(product.getInstantSellPrice());
+                    itemData.setBazaarSellOfferPrice(product.getSellOfferPrice());
                     foundPriceForItem = true;
                 }
             }
-            if (!foundPriceForItem && lowestBinsCache != null && lowestBinsCache.size() > 0) {
+            if (!foundPriceForItem && checkLowestBinPrices) {
                 String productKey = itemEntry.getKey().replace(':', '-');
                 Integer lowestBin = lowestBinsCache.get(productKey);
                 if (lowestBin != null) {
                     // item is sold via BIN
-                    itemEntry.getValue().setLowestBin(lowestBin);
+                    itemData.setLowestBin(lowestBin);
+                    foundPriceForItem = true;
                 }
             }
-            orderedAnalysisResult.add(itemEntry.getValue());
+            if (!foundPriceForItem && checkNpcSellPrices) {
+                String productKey = itemEntry.getKey();
+                Double npcSellPrice = npcSellCache.get(productKey);
+                if (npcSellPrice != null) {
+                    // item can be sold to NPC
+                    itemData.setNpcPrice(npcSellPrice);
+                    // foundPriceForItem = true;
+                }
+            }
+            itemData.setHidden(hiddenItems.contains(itemData.getKey()));
+            orderedAnalysisResult.add(itemData);
         }
         Comparator<ItemData> comparator;
         switch (orderBy) {
+            case PRICE_TYPE:
+                comparator = Comparator.comparing(ItemData::getPriceType).reversed();
+                break;
             case ITEM_NAME:
                 comparator = Comparator.comparing(ItemData::getName);
                 break;
@@ -180,6 +217,7 @@ public class ChestTracker {
         chestCache.clear();
         doubleChestCache.clear();
         chestsWithWantedItem.clear();
+        hiddenItems.clear();
         analysisResult.clear();
     }
 
@@ -234,10 +272,10 @@ public class ChestTracker {
         return doubleChestCache.getOrDefault(pos, EnumFacing.UP);
     }
 
-    public EnumSet<Updating> refreshPriceCache() {
-        EnumSet<Updating> updating = EnumSet.of(Updating.UNDEFINED);
+    public EnumSet<ItemData.PriceType> refreshPriceCache() {
+        EnumSet<ItemData.PriceType> updating = EnumSet.noneOf(ItemData.PriceType.class);
         if (allowUpdateBazaar()) {
-            updating.add(Updating.BAZAAR);
+            updating.add(ItemData.PriceType.BAZAAR);
             ApiUtils.fetchBazaarData(bazaarData -> {
                 if (bazaarData == null || !bazaarData.isSuccess()) {
                     main.getChatHelper().sendMessage(new MooChatComponent("Error: Couldn't get Bazaar data from Hypixel API! API might be down: check status.hypixel.net").red().setUrl("https://status.hypixel.net/"));
@@ -247,13 +285,30 @@ public class ChestTracker {
             });
         }
         if (allowUpdateLowestBins()) {
-            updating.add(Updating.LOWEST_BINS);
+            updating.add(ItemData.PriceType.LOWEST_BIN);
             ApiUtils.fetchLowestBins(lowestBins -> {
                 if (!lowestBins.hasData()) {
                     main.getChatHelper().sendMessage(new MooChatComponent("Error: Couldn't get lowest BINs from Moulberry's API! API might be down: check if " + ApiUtils.LOWEST_BINS + " is reachable.").red().setUrl(ApiUtils.LOWEST_BINS));
                 }
                 this.lowestBinsCache = lowestBins;
                 lastLowestBinsUpdate = System.currentTimeMillis();
+            });
+        }
+        if (allowUpdateNpcSell()) {
+            updating.add(ItemData.PriceType.NPC_SELL);
+            ApiUtils.fetchItemsData(itemsData -> {
+                this.npcSellCache = new HashMap<>();
+                if (itemsData == null || !itemsData.isSuccess()) {
+                    main.getChatHelper().sendMessage(new MooChatComponent("Error: Couldn't get Items data from Hypixel API! API might be down: check status.hypixel.net").red().setUrl("https://status.hypixel.net/"));
+                } else {
+                    for (HyItemsData.Item item : itemsData.getItems()) {
+                        if (item.getNpcSellPrice() > 0) {
+                            // item has a NPC sell price
+                            this.npcSellCache.put(item.getId(), item.getNpcSellPrice());
+                        }
+                    }
+                }
+                lastNpcSellUpdate = System.currentTimeMillis();
             });
         }
         return updating;
@@ -273,40 +328,84 @@ public class ChestTracker {
         return lowestBinsCache == null || (System.currentTimeMillis() - lastLowestBinsUpdate) > 300000;
     }
 
+    /**
+     * Allow NPC sell prices update once every 15 minutes
+     */
+    public boolean allowUpdateNpcSell() {
+        return npcSellCache == null || (System.currentTimeMillis() - lastNpcSellUpdate) > 900000;
+    }
+
+    public boolean allowAnyPriceUpdate() {
+        return allowUpdateBazaar() || allowUpdateLowestBins() || allowUpdateNpcSell();
+    }
+
     public void markChestsWithWantedItem(String sbKey, int amount, String itemName) {
         // clear old search results
         chestsWithWantedItem.clear();
 
+        Map<BlockPos, Integer> chestsWithWantedItemsAndCount = new TreeMap<>();
+
         if (sbKey.endsWith("_ambiguous")) {
             sbKey = sbKey.substring(0, sbKey.length() - 10);
         }
-        int relevantChests = 0;
+        int mostWantedItemsInOneChest = 0;
         for (Map.Entry<BlockPos, List<ItemStack>> chestCache : chestCache.entrySet()) {
-            boolean hasItemBeenFoundInChest = false;
+            int foundWantedItemsInChest = 0;
             for (ItemStack item : chestCache.getValue()) {
                 String key = item.hasDisplayName() ? item.getDisplayName() : item.getUnlocalizedName();
                 if (item.hasTagCompound()) {
                     key = item.getTagCompound().getCompoundTag("ExtraAttributes").getString("id");
                 }
                 if (sbKey.equals(key)) {
-                    if (!hasItemBeenFoundInChest) {
-                        chestsWithWantedItem.add(chestCache.getKey());
-                        hasItemBeenFoundInChest = true;
-                        ++relevantChests;
-                    }
-                    amount -= item.stackSize;
+                    foundWantedItemsInChest += item.stackSize;
                 }
             }
+            if (foundWantedItemsInChest > 0) {
+                // chest was a match!
+                chestsWithWantedItemsAndCount.put(chestCache.getKey(), foundWantedItemsInChest);
+                if (foundWantedItemsInChest > mostWantedItemsInOneChest) {
+                    mostWantedItemsInOneChest = foundWantedItemsInChest;
+                }
+            }
+            amount -= foundWantedItemsInChest;
             if (amount <= 0) {
                 // already found all relevant chests
                 break;
             }
         }
-        main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "Chest Tracker & Analyzer is now highlighting " + EnumChatFormatting.LIGHT_PURPLE + relevantChests + EnumChatFormatting.GREEN + " chest" + (relevantChests > 1 ? "s" : "") + " with " + itemName
-                + EnumChatFormatting.GREEN + ". Re-opening the chest analysis results with " + EnumChatFormatting.GRAY + "/moo analyzeChests " + EnumChatFormatting.GREEN + "clears the current search.");
+
+        int relevantChestCount = chestsWithWantedItemsAndCount.size();
+        int relevantChestsCoordsLimit = 30;
+        int maxItemCountLength = Utils.formatNumber(mostWantedItemsInOneChest).length();
+        final MooChatComponent relevantChestCoordsHover = new MooChatComponent("Chests with ").gold().bold().appendSibling(new MooChatComponent(itemName).reset())
+                .appendFreshSibling(new MooChatComponent(StringUtils.repeat(' ', maxItemCountLength) + "        (x | y | z)").gray());
+
+        chestsWithWantedItemsAndCount.entrySet().stream()
+                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                .limit(relevantChestsCoordsLimit)
+                .forEach(wantedChest -> {
+                    BlockPos chestPos = wantedChest.getKey();
+                    String itemCountInChest = StringUtils.leftPad(Utils.formatNumber(wantedChest.getValue()), maxItemCountLength, ' ');
+
+                    relevantChestCoordsHover.appendFreshSibling(new MooChatComponent(" " + EnumChatFormatting.YELLOW + itemCountInChest + EnumChatFormatting.DARK_GRAY + "x ➜ "
+                            + EnumChatFormatting.WHITE + chestPos.getX() + EnumChatFormatting.DARK_GRAY
+                            + " | " + EnumChatFormatting.WHITE + chestPos.getY() + EnumChatFormatting.DARK_GRAY
+                            + " | " + EnumChatFormatting.WHITE + chestPos.getZ()).white());
+                });
+        if (relevantChestCount > relevantChestsCoordsLimit) {
+            relevantChestCoordsHover.appendFreshSibling(new MooChatComponent("      + " + (relevantChestCount - relevantChestsCoordsLimit) + " more chests").gray());
+        }
+        main.getChatHelper().sendMessage(new MooChatComponent("Chest Tracker & Analyzer is now highlighting " + EnumChatFormatting.LIGHT_PURPLE + relevantChestCount + EnumChatFormatting.GREEN + " chest" + (relevantChestCount > 1 ? "s" : "") + " with " + itemName
+                + EnumChatFormatting.DARK_GREEN + " [hover for coords, click to re-open GUI]").green()
+                .setHover(relevantChestCoordsHover)
+                .setSuggestCommand("/moo analyzeChests", false));
+        chestsWithWantedItem.addAll(chestsWithWantedItemsAndCount.keySet());
     }
 
-    public enum Updating {
-        UNDEFINED, BAZAAR, LOWEST_BINS
+    public void toggleHiddenStateForItem(String key) {
+        boolean removed = hiddenItems.remove(key);
+        if (!removed) {
+            hiddenItems.add(key);
+        }
     }
 }

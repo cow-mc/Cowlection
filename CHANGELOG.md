@@ -15,6 +15,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - added new slayers (enderman + blaze)
   - `/moo analyzeIsland`: added new minions (mainly Crimson Isle related)
 - `/moo analyzeIsland`: Added chests and hopper counters
+- `/moo analyzeChests`: Chest Analyzer rework:
+  - Added search
+  - Added NPC sell prices (only used if an item has neither a Bazaar nor lowest BIN price, or if one of them is hidden)
+  - Added 'deselect/hide item' = not calculated in total price sum (right click inside GUI)
+  - Added list of coords for highlighted chests when searching for chests with a certain item (double click inside the GUI to search, hover the chat message to see coords)
+  - Added info button (`[?]`)
 
 ### Changed
 

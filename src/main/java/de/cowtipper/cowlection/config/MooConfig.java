@@ -78,6 +78,7 @@ public class MooConfig {
     public static boolean chestAnalyzerShowBazaarItems;
     private static String chestAnalyzerUseBazaarPrices;
     public static boolean chestAnalyzerShowLowestBinItems;
+    public static boolean chestAnalyzerShowNpcItems;
     public static boolean chestAnalyzerShowNoPriceItems;
     public static boolean chestAnalyzerShowCommandUsage;
     public static int tooltipToggleKeyBinding;
@@ -449,19 +450,25 @@ public class MooConfig {
         Property propNotifyServerAge = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "notifyServerAge", true, "Show server age notifications?"));
 
-        // Sub-Category: Chest Analyzer (Bazaar & lowest BIN prices)
-        subCat = configCat.addSubCategory("Chest Tracker & Analyzer (Bazaar & lowest BIN prices)");
+        // Sub-Category: Chest Analyzer (Bazaar, lowest BIN, & NPC prices)
+        subCat = configCat.addSubCategory("Chest Tracker & Analyzer (Bazaar, lowest BIN, & NPC prices)");
         String analyzeCommand = "/moo analyzeChests";
         subCat.addExplanations("Use " + EnumChatFormatting.YELLOW + analyzeCommand + EnumChatFormatting.RESET + " to start tracking chests on your island! " + EnumChatFormatting.GREEN + "Then you can...",
                 EnumChatFormatting.GREEN + "  ❶ " + EnumChatFormatting.RESET + "add chests by opening them; deselect chests by Sneaking + Right Click.",
                 EnumChatFormatting.GREEN + "  ❷ " + EnumChatFormatting.RESET + "use " + EnumChatFormatting.YELLOW + analyzeCommand + EnumChatFormatting.RESET + " again to run the chest analysis.",
-                EnumChatFormatting.GREEN + "  ❸ " + EnumChatFormatting.RESET + "use " + EnumChatFormatting.YELLOW + analyzeCommand + " stop" + EnumChatFormatting.RESET + " to stop the chest tracker and clear current results.");
+                EnumChatFormatting.GREEN + "  ❸ " + EnumChatFormatting.RESET + "use " + EnumChatFormatting.YELLOW + analyzeCommand + " stop" + EnumChatFormatting.RESET + " to stop the chest tracker and clear current results.",
+                "",
+                EnumChatFormatting.GREEN + "Inside the GUI you can also:",
+                EnumChatFormatting.WHITE + "  ‣ " + EnumChatFormatting.GOLD + "double click" + EnumChatFormatting.WHITE + ": highlight chests with selected item; hover over the chat message to see chest coords",
+                EnumChatFormatting.WHITE + "  ‣ " + EnumChatFormatting.GOLD + "right click" + EnumChatFormatting.WHITE + ": exclude item from sell value calculation");
         Property propChestAnalyzerShowBazaarItems = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "chestAnalyzerShowBazaarItems", true, "Show Bazaar items in Chest Tracker?"));
         Property propChestAnalyzerUseBazaarPrices = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "chestAnalyzerUseBazaarPrices", "Instant-Sell", "Use Bazaar prices?", new String[]{"Instant-Sell", "Sell Offer"}));
         Property propChestAnalyzerShowLowestBinItems = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "chestAnalyzerShowLowestBinItems", true, "Show lowest BIN items in Chest Tracker?"));
+        Property propChestAnalyzerShowNpcItems = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "chestAnalyzerShowNpcItems", true, "Show NPC items in Chest Tracker?"));
         Property propChestAnalyzerShowNoPriceItems = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "chestAnalyzerShowNoPriceItems", false, "Show items without price in Chest Tracker?"));
         Property propChestAnalyzerShowCommandUsage = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
@@ -762,6 +769,7 @@ public class MooConfig {
             chestAnalyzerShowBazaarItems = propChestAnalyzerShowBazaarItems.getBoolean();
             chestAnalyzerUseBazaarPrices = propChestAnalyzerUseBazaarPrices.getString();
             chestAnalyzerShowLowestBinItems = propChestAnalyzerShowLowestBinItems.getBoolean();
+            chestAnalyzerShowNpcItems = propChestAnalyzerShowNpcItems.getBoolean();
             chestAnalyzerShowNoPriceItems = propChestAnalyzerShowNoPriceItems.getBoolean();
             chestAnalyzerShowCommandUsage = propChestAnalyzerShowCommandUsage.getBoolean();
             tooltipToggleKeyBinding = propTooltipToggleKeyBinding.getInt();
@@ -854,6 +862,7 @@ public class MooConfig {
         propChestAnalyzerShowBazaarItems.set(chestAnalyzerShowBazaarItems);
         propChestAnalyzerUseBazaarPrices.set(chestAnalyzerUseBazaarPrices);
         propChestAnalyzerShowLowestBinItems.set(chestAnalyzerShowLowestBinItems);
+        propChestAnalyzerShowNpcItems.set(chestAnalyzerShowNpcItems);
         propChestAnalyzerShowNoPriceItems.set(chestAnalyzerShowNoPriceItems);
         propChestAnalyzerShowCommandUsage.set(chestAnalyzerShowCommandUsage);
         propTooltipToggleKeyBinding.set(tooltipToggleKeyBinding);

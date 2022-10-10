@@ -5,8 +5,9 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.mojang.util.UUIDTypeAdapter;
 import de.cowtipper.cowlection.Cowlection;
-import de.cowtipper.cowlection.chesttracker.HyBazaarData;
-import de.cowtipper.cowlection.chesttracker.LowestBinsCache;
+import de.cowtipper.cowlection.chesttracker.data.HyBazaarData;
+import de.cowtipper.cowlection.chesttracker.data.HyItemsData;
+import de.cowtipper.cowlection.chesttracker.data.LowestBinsCache;
 import de.cowtipper.cowlection.command.exception.ThrowingConsumer;
 import de.cowtipper.cowlection.config.CredentialStorage;
 import de.cowtipper.cowlection.data.*;
@@ -33,6 +34,7 @@ public class ApiUtils {
     private static final String SKYBLOCK_STATS_URL = "https://api.hypixel.net/skyblock/profiles?key=%s&uuid=%s";
     private static final String BAZAAR_URL = "https://api.hypixel.net/skyblock/bazaar";
     public static final String LOWEST_BINS = "https://moulberry.codes/lowestbin.json";
+    private static final String ITEMS_URL = "https://api.hypixel.net/resources/skyblock/items";
     private static final String PLAYER_URL = "https://api.hypixel.net/player?key=%s&uuid=%s";
     private static final String API_KEY_URL = "https://api.hypixel.net/key?key=%s";
     private static final ExecutorService pool = Executors.newCachedThreadPool();
@@ -135,6 +137,21 @@ public class ApiUtils {
             handleApiException(e);
         }
         return new LowestBinsCache();
+    }
+
+    public static void fetchItemsData(ThrowingConsumer<HyItemsData> action) {
+        pool.execute(() -> action.accept(getItemsData()));
+    }
+
+    private static HyItemsData getItemsData() {
+        try (BufferedReader reader = makeApiCall(ITEMS_URL)) {
+            if (reader != null) {
+                return GsonUtils.fromJson(reader, HyItemsData.class);
+            }
+        } catch (IOException | JsonSyntaxException e) {
+            handleApiException(e);
+        }
+        return null;
     }
 
     public static void fetchHyPlayerDetails(Friend stalkedPlayer, ThrowingConsumer<HyPlayerData> action) {
