@@ -67,8 +67,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SkyBlockListener {
-    private static final Pattern ITEM_COUNT_PREFIXED_PATTERN = Pattern.compile("^(?:§[0-9a-fl-or])*[\\d]+x ");
-    private static final Pattern ITEM_COUNT_SUFFIXED_PATTERN = Pattern.compile(" (?:§[0-9a-fl-or])*x[\\d]+$");
+    private static final Pattern ITEM_COUNT_PREFIXED_PATTERN = Pattern.compile("^(?:§[0-9a-fl-or])*\\d+x ");
+    private static final Pattern ITEM_COUNT_SUFFIXED_PATTERN = Pattern.compile(" (?:§[0-9a-fl-or])*x\\d+$");
     private static final Pattern PET_NAME_PATTERN = Pattern.compile("^§7\\[Lvl (\\d+)] (§[0-9a-f])");
     private static final Pattern TIER_SUFFIX_PATTERN = Pattern.compile(" [IVX0-9]+$");
     // example: " §a42§7x §fLeather §7for §6436.8 coins"
@@ -607,7 +607,11 @@ public class SkyBlockListener {
                             || toolTipLineUnformatted.startsWith("New bid: ") /* special case: 'Submit Bid' item */) {
 
                         try {
-                            long price = numberFormatter.parse(StringUtils.substringBetween(toolTipLineUnformatted, ": ", " coins")).longValue();
+                            String hopefullyAPrice = StringUtils.substringBetween(toolTipLineUnformatted, ": ", " coins");
+                            if (hopefullyAPrice == null) {
+                                return;
+                            }
+                            long price = numberFormatter.parse(hopefullyAPrice).longValue();
                             double priceEach = price / (double) itemAmount;
                             String formattedPriceEach = priceEach < 5000 ? numberFormatter.format(priceEach) : Utils.formatNumberWithAbbreviations(priceEach);
                             if (superEnchantName != null) {

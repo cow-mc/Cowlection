@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 
 public final class Utils {
     public static final Pattern VALID_UUID_PATTERN = Pattern.compile("^(\\w{8})-(\\w{4})-(\\w{4})-(\\w{4})-(\\w{12})$");
-    private static final Pattern VALID_USERNAME = Pattern.compile("^[\\w]{1,16}$");
+    private static final Pattern VALID_USERNAME = Pattern.compile("^\\w{1,16}$");
     private static final Pattern ALTERNATE_COLOR_CODES_PATTERN = Pattern.compile("&([0-9a-fk-or])");
     private static final Pattern MC_COLOR_CODES_PATTERN = Pattern.compile("§([0-9a-fk-or])");
     private static final NavigableMap<Double, Character> NUMBER_SUFFIXES = new TreeMap<>();
@@ -449,7 +449,7 @@ public final class Utils {
                         .appendSibling(new MooChatComponent(" [open folder]").darkAqua().setOpenFile(targetNormalized.getParentFile())));
             } catch (IOException | UnsupportedOperationException e) {
                 e.printStackTrace();
-                Cowlection.getInstance().getChatHelper().sendMessage(EnumChatFormatting.RED, "Couldn't save " + what + ": " + e.toString());
+                Cowlection.getInstance().getChatHelper().sendMessage(EnumChatFormatting.RED, "Couldn't save " + what + ": " + e);
             }
         }
     }

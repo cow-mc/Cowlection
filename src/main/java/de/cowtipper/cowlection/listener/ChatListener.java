@@ -36,10 +36,10 @@ public class ChatListener {
      * - §aFriend > §r§aNAME §r§eleft.§r
      * - §2Guild > §r§aNAME §r§eleft.§r
      */
-    private static final Pattern LOGIN_LOGOUT_NOTIFICATION = Pattern.compile("^(?<type>§aFriend|§2Guild) > §r(?<rank>§[0-9a-f])(?<playerName>[\\w]+)(?<joinLeaveSuffix> §r§e(?<joinedLeft>joined|left)\\.)§r$");
+    private static final Pattern LOGIN_LOGOUT_NOTIFICATION = Pattern.compile("^(?<type>§aFriend|§2Guild) > §r(?<rank>§[0-9a-f])(?<playerName>\\w+)(?<joinLeaveSuffix> §r§e(?<joinedLeft>joined|left)\\.)§r$");
     private static final Pattern CHAT_MESSAGE_RECEIVED_PATTERN = Pattern.compile("^(?:Party|Guild) > (?:\\[.*?] )?(\\w+)(?: \\[.*?])?: ");
     private static final Pattern PRIVATE_MESSAGE_RECEIVED_PATTERN = Pattern.compile("^From (?:\\[.*?] )?(\\w+): ");
-    private static final Pattern PARTY_OR_GAME_INVITE_PATTERN = Pattern.compile("^[-]+\\s+(?:\\[.*?] )?(\\w+) has invited you ");
+    private static final Pattern PARTY_OR_GAME_INVITE_PATTERN = Pattern.compile("^-+\\s+(?:\\[.*?] )?(\\w+) has invited you ");
     private static final Pattern DUNGEON_FINDER_JOINED_PATTERN = Pattern.compile("^Dungeon Finder > (\\w+) joined the dungeon group! \\(([A-Z][a-z]+) Level (\\d+)\\)$");
     private final Cowlection main;
     private String lastTypedChars = "";

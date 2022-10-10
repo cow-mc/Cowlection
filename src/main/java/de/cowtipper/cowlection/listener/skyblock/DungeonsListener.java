@@ -99,8 +99,8 @@ public class DungeonsListener {
      * <li> ☠ You were killed by [mob] and became a ghost.</li>
      * </ul>
      */
-    private final Pattern DUNGEON_DEATH_PATTERN = Pattern.compile("^ ☠ (\\w+) (?:.+) and became a ghost\\.$");
-    private final Pattern DUNGEON_REVIVED_PATTERN = Pattern.compile("^ ❣ (\\w+) was revived(?:.*?)$");
+    private final Pattern DUNGEON_DEATH_PATTERN = Pattern.compile("^ ☠ (\\w+) .+ and became a ghost\\.$");
+    private final Pattern DUNGEON_REVIVED_PATTERN = Pattern.compile("^ ❣ (\\w+) was revived.*?$");
     /**
      * Class milestones:
      * <ul>
@@ -667,8 +667,7 @@ public class DungeonsListener {
                     try {
                         int floorNrArabic = Integer.parseInt(floorMatcher.group(3));
                         floorNr = Utils.convertArabicToRoman(floorNrArabic); // floor == [0-9]+
-                    } catch (NumberFormatException ex) {
-                        floorNr = null;
+                    } catch (NumberFormatException ignored) {
                     }
                 }
                 main.getDungeonCache().setQueuedFloor(floorNr);

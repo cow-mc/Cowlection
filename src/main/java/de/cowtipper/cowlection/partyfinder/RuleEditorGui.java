@@ -53,7 +53,7 @@ public class RuleEditorGui extends GuiScreen {
         colorCodesExplanation.add(EnumChatFormatting.BOLD + "Minecraft color codes:");
         for (EnumChatFormatting chatFormatting : EnumChatFormatting.values()) {
             if (chatFormatting.isColor()) {
-                colorCodesExplanation.add(Utils.toHumanColorCodes(chatFormatting.toString()) + " → " + chatFormatting.toString() + chatFormatting.getFriendlyName());
+                colorCodesExplanation.add(Utils.toHumanColorCodes(chatFormatting.toString()) + " → " + chatFormatting + chatFormatting.getFriendlyName());
             }
         }
     }
@@ -114,6 +114,8 @@ public class RuleEditorGui extends GuiScreen {
                     EnumChatFormatting.GRAY + "plz,pls,help" + EnumChatFormatting.RESET + "\" matches \"" + EnumChatFormatting.GRAY + "plz" + EnumChatFormatting.RESET + "\", \"" + EnumChatFormatting.GRAY + "pls" + EnumChatFormatting.RESET + "\" and \"" + EnumChatFormatting.GRAY + "help" + EnumChatFormatting.RESET + "\"");
             helpTooltip.add(EnumChatFormatting.YELLOW + " ➊+➋ " + EnumChatFormatting.RESET + "combination of both " + EnumChatFormatting.YELLOW + "(,)" + EnumChatFormatting.RESET + ": for example \""
                     + EnumChatFormatting.GRAY + "carry( pls, plz)" + EnumChatFormatting.RESET + "\" matches \"" + EnumChatFormatting.GRAY + "carry" + EnumChatFormatting.RESET + "\", but not \"" + EnumChatFormatting.GRAY + "carry pls" + EnumChatFormatting.RESET + "\" or \"" + EnumChatFormatting.GRAY + "carry plz" + EnumChatFormatting.RESET + "\"");
+            helpTooltip.add("");
+            helpTooltip.add(EnumChatFormatting.GRAY + "If you want to use Regular Expressions (regex), you can enable them via " + EnumChatFormatting.YELLOW + "/moo config regex");
             drawHoveringText(helpTooltip, mouseX, mouseY);
         } else if (btnClose.isMouseOver()) {
             drawHoveringText(Arrays.asList(EnumChatFormatting.RED + "Save & Close", "" + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + "Hint:" + EnumChatFormatting.RESET + " alternatively press ESC"), mouseX, mouseY);

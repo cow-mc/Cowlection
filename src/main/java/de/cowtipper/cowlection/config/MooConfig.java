@@ -325,7 +325,7 @@ public class MooConfig {
 
         // (not visible in config gui: has opened config? or: knows how to move the dungeon overlay?)
         Property propHasOpenedConfigGui = cfg.get(configCat.getConfigName(),
-                "hasOpenedConfigGui", false, "Already opened config gui?")
+                        "hasOpenedConfigGui", false, "Already opened config gui?")
                 .setShowInGui(false);
 
         // Sub-Category: API settings
@@ -339,7 +339,7 @@ public class MooConfig {
         subCat = configCat.addSubCategory("Command settings");
 
         propMooCmdAlias = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "mooCmdAlias", "m", "Alias for /moo command")
+                        "mooCmdAlias", "m", "Alias for /moo command")
                 .setValidationPattern(Pattern.compile("^[A-Za-z]*$")));
         Property propFixReplyCmd = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "fixReplyCmd", true, "Auto-replace /r?"));
@@ -360,7 +360,7 @@ public class MooConfig {
                 "  ‣ Online best friends (if the best friend online checker is enabled)");
 
         propTabCompletableNamesCommands = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "tabCompletableNamesCommands", new String[]{"p", "ah", "ignore", "msg", "tell", "w", "boop", "profile", "friend", "friends"}, "List of commands with a Tab-completable username argument.")
+                        "tabCompletableNamesCommands", new String[]{"p", "ah", "ignore", "msg", "tell", "w", "boop", "profile", "friend", "friends"}, "List of commands with a Tab-completable username argument.")
                 .setValidationPattern(Pattern.compile("^[A-Za-z]+$")));
 
         // Sub-Category: Other settings
@@ -371,7 +371,7 @@ public class MooConfig {
                 "logsDirs", resolveDefaultLogsDirs(),
                 "Directories with Minecraft log files"));
         Property propDefaultStartDate = subCat.addConfigEntry(cfg.get(CATEGORY_LOGS_SEARCH,
-                "defaultStartDate", "3", "Default start date (a number means X months ago, alternatively a fixed date à la yyyy-mm-dd can be used)"))
+                        "defaultStartDate", "3", "Default start date (a number means X months ago, alternatively a fixed date à la yyyy-mm-dd can be used)"))
                 .setValidationPattern(Pattern.compile("^[1-9][0-9]{0,2}|(2[0-9]{3}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01]))$"));
         Property propMaxLogFileSize = subCat.addConfigEntry(cfg.get(CATEGORY_LOGS_SEARCH,
                 "maxLogFileSize", 2048, "Max log file size (in KB)?", 50, 10000));
@@ -399,17 +399,17 @@ public class MooConfig {
                 "Add someone to the best friends list with " + EnumChatFormatting.YELLOW + "/moo add <player>" + EnumChatFormatting.RESET);
 
         Property propShowBestFriendNotifications = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "showBestFriendNotifications", true, "Set to true to receive best friends' login/logout messages, set to false hide them."),
+                        "showBestFriendNotifications", true, "Set to true to receive best friends' login/logout messages, set to false hide them."),
                 new MooConfigPreview(new ChatComponentText("§a§lBest friend §a> §6Cow §r§ejoined.")));
         Property propEnableBestFriendNotificationSound = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "enableBestFriendNotificationSound", false, "Set to true to play a notification sound when a best friend comes online"),
+                        "enableBestFriendNotificationSound", false, "Set to true to play a notification sound when a best friend comes online"),
                 new MooConfigPreview("random.pop", Minecraft.getMinecraft().gameSettings.getSoundLevel(SoundCategory.MASTER), 1));
 
         Property propShowFriendNotifications = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "showFriendNotifications", true, "Set to true to receive friends' login/logout messages, set to false hide them."),
+                        "showFriendNotifications", true, "Set to true to receive friends' login/logout messages, set to false hide them."),
                 new MooConfigPreview(new ChatComponentText("§aFriend > §r§aBob §ejoined.")));
         Property propShowGuildNotifications = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "showGuildNotifications", true, "Set to true to receive guild members' login/logout messages, set to false hide them."),
+                        "showGuildNotifications", true, "Set to true to receive guild members' login/logout messages, set to false hide them."),
                 new MooConfigPreview(new ChatComponentText("§2Guild > §r§7Herobrian §eleft.")));
 
 
@@ -420,7 +420,7 @@ public class MooConfig {
 
         IChatComponent spacer = new MooChatComponent(", ").green();
         Property propDoBestFriendsOnlineCheck = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "doBestFriendsOnlineCheck", true, "Set to true to check best friends' online status when joining a server, set to false to disable."),
+                        "doBestFriendsOnlineCheck", true, "Set to true to check best friends' online status when joining a server, set to false to disable."),
                 new MooConfigPreview(new MooChatComponent("§a⬤ Online best friends (§24§a/§216§a): ")
                         .appendSibling(MooConfigPreview.createDemoOnline("Alice", "Housing", "1 hour 13 minutes 37 seconds")).appendSibling(spacer)
                         .appendSibling(MooConfigPreview.createDemoOnline("Bob", "Build Battle", "2 hours 13 minutes 37 seconds")).appendSibling(spacer)
@@ -482,7 +482,7 @@ public class MooConfig {
         MooConfigPreview nonStackableItemPreview = new MooConfigPreview(MooConfigPreview.createDemoItem("cake", "§dNew Year Cake", new String[]{"§7Given to every player as a", "§7celebration for the 1st SkyBlock", "§7year!", "", "§d§lSPECIAL"}, demoItemExtraAttributes));
 
         Property propTooltipItemAge = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "tooltipItemAge", "always", "Show item age", new String[]{"always", "key press", "never"}),
+                        "tooltipItemAge", "always", "Show item age", new String[]{"always", "key press", "never"}),
                 nonStackableItemPreview);
 
         Property propTooltipItemAgeShortened = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
@@ -506,14 +506,14 @@ public class MooConfig {
                 "tooltipAuctionHousePriceEach", "always", "Add price per item if multiple items are bought or sold", new String[]{"always", "key press", "never"}), ahItemPreview);
 
         propTooltipAuctionHousePriceEachEnchantments = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "tooltipAuctionHousePriceEachEnchantments", new String[]{"overload", "rejuvenate"}, "Price per lvl 1 book enchantment")
+                        "tooltipAuctionHousePriceEachEnchantments", new String[]{"overload", "rejuvenate"}, "Price per lvl 1 book enchantment")
                 .setValidationPattern(Pattern.compile("^[A-Za-z_ -]+$")));
 
         Property propAuctionHouseMarkEndedAuctions = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "auctionHouseMarkEndedAuctions", "a letter", "Mark ended auctions", new String[]{"a letter", "a word", "disabled"}));
 
         Property propBazaarSellAllOrder = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "bazaarSellAllOrder", "price (sum)", "Bazaar: sell all order", new String[]{"price (sum)", "item amount", "unordered", "price (each)"}),
+                        "bazaarSellAllOrder", "price (sum)", "Bazaar: sell all order", new String[]{"price (sum)", "item amount", "unordered", "price (each)"}),
                 new MooConfigPreview(MooConfigPreview.createDemoItem("chest", "§aSell Inventory Now", new String[]{"§7Instantly sell anything in", "§7your inventory that can be", "§7sold on the Bazaar.", "", " §a1§7x §aEnchanted Leather §7for §65,263.1 coins", " §a42§7x §fLeather §7for §6436.8 coins", " §a2§7x §fRabbit Hide §7for §642.0 coins", " §a79§7x §fRaw Beef §7for §6450.3 coins", " §a16§7x §aEnchanted Raw Beef §7for §69,867.2 coins", "", "§7You earn: §615,698 coins", "", "§eClick to sell!"}, Collections.emptyMap())));
 
         Property propBazaarSellAllOrderAscDesc = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
@@ -531,7 +531,7 @@ public class MooConfig {
                 "§r│§8····§r│§8·······§bx§8·································§r│", "§r│§8··§66k§r+---------+----------+---------+---------+│",
                 "§r│§8····§r24h§8······§r18h§8········§r12h§8·······§r6h§8·······§rnow│", "§r└----------------------------------------------┘"}, Maps.newHashMap()));
         Property propBazaarConnectGraphsNodes = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "bazaarConnectGraphsNodes", "always", "Bazaar: connect the graph nodes", new String[]{"always", "key press", "never"}),
+                        "bazaarConnectGraphsNodes", "always", "Bazaar: connect the graph nodes", new String[]{"always", "key press", "never"}),
                 bazaarGraphPreview);
 
         Property propBazaarConnectGraphsLineWidth = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
@@ -544,7 +544,7 @@ public class MooConfig {
                 "",
                 "§7Families Found: §e75§6%", "§3---------------§f----- §b3§3/§b4"}, Maps.newHashMap()));
         Property propBestiaryOverviewOrder = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "bestiaryOverviewOrder", "fewest kills", "Order of the Bestiary overview?", bestiaryOverviewOrderDefaultValues),
+                        "bestiaryOverviewOrder", "fewest kills", "Order of the Bestiary overview?", bestiaryOverviewOrderDefaultValues),
                 bestiaryOverviewPreview);
 
         // Sub-Category: Item lookup
@@ -580,7 +580,7 @@ public class MooConfig {
                 "showItemQualityAndFloor", "always", "show item quality + obtained floor?", new String[]{"always", "key press", "never"}));
 
         Property propDungItemQualityPos = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungItemQualityPos", "top", "Position of item quality in tooltip", new String[]{"top", "bottom"}),
+                        "dungItemQualityPos", "top", "Position of item quality in tooltip", new String[]{"top", "bottom"}),
                 new MooConfigPreview(
                         MooConfigPreview.createDungeonItem("light", "7/17/20 7:22 PM", "§7Gear Score: §d336 §8(526)", "§7Crit Chance: §c+5% §9(Light +2%)", "§7Crit Damage: §c+30% §9(Light +4%) §8(+48.9%)", "§7Bonus Attack Speed: §c+4% §9(Light +4%)", "", "§7Health: §a+126 HP §9(Light +15 HP) §8(+205.38 HP)", "§7Defense: §a+76 §9(Light +4) §8(+123.88)", "§7Speed: §a+4 §9(Light +4) §8(+6.52)", "", "§9Growth V, §9Protection V", "§9Thorns III", "", "§7Increase the damage you deal", "§7with arrows by §c5%§7.", "", "§6Full Set Bonus: Skeleton Soldier", "§7Increase the damage you deal", "§7with arrows by an extra §c25%§7.", "", "§aPerfect 52500 / 52500", "§5§lEPIC DUNGEON LEGGINGS"),
                         MooConfigPreview.createDungeonItem("clean", "7/11/20 12:27 PM", "§7Gear Score: §d359 §8(561)", "§7Crit Chance: §c+11% §9(Clean +8%)", "§7Crit Damage: §c+26% §8(+42.38%)", "", "§7Health: §a+126 HP §9(Clean +15 HP) §8(+205.38 HP)", "§7Defense: §a+87 §9(Clean +15) §8(+141.81)", "", "§9Growth V, §9Protection V", "§9Thorns III", "", "§7Increase the damage you deal", "§7with arrows by §c5%§7.", "", "§6Full Set Bonus: Skeleton Soldier", "§7Increase the damage you deal", "§7with arrows by an extra §c25%§7.", "", "§aPerfect 52500 / 52500", "§5§lEPIC DUNGEON LEGGINGS")));
@@ -612,7 +612,7 @@ public class MooConfig {
                 "dungOverlayEnabled", true, "Enable Dungeon performance overlay?"));
 
         Property propDungOverlayPositionX = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungOverlayPositionX", 6, "Dungeon performance overlay position: x value", 0, 1000),
+                        "dungOverlayPositionX", 6, "Dungeon performance overlay position: x value", 0, 1000),
                 null, "‰", // per mille
                 (slider) -> {
                     MooConfig.dungOverlayPositionX = slider.getValueInt();
@@ -620,7 +620,7 @@ public class MooConfig {
                 });
 
         Property propDungOverlayPositionY = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungOverlayPositionY", 200, "Dungeon performance overlay position: y value", 0, 1000),
+                        "dungOverlayPositionY", 200, "Dungeon performance overlay position: y value", 0, 1000),
                 null, "‰", // per mille
                 (slider) -> {
                     MooConfig.dungOverlayPositionY = slider.getValueInt();
@@ -628,7 +628,7 @@ public class MooConfig {
                 });
 
         Property propDungOverlayGuiScale = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungOverlayGuiScale", 100, "Dungeon performance overlay GUI scale", 50, 200),
+                        "dungOverlayGuiScale", 100, "Dungeon performance overlay GUI scale", 50, 200),
                 null, "%",
                 (slider) -> {
                     MooConfig.dungOverlayGuiScale = slider.getValueInt();
@@ -665,57 +665,57 @@ public class MooConfig {
                 "dungPartyFinderOverlayDrawBackground", true, "Party Finder: draw colored overlay?"));
 
         Property propDungPartiesSize = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungPartiesSize", true, "Show size of parties?"),
+                        "dungPartiesSize", true, "Show size of parties?"),
                 new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.WHITE + "1 - 4").gray()));
 
         Property propDungDungeonReqMin = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungDungeonReqMin", 0, "Marks parties with lower Dungeon level req than this value")
+                                "dungDungeonReqMin", 0, "Marks parties with lower Dungeon level req than this value")
                         .setMinValue(0).setMaxValue(50),
                 new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.DARK_RED + EnumChatFormatting.BOLD + "ᐯ").gray()));
 
         Property propDungClassMin = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungClassMin", 0, "Marks parties with members with lower class level than this value")
+                                "dungClassMin", 0, "Marks parties with members with lower class level than this value")
                         .setMinValue(0).setMaxValue(50),
                 new MooConfigPreview(new MooChatComponent("Marked with: " + EnumChatFormatting.RED + EnumChatFormatting.BOLD + "ᐯ").gray()));
 
         Property propDungMarkPartiesWithArcher = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungMarkPartiesWithArcher", "if dupe: " + EnumChatFormatting.GOLD + "⬛", "Mark parties with Archer class?",
-                new String[]{
-                        "if dupe: " + EnumChatFormatting.GOLD + "⬛", "always: " + EnumChatFormatting.GOLD + "⬛",
-                        "if dupe: " + EnumChatFormatting.RED + "⬛", "always: " + EnumChatFormatting.RED + "⬛",
-                        "do not mark"}),
+                        "dungMarkPartiesWithArcher", "if dupe: " + EnumChatFormatting.GOLD + "⬛", "Mark parties with Archer class?",
+                        new String[]{
+                                "if dupe: " + EnumChatFormatting.GOLD + "⬛", "always: " + EnumChatFormatting.GOLD + "⬛",
+                                "if dupe: " + EnumChatFormatting.RED + "⬛", "always: " + EnumChatFormatting.RED + "⬛",
+                                "do not mark"}),
                 new MooConfigPreview(DataHelper.DungeonClass.ARCHER));
 
         Property propDungMarkPartiesWithBerserk = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungMarkPartiesWithBerserk", "do not mark", "Mark parties with Berserk class?",
-                new String[]{
-                        "if dupe: " + EnumChatFormatting.GOLD + "⬛", "always: " + EnumChatFormatting.GOLD + "⬛",
-                        "if dupe: " + EnumChatFormatting.RED + "⬛", "always: " + EnumChatFormatting.RED + "⬛",
-                        "do not mark"}),
+                        "dungMarkPartiesWithBerserk", "do not mark", "Mark parties with Berserk class?",
+                        new String[]{
+                                "if dupe: " + EnumChatFormatting.GOLD + "⬛", "always: " + EnumChatFormatting.GOLD + "⬛",
+                                "if dupe: " + EnumChatFormatting.RED + "⬛", "always: " + EnumChatFormatting.RED + "⬛",
+                                "do not mark"}),
                 new MooConfigPreview(DataHelper.DungeonClass.BERSERK));
 
         Property propDungMarkPartiesWithHealer = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungMarkPartiesWithHealer", "do not mark", "Mark parties with Healer class?",
-                new String[]{
-                        "if dupe: " + EnumChatFormatting.GOLD + "⬛", "always: " + EnumChatFormatting.GOLD + "⬛",
-                        "if dupe: " + EnumChatFormatting.RED + "⬛", "always: " + EnumChatFormatting.RED + "⬛",
-                        "do not mark"}),
+                        "dungMarkPartiesWithHealer", "do not mark", "Mark parties with Healer class?",
+                        new String[]{
+                                "if dupe: " + EnumChatFormatting.GOLD + "⬛", "always: " + EnumChatFormatting.GOLD + "⬛",
+                                "if dupe: " + EnumChatFormatting.RED + "⬛", "always: " + EnumChatFormatting.RED + "⬛",
+                                "do not mark"}),
                 new MooConfigPreview(DataHelper.DungeonClass.HEALER));
 
         Property propDungMarkPartiesWithMage = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungMarkPartiesWithMage", "do not mark", "Mark parties with Mage class?",
-                new String[]{
-                        "if dupe: " + EnumChatFormatting.GOLD + "⬛", "always: " + EnumChatFormatting.GOLD + "⬛",
-                        "if dupe: " + EnumChatFormatting.RED + "⬛", "always: " + EnumChatFormatting.RED + "⬛",
-                        "do not mark"}),
+                        "dungMarkPartiesWithMage", "do not mark", "Mark parties with Mage class?",
+                        new String[]{
+                                "if dupe: " + EnumChatFormatting.GOLD + "⬛", "always: " + EnumChatFormatting.GOLD + "⬛",
+                                "if dupe: " + EnumChatFormatting.RED + "⬛", "always: " + EnumChatFormatting.RED + "⬛",
+                                "do not mark"}),
                 new MooConfigPreview(DataHelper.DungeonClass.MAGE));
 
         Property propDungMarkPartiesWithTank = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungMarkPartiesWithTank", "do not mark", "Mark parties with Tank class?",
-                new String[]{
-                        "if dupe: " + EnumChatFormatting.GOLD + "⬛", "always: " + EnumChatFormatting.GOLD + "⬛",
-                        "if dupe: " + EnumChatFormatting.RED + "⬛", "always: " + EnumChatFormatting.RED + "⬛",
-                        "do not mark"}),
+                        "dungMarkPartiesWithTank", "do not mark", "Mark parties with Tank class?",
+                        new String[]{
+                                "if dupe: " + EnumChatFormatting.GOLD + "⬛", "always: " + EnumChatFormatting.GOLD + "⬛",
+                                "if dupe: " + EnumChatFormatting.RED + "⬛", "always: " + EnumChatFormatting.RED + "⬛",
+                                "do not mark"}),
                 new MooConfigPreview(DataHelper.DungeonClass.TANK));
 
         Property propDungPartyFinderRuleEditorSimplified = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),

@@ -68,7 +68,7 @@ public class HyPlayerData {
     }
 
     /**
-     * Player's Rank prefix: https://github.com/HypixelDev/PublicAPI/wiki/Common-Questions#how-do-i-get-a-players-rank-prefix
+     * Player's Rank prefix: <a href="https://github.com/HypixelDev/PublicAPI/wiki/Common-Questions#how-do-i-get-a-players-rank-prefix">API Docs: How do I get a player's rank prefix?</a>
      *
      * @return formatted rank
      */

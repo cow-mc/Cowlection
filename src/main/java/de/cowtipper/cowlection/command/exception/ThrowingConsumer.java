@@ -29,7 +29,7 @@ public interface ThrowingConsumer<T> extends Consumer<T> {
                     break;
                 }
             }
-            handleException(e, new MooChatComponent(EnumChatFormatting.DARK_RED + "Something went wrong: " + EnumChatFormatting.RED + e.toString()
+            handleException(e, new MooChatComponent(EnumChatFormatting.DARK_RED + "Something went wrong: " + EnumChatFormatting.RED + e
                     + (stackTraceInfo == null ? "" : EnumChatFormatting.GRAY + " (" + EnumChatFormatting.WHITE + "in " + EnumChatFormatting.GRAY + stackTraceInfo + EnumChatFormatting.GRAY + ")")));
         }
     }

@@ -624,7 +624,7 @@ public class MooCommand extends CommandBase {
                 // last save:
                 Pair<String, String> fancyLastSave = activeProfile.getFancyLastSave();
                 sbStats.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Last profile save", fancyLastSave != null ? fancyLastSave.first() + " ago" : "unknown").setHover(new MooChatComponent.KeyValueTooltipComponent("Last profile save", fancyLastSave != null ? (fancyLastSave.second() == null ? "today" : fancyLastSave.second()) : "unknown")
-                        .appendFreshSibling(new MooChatComponent("= last time " + (activeProfile.coopCount() == 0 ? stalkedPlayer.getName() : "someone " + EnumChatFormatting.RED + "from " + stalkedPlayer.getName() + "'s profile" + EnumChatFormatting.WHITE) + " has played SkyBlock.").white())));
+                        .appendFreshSibling(new MooChatComponent("= last time " + (activeProfile.coopCount() == 0 ? stalkedPlayer.getName() : EnumChatFormatting.RED + "someone from " + stalkedPlayer.getName() + "'s profile" + EnumChatFormatting.WHITE) + " has played SkyBlock.").white())));
 
                 main.getChatHelper().sendMessage(sbStats);
             } else {

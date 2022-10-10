@@ -145,7 +145,7 @@ public class MooChatComponent extends ChatComponentText {
 
     public MooChatComponent setOpenFile(File filePath) {
         setChatStyle(getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, filePath.getAbsolutePath())));
-        setHover(new MooChatComponent(filePath.isFile() ? "Open " + filePath.getName() : "Open folder: " + filePath.toString()).yellow());
+        setHover(new MooChatComponent(filePath.isFile() ? "Open " + filePath.getName() : "Open folder: " + filePath).yellow());
         return this;
     }
 
@@ -171,7 +171,7 @@ public class MooChatComponent extends ChatComponentText {
     /**
      * Appends the given component in a new line, without inheriting formatting of previous siblings.
      *
-     * @see ChatComponentText#appendSibling appendSibling
+     * @see ChatComponentText#appendSibling
      */
     public MooChatComponent appendFreshSibling(IChatComponent sibling) {
         this.siblings.add(new ChatComponentText("\n").appendSibling(sibling));
