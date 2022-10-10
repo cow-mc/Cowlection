@@ -6,7 +6,6 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatStyle;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
-import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -34,11 +33,7 @@ public class ChatHelper {
         if (Minecraft.getMinecraft().thePlayer == null) {
             putOfflineMessage(chatComponent);
         } else {
-            ClientChatReceivedEvent event = new ClientChatReceivedEvent((byte) 1, chatComponent);
-            MinecraftForge.EVENT_BUS.post(event);
-            if (!event.isCanceled()) {
-                Minecraft.getMinecraft().thePlayer.addChatMessage(event.message);
-            }
+            Minecraft.getMinecraft().thePlayer.addChatMessage(chatComponent);
         }
     }
 

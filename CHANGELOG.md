@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - `/moo search`: Allow empty search query (= returns all log entries between start and end date)
 - `/moo stalkskyblock`: replaced "last played" with "last time *someone* played on the selected profile"
+- (technical change: no longer fire `ClientChatReceivedEvent` when sending a mod-internal chat message, as too many other mods have had problems with it)
 
 ### Fixed
 
