@@ -26,7 +26,7 @@ class LogFilesSearcher {
      * - [13:33:37] [Client thread/INFO]: [CHAT] Hello World
      * - [08:15:42] [Client thread/ERROR]: Item entity 9001 has no item?!
      */
-    private static final Pattern LOG4J_PATTERN = Pattern.compile("^\\[(?<timeHours>[\\d]{2}):(?<timeMinutes>[\\d]{2}):(?<timeSeconds>[\\d]{2})] \\[(?<thread>[^/]+)/(?<logLevel>[A-Z]+)]:(?<isChat> \\[CHAT])? (?<message>.*)$");
+    private static final Pattern LOG4J_PATTERN = Pattern.compile("^\\[(?<timeHours>\\d{2}):(?<timeMinutes>\\d{2}):(?<timeSeconds>\\d{2})] \\[(?<thread>[^/]+)/(?<logLevel>[A-Z]+)]:(?<isChat> \\[CHAT])? (?<message>.*)$");
     private int analyzedFilesWithHits = 0;
 
     LogSearchResults searchFor(String searchQuery, boolean chatOnly, boolean matchCase, boolean removeFormatting, LocalDate dateStart, LocalDate dateEnd) throws IOException {
@@ -44,8 +44,8 @@ class LogFilesSearcher {
                 }
                 String fileName = path.getFileName().toString();
                 return fileName.endsWith(".log.gz") || "latest.log".equals(fileName);
-            }).collect(Collectors.toList()).parallelStream()) {
-                paths.forEach(path -> {
+            }); Stream<Path> allPaths = paths.collect(Collectors.toList()).parallelStream()) {
+                allPaths.forEach(path -> {
                     String fileName = path.getFileName().toString();
                     if (fileName.endsWith("z")) { // .log.gz
                         Matcher fileNameMatcher = LOG_FILE_PATTERN.matcher(fileName);
@@ -103,8 +103,8 @@ class LogFilesSearcher {
         List<LogEntry> searchResults = new ArrayList<>();
         boolean foundSearchTermInFile = false;
         try (BufferedReader in = (isGzipped
-                ? new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(path.toFile())))) // ....log.gz
-                : new BufferedReader(new InputStreamReader(new FileInputStream(path.toFile()))))) { // latest.log
+                ? new BufferedReader(new InputStreamReader(new GZIPInputStream(Files.newInputStream(path)))) // ....log.gz
+                : new BufferedReader(new InputStreamReader(Files.newInputStream(path))))) { // latest.log
             String content;
             LogEntry logEntry = null;
             while ((content = in.readLine()) != null) {
@@ -172,7 +172,7 @@ class LogFilesSearcher {
                 // no result, abort
                 return null;
             }
-        } else if (!logMessage.contains(searchTerms)) {
+        } else if (searchTerms.length() > 0 && !logMessage.contains(searchTerms)) {
             // no result, abort
             return null;
         }

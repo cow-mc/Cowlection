@@ -27,7 +27,6 @@ import org.lwjgl.input.Keyboard;
 
 import java.awt.*;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -161,7 +160,7 @@ public class GuiSearch extends GuiScreen {
 
         boolean isStartDateValid = fieldDateStart.validateDate();
         boolean isEndDateValid = fieldDateEnd.validateDate();
-        this.buttonSearch.enabled = !isSearchInProgress && this.fieldSearchQuery.getText().trim().length() > 1 && !this.fieldSearchQuery.getText().startsWith(SEARCH_QUERY_PLACE_HOLDER) && isStartDateValid && isEndDateValid && !dateStart.isAfter(dateEnd);
+        this.buttonSearch.enabled = !isSearchInProgress && !this.fieldSearchQuery.getText().startsWith(SEARCH_QUERY_PLACE_HOLDER) && isStartDateValid && isEndDateValid && !dateStart.isAfter(dateEnd);
 
         if (isStartDateValid && isEndDateValid && dateStart.isAfter(dateEnd)) {
             fieldDateStart.setTextColor(0xFFDD3333);
@@ -244,7 +243,7 @@ public class GuiSearch extends GuiScreen {
 
         boolean isStartDateValid = fieldDateStart.validateDate();
         boolean isEndDateValid = fieldDateEnd.validateDate();
-        this.buttonSearch.enabled = !isSearchInProgress && searchQuery.trim().length() > 1 && !searchQuery.startsWith(SEARCH_QUERY_PLACE_HOLDER) && isStartDateValid && isEndDateValid && !dateStart.isAfter(dateEnd);
+        this.buttonSearch.enabled = !isSearchInProgress && !searchQuery.startsWith(SEARCH_QUERY_PLACE_HOLDER) && isStartDateValid && isEndDateValid && !dateStart.isAfter(dateEnd);
 
         if (isStartDateValid && isEndDateValid && dateStart.isAfter(dateEnd)) {
             fieldDateStart.setTextColor(0xFFDD3333);
@@ -508,7 +507,7 @@ public class GuiSearch extends GuiScreen {
                 } else { // .log.gz
                     String newLine = System.getProperty("line.separator");
                     String fileHeader = "# Original filename: " + logFileName + newLine + "# Use CTRL + F to search for specific words" + newLine + newLine;
-                    try (GZIPInputStream logFileGzipped = new GZIPInputStream(new FileInputStream(logFileName));
+                    try (GZIPInputStream logFileGzipped = new GZIPInputStream(Files.newInputStream(searchResult.getFilePath()));
                          FileOutputStream logFileUnGzipped = new FileOutputStream(mcLogOutputFile)) {
                         logFileUnGzipped.write(fileHeader.getBytes());
                         int len;

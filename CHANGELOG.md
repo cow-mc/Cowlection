@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- `/moo search`: Allow empty search query (= returns all log entries between start and end date)
 - `/moo stalkskyblock`: replaced "last played" with "last time *someone* played on the selected profile"
 
 ### Fixed
