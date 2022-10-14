@@ -58,7 +58,7 @@ public class HyPlayerData {
     }
 
     public boolean hasNeverLoggedOut() {
-        // example player that has no logout value (as of April 2020): Pig (in general accounts that haven't logged in for a few years)
+        // example player that has no logout value (as of October 2022): Creeper (in general accounts that haven't logged in for a few years)
         return lastLogin != 0 && lastLogout == 0;
     }
 

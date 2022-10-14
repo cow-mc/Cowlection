@@ -161,7 +161,7 @@ public class FriendsHandler {
             for (Friend bestFriend : bestFriends) {
                 bestFriendOnlineStatusQueue.incrementAndGet();
                 ApiUtils.fetchHyPlayerDetails(bestFriend, hyPlayerData -> {
-                    if (hyPlayerData != null && hyPlayerData.getLastLogin() > hyPlayerData.getLastLogout()) {
+                    if (hyPlayerData != null && !hyPlayerData.hasNeverLoggedOut() && hyPlayerData.getLastLogin() > hyPlayerData.getLastLogout()) {
                         // online & not hiding their online status
                         main.getPlayerCache().addBestFriend(bestFriend.getName());
 
