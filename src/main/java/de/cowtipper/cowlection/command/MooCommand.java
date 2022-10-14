@@ -237,12 +237,7 @@ public class MooCommand extends CommandBase {
                         } else if (hyPlayerData.hasNeverJoinedHypixel()) {
                             main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, EnumChatFormatting.GOLD + stalkedPlayer.getName() + EnumChatFormatting.YELLOW + " has " + EnumChatFormatting.GOLD + "never " + EnumChatFormatting.YELLOW + "been on Hypixel (or might be nicked).");
                         } else if (hyPlayerData.isHidingOnlineStatus()) {
-                            main.getChatHelper().sendMessage(new ChatComponentText(hyPlayerData.getPlayerNameFormatted()).appendSibling(new ChatComponentText(" is hiding their online status from the Hypixel API. You can see their online status with ").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.YELLOW)))
-                                    .appendSibling(new ChatComponentText("/profile " + hyPlayerData.getPlayerName()).setChatStyle(new ChatStyle()
-                                            .setColor(EnumChatFormatting.GOLD)
-                                            .setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/profile " + hyPlayerData.getPlayerName()))
-                                            .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.YELLOW + "Run " + EnumChatFormatting.GOLD + "/profile " + hyPlayerData.getPlayerName())))))
-                                    .appendSibling(new ChatComponentText(" while you're in a lobby (tooltip of the player head on the top left).").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.YELLOW))));
+                            main.getChatHelper().sendMessage(new ChatComponentText(hyPlayerData.getPlayerNameFormatted()).appendSibling(new ChatComponentText(" is hiding their online status from the Hypixel API.").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.YELLOW))));
                         } else if (hyPlayerData.hasNeverLoggedOut()) {
                             Pair<String, String> lastOnline = Utils.getDurationAsWords(hyPlayerData.getLastLogin());
 
