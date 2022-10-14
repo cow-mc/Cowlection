@@ -368,6 +368,7 @@ public class RuleEditorGui extends GuiScreen {
 
                 // trigger:
                 this.fieldTrigger = new GuiTextField(52, fontRendererObj, 0, 0, 120, 12);
+                this.fieldTrigger.setMaxStringLength(255);
                 this.fieldTrigger.setText(rule.getTriggerText());
                 this.fieldTriggerTooltip = new ArrayList<>();
                 this.btnTriggerType = new GuiButtonExt(50, 0, 0, 36, 14, this.rule.getTriggerType().toButtonText());
