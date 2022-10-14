@@ -89,9 +89,11 @@ cowlection.config.bazaarConnectGraphsLineWidth.tooltip=Width of the line drawn t
 cowlection.config.bestiaryOverviewOrder=§7Bestiary: §roverview order by...
 cowlection.config.bestiaryOverviewOrder.tooltip=Add §6§lBestiary Overview§r to the SkyBlock Bestiary (§e/bestiary§7 or §e/be§r).\nThis setting changes the order of the Bestiary Overview entries, §7which can also be changed by left-clicking the area/location icon in the Bestiary GUI §7(§e/be§7).
 cowlection.config.lookupWikiKeyBinding=Key binding: lookup item wiki
-cowlection.config.lookupWikiKeyBinding.tooltip=Hover over an item in any inventory and press keybinding to open the item's wiki article.\n§7§oAccesses §e§ohypixel-skyblock.fandom.com\n§7§odefault key: §e§oI = info\n\n§7§odisable key binding: §e§oset key binding to §lESC
+cowlection.config.lookupWikiKeyBinding.tooltip=Hover over an item in any inventory and press keybinding to open the item's wiki article.\n§7§oAccesses §e§ohypixel-skyblock.fandom.com §7§oor §e§owiki.hypixel.net\n§7§odefault key: §e§oI = info §7§o(+ optionally §e§oSHIFT§7§o: see setting below)\n\n§7§odisable key binding: §e§oset key binding to §lESC
+cowlection.config.lookupWikiPreferredWiki=Prefer which wiki?
+cowlection.config.lookupWikiPreferredWiki.tooltip=Official wiki: §ewiki.hypixel.net\n§rUnofficial wiki: §ehypixel-skyblock.fandom.com\n\n§7The §6§opreferred§7 wiki can be used by pressing the §ewiki lookup keybinding§7.\n§7The §6§ounpreferred§7 wiki can be used by pressing the §ewiki lookup keybinding §6+ SHIFT§7.
 cowlection.config.lookupPriceKeyBinding=Key binding: lookup item price
-cowlection.config.lookupPriceKeyBinding.tooltip=Hover over an item in any inventory and press keybinding to open the item's price details.\n§7§oAccesses §e§ostonks.gg\n§7§odefault key: §e§oP = price\n\n§7§odisable key binding: §e§oset key binding to §lESC
+cowlection.config.lookupPriceKeyBinding.tooltip=Hover over an item in any inventory and press keybinding to open the item's price details.\n§7§oAccesses §e§osky.coflnet.com\n§7§odefault key: §e§oP = price\n\n§7§odisable key binding: §e§oset key binding to §lESC
 cowlection.config.lookupItemDirectly=Open website directly?
 cowlection.config.lookupItemDirectly.tooltip=Should the corresponding website be opened immediately (§a✔§r) or sent as a chat message (§c✘§r)?
 cowlection.config.showItemQualityAndFloor=Show item quality + obtained floor

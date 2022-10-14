@@ -26,6 +26,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - `/moo search`: Allow empty search query (= returns all log entries between start and end date)
 - `/moo stalkskyblock`: replaced "last played" with "last time *someone* played on the selected profile"
+- Updated quick lookup for item prices and wiki: (`/moo config item`)
+  - wiki: also added official wiki (use <kbd>SHIFT</kbd> to switch between Fandom and official wiki; default wiki key: <kbd>I</kbd> = info)
+  - item prices: replaced stonks.gg with sky.coflnet.com (default key: <kbd>P</kbd> = price)
 - (technical change: no longer fire `ClientChatReceivedEvent` when sending a mod-internal chat message, as too many other mods have had problems with it)
 - Party Finder Rules Editor: increased character limit per rule from 32 to 255
 

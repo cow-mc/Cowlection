@@ -59,7 +59,7 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
         this.mc = mc;
 
         listEntriesPreviews = new TreeMap<>();
-        newConfigOptions = Sets.newHashSet("chestAnalyzerShowNpcItems");
+        newConfigOptions = Sets.newHashSet("chestAnalyzerShowNpcItems", "lookupWikiKeyBinding", "lookupWikiPreferredWiki", "lookupPriceKeyBinding");
         explanations = new HashMap<>();
         listEntries = new ArrayList<>();
     }

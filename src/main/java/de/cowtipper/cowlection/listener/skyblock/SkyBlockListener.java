@@ -91,6 +91,8 @@ public class SkyBlockListener {
         ItemLookupType itemLookupType;
         if (MooConfig.isLookupWikiKeyBindingPressed()) {
             itemLookupType = ItemLookupType.WIKI;
+        } else if (MooConfig.isLookupOfficialWikiKeyBindingPressed()) {
+            itemLookupType = ItemLookupType.OFFICIAL_WIKI;
         } else if (MooConfig.isLookupPriceKeyBindingPressed()) {
             itemLookupType = ItemLookupType.PRICE;
         } else {
@@ -105,10 +107,11 @@ public class SkyBlockListener {
 
                 ItemStack itemStack = hoveredSlot.getStack();
                 NBTTagCompound extraAttributes = itemStack.getSubCompound("ExtraAttributes", false);
+                String sbId = null;
                 if (extraAttributes != null && extraAttributes.hasKey("id")) {
                     // seems to be a SkyBlock item
-                    String sbId = extraAttributes.getString("id");
-                    if (itemLookupType == ItemLookupType.WIKI || (/* itemLookupType == ItemLookupType.PRICE && */ !DataHelper.AMBIGUOUS_ITEM_IDS.contains(sbId) && !sbId.contains("_GENERATOR_"))) {
+                    sbId = extraAttributes.getString("id");
+                    if (itemLookupType == ItemLookupType.WIKI || itemLookupType == ItemLookupType.OFFICIAL_WIKI || (/* itemLookupType == ItemLookupType.PRICE && */ !DataHelper.AMBIGUOUS_ITEM_IDS.contains(sbId) && !sbId.contains("_GENERATOR_"))) {
                         // open item price info or open wiki entry
                         Pair<String, String> sbItemBaseName = Utils.extractSbItemBaseName(itemStack.getDisplayName(), extraAttributes, false);
                         itemBaseName = sbItemBaseName.first();
@@ -146,7 +149,7 @@ public class SkyBlockListener {
                     }
                 }
                 if (itemBaseName != null) {
-                    String link = buildLink(EnumChatFormatting.getTextWithoutFormattingCodes(itemBaseName).trim() + querySuffix, itemLookupType);
+                    String link = itemLookupType.buildLink(sbId, EnumChatFormatting.getTextWithoutFormattingCodes(itemBaseName).trim() + querySuffix);
                     if (link == null) {
                         main.getChatHelper().sendMessage(EnumChatFormatting.RED, "Error: Your operating system doesn't support UTF-8? Huh?");
                         return;
@@ -775,14 +778,6 @@ public class SkyBlockListener {
         }
     }
 
-    private String buildLink(String itemName, ItemLookupType itemLookupType) {
-        try {
-            return itemLookupType.getBaseUrl() + URLEncoder.encode(itemName, "UTF-8");
-        } catch (UnsupportedEncodingException ignored) {
-        }
-        return null;
-    }
-
     private boolean openLink(String link) {
         try {
             Desktop.getDesktop().browse(new URI(link));
@@ -800,8 +795,9 @@ public class SkyBlockListener {
     }
 
     private enum ItemLookupType {
-        WIKI("wiki", "https://hypixel-skyblock.fandom.com/wiki/Special:Search?search="),
-        PRICE("price info", "https://stonks.gg/search?input="),
+        OFFICIAL_WIKI("official wiki", "https://wiki.hypixel.net/?search="),
+        WIKI("unofficial wiki", "https://hypixel-skyblock.fandom.com/wiki/Special:Search?search="),
+        PRICE("price info", "https://sky.coflnet.com/item/"),
         INVALID("nothing", "https://google.com/search?q=");
 
         private final String description;
@@ -816,8 +812,12 @@ public class SkyBlockListener {
             return description;
         }
 
-        public String getBaseUrl() {
-            return baseUrl;
+        public String buildLink(String itemId, String itemName) {
+            try {
+                return this.baseUrl + (this == PRICE ? itemId : URLEncoder.encode(itemName, "UTF-8"));
+            } catch (UnsupportedEncodingException ignored) {
+            }
+            return null;
         }
     }
 }

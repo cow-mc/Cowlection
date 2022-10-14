@@ -12,6 +12,7 @@ import de.cowtipper.cowlection.util.MooChatComponent;
 import de.cowtipper.cowlection.util.Utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.SoundCategory;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.command.ICommand;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
@@ -98,6 +99,7 @@ public class MooConfig {
     public static String bestiaryOverviewOrder;
     private String[] bestiaryOverviewOrderDefaultValues;
     private static int lookupWikiKeyBinding;
+    private static String lookupWikiPreferredWiki;
     private static int lookupPriceKeyBinding;
     public static boolean lookupItemDirectly;
     // Category: SkyBlock Dungeons
@@ -560,6 +562,8 @@ public class MooConfig {
 
         Property propLookupWikiKeyBinding = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "lookupWikiKeyBinding", Keyboard.KEY_I, "Key to lookup wiki"));
+        Property propLookupWikiPreferredWiki = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "lookupWikiPreferredWiki", "unofficial", "Prefer official or unofficial wiki?", new String[]{"unofficial", "official"}));
         Property propLookupPriceKeyBinding = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "lookupPriceKeyBinding", Keyboard.KEY_P, "Key to lookup item price"));
 
@@ -788,6 +792,7 @@ public class MooConfig {
             bazaarConnectGraphsLineWidth = propBazaarConnectGraphsLineWidth.getInt();
             bestiaryOverviewOrder = propBestiaryOverviewOrder.getString();
             lookupWikiKeyBinding = propLookupWikiKeyBinding.getInt();
+            lookupWikiPreferredWiki = propLookupWikiPreferredWiki.getString();
             lookupPriceKeyBinding = propLookupPriceKeyBinding.getInt();
             lookupItemDirectly = propLookupItemDirectly.getBoolean();
             // Category: SkyBlock Dungeons
@@ -881,6 +886,7 @@ public class MooConfig {
         propBazaarConnectGraphsLineWidth.set(bazaarConnectGraphsLineWidth);
         propBestiaryOverviewOrder.set(bestiaryOverviewOrder);
         propLookupWikiKeyBinding.set(lookupWikiKeyBinding);
+        propLookupWikiPreferredWiki.set(lookupWikiPreferredWiki);
         propLookupPriceKeyBinding.set(lookupPriceKeyBinding);
         propLookupItemDirectly.set(lookupItemDirectly);
         // Category: SkyBlock Dungeons
@@ -1103,7 +1109,21 @@ public class MooConfig {
         return tooltipToggleKeyBinding > 0 && Keyboard.isKeyDown(tooltipToggleKeyBinding);
     }
 
+    /**
+     * @return true if unofficial wiki is preferred but shift isn't pressed, or if unofficial wiki isn't preferred and shift is pressed
+     */
     public static boolean isLookupWikiKeyBindingPressed() {
+        return isLookupAnyWikiKeyBindingPressed() && ("unofficial".equals(lookupWikiPreferredWiki) ^ GuiScreen.isShiftKeyDown());
+    }
+
+    /**
+     * @return true if official wiki is preferred but shift isn't pressed, or if official wiki isn't preferred and shift is pressed
+     */
+    public static boolean isLookupOfficialWikiKeyBindingPressed() {
+        return isLookupAnyWikiKeyBindingPressed() && ("official".equals(lookupWikiPreferredWiki) ^ GuiScreen.isShiftKeyDown());
+    }
+
+    private static boolean isLookupAnyWikiKeyBindingPressed() {
         return lookupWikiKeyBinding > 0 && Keyboard.isKeyDown(lookupWikiKeyBinding);
     }
 
