@@ -522,6 +522,7 @@ public class DungeonsListener {
             List<String> btnTooltip = new ArrayList<>();
             btnTooltip.add("Open Cowlection's Party Notes Rule Editor");
             btnTooltip.add(EnumChatFormatting.GRAY + "Want to remove this button? " + EnumChatFormatting.YELLOW + "/moo config editor");
+            btnTooltip.add(EnumChatFormatting.GRAY + "Want to remove the overlay inside dungeons? " + EnumChatFormatting.YELLOW + "/moo config overlay");
             GuiHelper.drawHoveringText(btnTooltip, e.mouseX, e.mouseY, mc.displayWidth, mc.displayHeight, 300);
             GlStateManager.disableLighting();
         }
@@ -723,15 +724,8 @@ public class DungeonsListener {
                     color = EnumChatFormatting.YELLOW;
                 }
                 dungeonPerformanceEntries.add("Elapsed Minutes: " + color + elapsedMinutes);
-                if (elapsedMinutes > 15 && elapsedMinutes <= 20) {
-                    dungeonPerformanceEntries.add(EnumChatFormatting.RED + "  ⚠ slower than 20 mins = point penalty");
-                } else if (elapsedMinutes > 20) {
-                    dungeonPerformanceEntries.add(EnumChatFormatting.GOLD + "  Time penalty: " + EnumChatFormatting.RED + ((int) (2.2 * (elapsedMinutes - 20))) + " points");
-                }
                 if (!MooConfig.hasOpenedConfigGui) {
-                    dungeonPerformanceEntries.add(EnumChatFormatting.RED + "Want to move me? " + EnumChatFormatting.LIGHT_PURPLE + "/moo config "
-                            + EnumChatFormatting.DARK_GRAY + "➡ " + EnumChatFormatting.WHITE + "SB Dungeons "
-                            + EnumChatFormatting.DARK_GRAY + "➡ " + EnumChatFormatting.WHITE + "Dungeon Performance Overlay");
+                    dungeonPerformanceEntries.add(EnumChatFormatting.RED + " ⚠ Want to move me? " + EnumChatFormatting.DARK_GRAY + "➡ " + EnumChatFormatting.LIGHT_PURPLE + "/moo config overlay");
                 }
 
                 FontRenderer fontRenderer = Minecraft.getMinecraft().fontRendererObj;
