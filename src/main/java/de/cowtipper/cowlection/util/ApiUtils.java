@@ -14,9 +14,14 @@ import de.cowtipper.cowlection.data.*;
 import de.cowtipper.cowlection.error.ApiAskPolitelyErrorEvent;
 import de.cowtipper.cowlection.error.ApiHttpErrorEvent;
 import de.cowtipper.cowlection.error.ApiHttpErrorException;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.common.MinecraftForge;
 import org.apache.http.HttpStatus;
+import sun.security.provider.certpath.SunCertPathBuilderException;
+import sun.security.validator.ValidatorException;
 
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLHandshakeException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -194,31 +199,46 @@ public class ApiUtils {
     }
 
     private static BufferedReader makeApiCall(String url) throws IOException {
-        HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
-        connection.setConnectTimeout(5000);
-        connection.setReadTimeout(8000);
-        connection.addRequestProperty("User-Agent", "Forge Mod " + Cowlection.MODNAME + "/" + Cowlection.VERSION + " (" + Cowlection.GITURL + ")");
-
-        connection.getResponseCode();
-        if (connection.getResponseCode() == HttpStatus.SC_NO_CONTENT) { // http status 204
-            return null;
-        } else if (connection.getResponseCode() == HttpStatus.SC_BAD_GATEWAY && url.startsWith("https://api.hypixel.net/")) { // http status 502 (cloudflare)
-            throw new ApiHttpErrorException("Couldn't contact Hypixel API (502 Bad Gateway). API might be down, check https://status.hypixel.net for info.", "https://status.hypixel.net");
-        } else if (connection.getResponseCode() == HttpStatus.SC_SERVICE_UNAVAILABLE) { // http status 503 Service Unavailable
-            int queryParamStart = url.indexOf('?', 10);
-            String baseUrl = queryParamStart > 0 ? url.substring(0, queryParamStart) : url;
-            throw new ApiHttpErrorException("Couldn't contact the API (503 Service unavailable). API might be down, or you might be blocked by Cloudflare, check if you can reach: " + baseUrl, url);
-        } else if (connection.getResponseCode() == HttpStatus.SC_BAD_GATEWAY && url.startsWith("https://moulberry.codes/")) { // http status 502 (cloudflare)
-            throw new ApiHttpErrorException("Couldn't contact Moulberry's API (502 Bad Gateway). API might be down, check if " + LOWEST_BINS + " is reachable.", LOWEST_BINS);
-        } else {
-            BufferedReader reader;
-            InputStream errorStream = connection.getErrorStream();
-            if (errorStream != null) {
-                reader = new BufferedReader(new InputStreamReader(errorStream));
-            } else {
-                reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        try {
+            HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+            if (CredentialStorage.sslContext != null && connection instanceof HttpsURLConnection) {
+                ((HttpsURLConnection) connection).setSSLSocketFactory(CredentialStorage.sslContext.getSocketFactory());
             }
-            return reader;
+            connection.setConnectTimeout(5000);
+            connection.setReadTimeout(8000);
+            connection.addRequestProperty("User-Agent", "Forge Mod " + Cowlection.MODNAME + "/" + Cowlection.VERSION + " (" + Cowlection.GITURL + ")");
+
+            connection.getResponseCode();
+            if (connection.getResponseCode() == HttpStatus.SC_NO_CONTENT) { // http status 204
+                return null;
+            } else if (connection.getResponseCode() == HttpStatus.SC_BAD_GATEWAY && url.startsWith("https://api.hypixel.net/")) { // http status 502 (cloudflare)
+                throw new ApiHttpErrorException("Couldn't contact Hypixel API (502 Bad Gateway). API might be down, check https://status.hypixel.net for info.", "https://status.hypixel.net");
+            } else if (connection.getResponseCode() == HttpStatus.SC_SERVICE_UNAVAILABLE) { // http status 503 Service Unavailable
+                int queryParamStart = url.indexOf('?', 10);
+                String baseUrl = queryParamStart > 0 ? url.substring(0, queryParamStart) : url;
+                throw new ApiHttpErrorException("Couldn't contact the API (503 Service unavailable). API might be down, or you might be blocked by Cloudflare, check if you can reach: " + baseUrl, url);
+            } else if (connection.getResponseCode() == HttpStatus.SC_BAD_GATEWAY && url.startsWith("https://moulberry.codes/")) { // http status 502 (cloudflare)
+                throw new ApiHttpErrorException("Couldn't contact Moulberry's API (502 Bad Gateway). API might be down, check if " + LOWEST_BINS + " is reachable.", LOWEST_BINS);
+            } else {
+                BufferedReader reader;
+                InputStream errorStream = connection.getErrorStream();
+                if (errorStream != null) {
+                    reader = new BufferedReader(new InputStreamReader(errorStream));
+                } else {
+                    reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                }
+                return reader;
+            }
+        } catch (SSLHandshakeException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof ValidatorException && cause.getCause() instanceof SunCertPathBuilderException) {
+                throw new ApiHttpErrorException("" + EnumChatFormatting.DARK_RED + EnumChatFormatting.BOLD + " ! "
+                        + EnumChatFormatting.RED + "Java is outdated and doesn't support Let's Encrypt certificates (out of the box). A game restart might fix this issue. If the problem persists, open a ticket on the Cowshed discord server.", Cowlection.INVITE_URL);
+            } else {
+                // not a newer https related issue, thus rethrow exception:
+                throw e;
+            }
         }
     }
+
 }

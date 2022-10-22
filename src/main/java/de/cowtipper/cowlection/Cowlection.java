@@ -65,8 +65,8 @@ public class Cowlection {
             configDir.mkdirs();
         }
 
-        friendsHandler = new FriendsHandler(this, new File(configDir, "friends.json"));
         moo = new CredentialStorage(new Configuration(new File(configDir, "do-not-share-me-with-other-players.cfg")));
+        friendsHandler = new FriendsHandler(this, new File(configDir, "friends.json"));
         partyFinderRules = new Rules(this, new File(configDir, "partyfinder-rules.json"));
         config = new MooConfig(this, new Configuration(new File(configDir, MODID + ".cfg"), "2"));
     }

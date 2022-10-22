@@ -40,6 +40,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Minecraft username lookup by uuid changed since username history API got removed
 - Fixed GUI related issues caused by updates since the last release of Cowlection:
   - Fixed detection for `/bestiary` overview
+- (technical fix: add support for [public Hypixel API SSL certificate changes](https://hypixel.net/threads/public-api-ssl-certificate-changes.5116193/))
 
 ## [1.8.9-0.14.0] - 14.08.2021
 ### Added
