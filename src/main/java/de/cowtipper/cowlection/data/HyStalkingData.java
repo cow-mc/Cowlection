@@ -105,6 +105,8 @@ public class HyStalkingData {
                         return "The Farming Islands";
                     case "foraging_1":
                         return "Floating Islands";
+                    case "instanced":
+                        return "an instanced area";
                     case "mining_1":
                         return "Gold Mine";
                     case "mining_2":

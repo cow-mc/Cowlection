@@ -228,7 +228,8 @@ public class MooCommand extends CommandBase {
             if (hyStalking != null && hyStalking.isSuccess()) {
                 HyStalkingData.HySession session = hyStalking.getSession();
                 if (session.isOnline()) {
-                    main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, EnumChatFormatting.GOLD + stalkedPlayer.getName() + EnumChatFormatting.YELLOW + " is currently playing " + EnumChatFormatting.GOLD + session.getGameType() + EnumChatFormatting.YELLOW
+                    main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, EnumChatFormatting.GOLD + stalkedPlayer.getName()
+                            + EnumChatFormatting.YELLOW + " is currently playing " + EnumChatFormatting.GOLD + (session.getGameType() != null ? session.getGameType() : EnumChatFormatting.ITALIC + "something (but hiding their game mode)") + EnumChatFormatting.YELLOW
                             + (session.getMode() != null ? ": " + EnumChatFormatting.GOLD + session.getMode() : "")
                             + (session.getMap() != null ? EnumChatFormatting.YELLOW + " (Map: " + EnumChatFormatting.GOLD + session.getMap() + EnumChatFormatting.YELLOW + ")" : ""));
                 } else {
