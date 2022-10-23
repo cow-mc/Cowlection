@@ -33,14 +33,15 @@ import net.minecraft.event.HoverEvent;
 import net.minecraft.init.Items;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.ItemMap;
-import net.minecraft.item.ItemSkull;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.*;
-import net.minecraft.tileentity.*;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.tileentity.TileEntityBanner;
+import net.minecraft.tileentity.TileEntitySign;
+import net.minecraft.tileentity.TileEntitySkull;
 import net.minecraft.util.*;
 import net.minecraft.world.storage.MapData;
 import net.minecraftforge.common.util.Constants;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 
 import java.awt.*;
@@ -671,97 +672,7 @@ public class MooCommand extends CommandBase {
     }
 
     private void handleAnalyzeIsland(ICommandSender sender) {
-        Map<String, String> minions = DataHelper.getMinions();
-
-        Map<String, Integer> detectedMinions = new HashMap<>();
-        Map<Integer, Integer> detectedMinionsWithSkin = new HashMap<>();
-        int detectedMinionCount = 0;
-        int minionsWithSkinCount = 0;
-        entityLoop:
-        for (Entity entity : sender.getEntityWorld().loadedEntityList) {
-            if (entity instanceof EntityArmorStand) {
-                EntityArmorStand minion = (EntityArmorStand) entity;
-
-                if (minion.isInvisible() || !minion.isSmall() || minion.getHeldItem() == null) {
-                    // not a minion: invisible, or not small armor stand, or no item in hand (= minion in a minion chair)
-                    continue;
-                }
-                for (int slot = 0; slot < 4; slot++) {
-                    if (minion.getCurrentArmor(slot) == null) {
-                        // not a minion: missing equipment
-                        continue entityLoop;
-                    }
-                }
-                ItemStack skullItem = minion.getCurrentArmor(3); // head slot
-                if (skullItem.getItem() instanceof ItemSkull && skullItem.getMetadata() == 3 && skullItem.hasTagCompound()) {
-                    // is a player head!
-                    if (skullItem.getTagCompound().hasKey("SkullOwner", Constants.NBT.TAG_COMPOUND)) {
-                        NBTTagCompound skullOwner = skullItem.getTagCompound().getCompoundTag("SkullOwner");
-                        String skullDataBase64 = skullOwner.getCompoundTag("Properties").getTagList("textures", Constants.NBT.TAG_COMPOUND).getCompoundTagAt(0).getString("Value");
-                        String skullData = new String(Base64.decodeBase64(skullDataBase64));
-                        String minionSkinId = StringUtils.substringBetween(skullData, "http://textures.minecraft.net/texture/", "\"");
-                        String detectedMinion = minions.get(minionSkinId);
-                        if (detectedMinion != null) {
-                            // minion head matches one know minion tier
-                            detectedMinions.put(detectedMinion, detectedMinions.getOrDefault(detectedMinion, 0) + 1);
-                            detectedMinionCount++;
-                        } else {
-                            int minionTier = ImageUtils.getTierFromTexture(minionSkinId);
-                            if (minionTier > 0) {
-                                detectedMinionsWithSkin.put(minionTier, detectedMinionsWithSkin.getOrDefault(minionTier, 0) + 1);
-                                minionsWithSkinCount++;
-                            } else {
-                                // looked like a minion but has no matching tier badge
-                                main.getLogger().info("[/moo analyzeIsland] Found an armor stand that could be a minion but it is missing a tier badge: " + minionSkinId + "\t\t\t" + minion.serializeNBT());
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        StringBuilder analysisResults = new StringBuilder("Found ").append(EnumChatFormatting.GOLD).append(detectedMinionCount).append(EnumChatFormatting.YELLOW).append(" minions");
-        if (minionsWithSkinCount > 0) {
-            analysisResults.append(" + ").append(EnumChatFormatting.GOLD).append(minionsWithSkinCount).append(EnumChatFormatting.YELLOW).append(" unknown minions");
-        }
-        analysisResults.append(" on this island");
-        detectedMinions.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey()) // sort alphabetically by minion name and tier
-                .forEach(minion -> {
-                    String minionWithTier = minion.getKey();
-                    int lastSpace = minionWithTier.lastIndexOf(' ');
-
-                    String tierRoman = minionWithTier.substring(lastSpace + 1);
-
-                    int tierArabic = Utils.convertRomanToArabic(tierRoman);
-                    EnumChatFormatting tierColor = Utils.getMinionTierColor(tierArabic);
-
-                    minionWithTier = minionWithTier.substring(0, lastSpace) + " " + tierColor + (MooConfig.useRomanNumerals() ? tierRoman : tierArabic);
-                    analysisResults.append("\n  ").append(EnumChatFormatting.GOLD).append(minion.getValue()).append(minion.getValue() > 1 ? "✕ " : "⨉ ")
-                            .append(EnumChatFormatting.YELLOW).append(minionWithTier);
-                });
-        detectedMinionsWithSkin.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey()) // sort by tier
-                .forEach(minionWithSkin -> {
-                    EnumChatFormatting tierColor = Utils.getMinionTierColor(minionWithSkin.getKey());
-                    String minionTier = MooConfig.useRomanNumerals() ? Utils.convertArabicToRoman(minionWithSkin.getKey()) : String.valueOf(minionWithSkin.getKey());
-                    analysisResults.append("\n  ").append(EnumChatFormatting.GOLD).append(minionWithSkin.getValue()).append(minionWithSkin.getValue() > 1 ? "✕ " : "⨉ ")
-                            .append(EnumChatFormatting.RED).append("Unknown minion ").append(EnumChatFormatting.YELLOW).append("(new or with minion skin) ").append(tierColor).append(minionTier);
-                });
-        // Tile entities (chests/hoppers)
-        int chestCount = 0;
-        int hopperCount = 0;
-        for (TileEntity tileEntity : sender.getEntityWorld().loadedTileEntityList) {
-            if (tileEntity instanceof TileEntityChest) {
-                ++chestCount;
-            } else if (tileEntity instanceof TileEntityHopper) {
-                ++hopperCount;
-            }
-        }
-        analysisResults.append("\n").append(EnumChatFormatting.YELLOW).append("Found ")
-                .append(EnumChatFormatting.GOLD).append(chestCount).append(EnumChatFormatting.YELLOW).append(" chests and ")
-                .append(EnumChatFormatting.GOLD).append(hopperCount).append(EnumChatFormatting.YELLOW).append(" hoppers nearby.");
-
-        main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, analysisResults.toString());
+        this.main.getAnalyzeIslandTracker().analyzeIsland(sender.getEntityWorld());
     }
 
     private void handleWhatAmILookingAt(ICommandSender sender, boolean showAllInfo) {

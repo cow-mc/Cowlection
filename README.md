@@ -28,7 +28,7 @@ It is a collection of different features mainly focused on Hypixel SkyBlock. üê
 |-------------------------------------------------------------------------|-----------------------------------------|
 | Stalk SkyBlock stats of a player                                        | `/moo stalkskyblock`                    |
 | Analyze chests and their Bazaar, lowest BINs, and NPC value on your private island | `/moo analyzeChests`         |
-| Analyze minions on a private island                                     | `/moo analyzeIsland`                    |
+| Analyze minions, chest and hopper counts on a private island            | `/moo analyzeIsland`                    |
 | Improved Dungeon item tooltips (item quality + obtained floor; normalize dungeon item stats) | To normalize stats: Hold <kbd>shift</kbd> (configurable) while viewing a dungeon item tooltip |
 | Improved Dungeon Party Finder                                           | configure with `/moo config party`      |
 | Dungeon Party inspector (Who is in my party again? What class are we missing?) | `/moo dungeon party` or `/moo dp` |

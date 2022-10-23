@@ -4,6 +4,7 @@ import de.cowtipper.cowlection.chesttracker.ChestTracker;
 import de.cowtipper.cowlection.command.*;
 import de.cowtipper.cowlection.config.CredentialStorage;
 import de.cowtipper.cowlection.config.MooConfig;
+import de.cowtipper.cowlection.handler.AnalyzeIslandTracker;
 import de.cowtipper.cowlection.handler.DungeonCache;
 import de.cowtipper.cowlection.handler.FriendsHandler;
 import de.cowtipper.cowlection.handler.PlayerCache;
@@ -50,6 +51,7 @@ public class Cowlection {
     private PlayerCache playerCache;
     private DungeonCache dungeonCache;
     private ChestTracker chestTracker;
+    private AnalyzeIslandTracker analyzeIslandTracker;
     private Logger logger;
 
     @EventHandler
@@ -153,6 +155,13 @@ public class Cowlection {
 
     public ChestTracker getChestTracker() {
         return chestTracker;
+    }
+
+    public AnalyzeIslandTracker getAnalyzeIslandTracker() {
+        if (analyzeIslandTracker == null) {
+            analyzeIslandTracker = new AnalyzeIslandTracker(this);
+        }
+        return analyzeIslandTracker;
     }
 
     public File getModsDirectory() {

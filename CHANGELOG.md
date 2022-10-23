@@ -14,7 +14,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - updated skill average calculation (carpentry is no longer a 'cosmetic' skill)
     - added new slayers (enderman + blaze)
   - `/moo analyzeIsland`: added new minions (mainly Crimson Isle related)
-- `/moo analyzeIsland`: Added chests and hopper counters
+- `/moo analyzeIsland`:
+  - Added chests and hopper counters
+  - Added accumulating results: repeat the command and scan multiple areas of an island
 - `/moo analyzeChests`: Chest Analyzer rework:
   - Added search
   - Added NPC sell prices (only used if an item has neither a Bazaar nor lowest BIN price, or if one of them is hidden)
