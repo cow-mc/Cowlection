@@ -40,7 +40,7 @@ public class ChatListener {
     private static final Pattern CHAT_MESSAGE_RECEIVED_PATTERN = Pattern.compile("^(?:Party|Guild) > (?:\\[.*?] )?(\\w+)(?: \\[.*?])?: ");
     private static final Pattern PRIVATE_MESSAGE_RECEIVED_PATTERN = Pattern.compile("^From (?:\\[.*?] )?(\\w+): ");
     private static final Pattern PARTY_OR_GAME_INVITE_PATTERN = Pattern.compile("^-+\\s+(?:\\[.*?] )?(\\w+) has invited you ");
-    private static final Pattern DUNGEON_FINDER_JOINED_PATTERN = Pattern.compile("^Dungeon Finder > (\\w+) joined the dungeon group! \\(([A-Z][a-z]+) Level (\\d+)\\)$");
+    private static final Pattern DUNGEON_FINDER_JOINED_PATTERN = Pattern.compile("^Party Finder > (\\w+) joined the dungeon group! \\(([A-Z][a-z]+) Level (\\d+)\\)$");
     private final Cowlection main;
     private String lastTypedChars = "";
     private String lastPMSender;
@@ -190,7 +190,7 @@ public class ChatListener {
                         main.getDungeonCache().lookupPartyMembers();
                     }
                 }
-            } else if (CredentialStorage.isMooValid && MooConfig.dungPartyFullLookup && message.equals("Dungeon Finder > Your dungeon group is full! Click here to warp to the dungeon!")
+            } else if (CredentialStorage.isMooValid && MooConfig.dungPartyFullLookup && message.equals("Party Finder > Your dungeon group is full! Click here to warp to the dungeon!")
                     && (Minecraft.getMinecraft().currentScreen == null || Minecraft.getMinecraft().currentScreen instanceof GuiChat)) {
                 ClientCommandHandler.instance.executeCommand(Minecraft.getMinecraft().thePlayer, "/moo dp");
             }
