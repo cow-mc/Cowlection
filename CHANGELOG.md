@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [1.8.9-0.16.0] - unreleased
 ### Fixed
+- Pet exp in tooltips: fixed rare crash caused by unexpected NBT data typing
 - Bazaar: fixed "Show items left to buy/sell" not working anymore
 
 ## [1.8.9-0.15.1] - 22.12.2022

@@ -207,11 +207,13 @@ public class SkyBlockListener {
         if ((MooConfig.getTooltipPetExpDisplay() == MooConfig.Setting.ALWAYS
                 || MooConfig.getTooltipPetExpDisplay() == MooConfig.Setting.SPECIAL && MooConfig.isTooltipToggleKeyBindingPressed())
                 && e.itemStack.getItem() == Items.skull) {
-            if (extraAttributes != null && extraAttributes.hasKey("petInfo")) {
+            if (extraAttributes != null && extraAttributes.hasKey("petInfo", (byte) 8 /* string */)) {
                 // pet in inventory, auction house or similar
                 HySkyBlockStats.Profile.Pet petInfo = GsonUtils.fromJson(extraAttributes.getString("petInfo"), HySkyBlockStats.Profile.Pet.class);
-                int index = Math.max(0, e.toolTip.size() - (e.showAdvancedItemTooltips ? /* item name & nbt info */ 2 : 0));
-                e.toolTip.add(index, EnumChatFormatting.GRAY + "Pet exp: " + EnumChatFormatting.GOLD + numberFormatter.format(petInfo.getExp()));
+                if (petInfo != null) {
+                    int index = Math.max(0, e.toolTip.size() - (e.showAdvancedItemTooltips ? /* item name & nbt info */ 2 : 0));
+                    e.toolTip.add(index, EnumChatFormatting.GRAY + "Pet exp: " + EnumChatFormatting.GOLD + numberFormatter.format(petInfo.getExp()));
+                }
             } else if (e.itemStack.getDisplayName().contains("[Lvl ")) {
                 // pet in pets menu
                 for (int i = e.toolTip.size() - 1; i >= 0; i--) {
