@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [1.8.9-0.16.0] - unreleased
 ### Changed
 - Dungeons overlay: now disabled by default (old config entries aren't modified)
+- SkyBlock player lookup: removed 'last played/last profile save' as it's no longer part of the API
 
 ### Fixed
 - Pet exp in tooltips: fixed rare crash caused by unexpected NBT data typing

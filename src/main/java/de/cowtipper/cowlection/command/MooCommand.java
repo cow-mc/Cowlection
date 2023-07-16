@@ -618,10 +618,6 @@ public class MooCommand extends CommandBase {
                 sbStats.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Fairy Souls", (member.getFairySoulsCollected() >= 0) ? String.valueOf(member.getFairySoulsCollected()) : "API access disabled"));
                 // profile age:
                 sbStats.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Profile age", fancyFirstJoined.first()).setHover(new MooChatComponent.KeyValueTooltipComponent("Join date", (fancyFirstJoined.second() == null ? "today" : fancyFirstJoined.second()))));
-                // last save:
-                Pair<String, String> fancyLastSave = activeProfile.getFancyLastSave();
-                sbStats.appendFreshSibling(new MooChatComponent.KeyValueChatComponent("Last profile save", fancyLastSave != null ? fancyLastSave.first() + " ago" : "unknown").setHover(new MooChatComponent.KeyValueTooltipComponent("Last profile save", fancyLastSave != null ? (fancyLastSave.second() == null ? "today" : fancyLastSave.second()) : "unknown")
-                        .appendFreshSibling(new MooChatComponent("= last time " + (activeProfile.coopCount() == 0 ? stalkedPlayer.getName() : EnumChatFormatting.RED + "someone from " + stalkedPlayer.getName() + "'s profile" + EnumChatFormatting.WHITE) + " has played SkyBlock.").white())));
 
                 main.getChatHelper().sendMessage(sbStats);
             } else {

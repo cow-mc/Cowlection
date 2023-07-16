@@ -60,7 +60,6 @@ public class HySkyBlockStats {
 
     public static class Profile {
         public boolean selected;
-        private long last_save;
         private String cute_name;
         private Map<String, Member> members;
         private String game_mode;
@@ -94,10 +93,6 @@ public class HySkyBlockStats {
                 default:
                     return EnumChatFormatting.ITALIC + Utils.fancyCase(game_mode);
             }
-        }
-
-        public Pair<String, String> getFancyLastSave() {
-            return (last_save > 0) ? Utils.getDurationAsWords(last_save) : null;
         }
 
         public double getCoinBank() {
