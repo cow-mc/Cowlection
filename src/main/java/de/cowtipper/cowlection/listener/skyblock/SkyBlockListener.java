@@ -479,8 +479,8 @@ public class SkyBlockListener {
         // bazaar: show how many items left on offer/order
         if (MooConfig.bazaarShowItemsLeft) {
             String displayName = e.itemStack.getDisplayName();
-            if (displayName.startsWith("" + EnumChatFormatting.GOLD + EnumChatFormatting.BOLD + "SELL" + EnumChatFormatting.GRAY + ":")
-                    || displayName.startsWith("" + EnumChatFormatting.GREEN + EnumChatFormatting.BOLD + "BUY" + EnumChatFormatting.GRAY + ":")) {
+            if (displayName.startsWith("" + EnumChatFormatting.GOLD + EnumChatFormatting.BOLD + "SELL")
+                    || displayName.startsWith("" + EnumChatFormatting.GREEN + EnumChatFormatting.BOLD + "BUY")) {
                 int targetAmount = -1; // order/offer amount
                 List<String> toolTip = e.toolTip;
                 for (int lineNr = 2; lineNr < Math.min(5, toolTip.size()); lineNr++) {
