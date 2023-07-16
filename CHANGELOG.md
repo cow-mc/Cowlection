@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [1.8.9-0.16.0] - unreleased
+### Changed
+- Dungeons overlay: now disabled by default (old config entries aren't modified)
+
 ### Fixed
 - Pet exp in tooltips: fixed rare crash caused by unexpected NBT data typing
 - Bazaar: fixed "Show items left to buy/sell" not working anymore

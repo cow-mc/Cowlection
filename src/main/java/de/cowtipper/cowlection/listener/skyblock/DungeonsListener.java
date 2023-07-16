@@ -692,12 +692,12 @@ public class DungeonsListener {
         if (e.type == RenderGameOverlayEvent.ElementType.ALL) {
             DungeonCache dungeonCache = main.getDungeonCache();
 
-            if (dungeonCache.isInDungeon()) {
-                dungeonCache.fetchScoreboardData();
-            }
-
             boolean isEditingDungeonOverlaySettings = MooConfigGui.showDungeonPerformanceOverlay();
             if (MooConfig.dungOverlayEnabled && dungeonCache.isInDungeon() || isEditingDungeonOverlaySettings) {
+                if (dungeonCache.isInDungeon()) {
+                    dungeonCache.fetchScoreboardData();
+                }
+
                 ArrayList<String> dungeonPerformanceEntries = new ArrayList<>();
                 int maxSkillScore = dungeonCache.getMaxSkillScore();
                 int totalDeaths = dungeonCache.getTotalDeaths();

@@ -1062,9 +1062,13 @@ public class MooCommand extends CommandBase {
     }
 
     private void sendCommandUsage(ICommandSender sender) {
+        IChatComponent dungeonOverlayHint = MooConfig.dungOverlayEnabled
+                ? new MooChatComponent("\n").reset().white().appendText(EnumChatFormatting.DARK_GREEN + "  ❢" + EnumChatFormatting.LIGHT_PURPLE + EnumChatFormatting.ITALIC + " To move the Dungeons overlay: " + EnumChatFormatting.WHITE + "/" + getCommandName() + " config " + EnumChatFormatting.GRAY + "➡ " + EnumChatFormatting.WHITE + "SB Dungeons " + EnumChatFormatting.GRAY + "➡ " + EnumChatFormatting.WHITE + "Dungeon Performance Overlay")
+                : null;
+
         IChatComponent usage = new MooChatComponent("➜ " + Cowlection.MODNAME + " commands:").gold().bold()
                 .appendSibling(createCmdHelpEntry("config", "Open mod's configuration"))
-                .appendSibling(new MooChatComponent("\n").reset().white().appendText(EnumChatFormatting.DARK_GREEN + "  ❢" + EnumChatFormatting.LIGHT_PURPLE + EnumChatFormatting.ITALIC + " To move the Dungeons overlay: " + EnumChatFormatting.WHITE + "/" + getCommandName() + " config " + EnumChatFormatting.GRAY + "➡ " + EnumChatFormatting.WHITE + "SB Dungeons " + EnumChatFormatting.GRAY + "➡ " + EnumChatFormatting.WHITE + "Dungeon Performance Overlay"))
+                .appendSibling(dungeonOverlayHint)
                 .appendSibling(new MooChatComponent("\n").reset().gray().appendText(EnumChatFormatting.DARK_GREEN + "  ❢" + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + " Commands marked with §d§l⚷" + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + " require a valid API key"))
                 .appendSibling(createCmdHelpSection(1, "Best friends, friends & other players"))
                 .appendSibling(createCmdHelpEntry("stalk", "Get info of player's status §d§l⚷"))

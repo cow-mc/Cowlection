@@ -164,7 +164,9 @@ public class MooChatComponent extends ChatComponentText {
 
     @Override
     public MooChatComponent appendSibling(IChatComponent component) {
-        super.appendSibling(component);
+        if (component != null) {
+            super.appendSibling(component);
+        }
         return this;
     }
 

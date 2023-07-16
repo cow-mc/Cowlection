@@ -614,13 +614,13 @@ public class MooConfig {
                 "Does " + EnumChatFormatting.ITALIC + "not" + EnumChatFormatting.RESET + " track explorer score " + EnumChatFormatting.GRAY + "(explored rooms, secrets, ...)");
 
         Property propDungSendPerformanceOnDeath = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungSendPerformanceOnDeath", true, "Send dungeon performance after a player died?"));
+                "dungSendPerformanceOnDeath", false, "Send dungeon performance after a player died?"));
 
         Property propDungSendPerformanceOnEndScreen = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungSendPerformanceOnEndScreen", true, "Send dungeon performance on end screen?"));
+                "dungSendPerformanceOnEndScreen", false, "Send dungeon performance on end screen?"));
 
         Property propDungOverlayEnabled = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "dungOverlayEnabled", true, "Enable Dungeon performance overlay?"));
+                "dungOverlayEnabled", false, "Enable Dungeon performance overlay?"));
 
         Property propDungOverlayPositionX = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                         "dungOverlayPositionX", 6, "Dungeon performance overlay position: x value", 0, 1000),
