@@ -593,7 +593,7 @@ public final class DataHelper {
         minions.put("4beed0b166465261f07399fe97304b9913f522e0d42e78d86849ec72be3d7fa9", new Minion("Flower", 9));
         minions.put("d719f6041aaaf6c7b55042a550d51e17af727f6b8e41af09a1aded49c9ff9e31", new Minion("Flower", 10));
         minions.put("1142fe535855dd6b06f4f0817dbc8bf98da31265ae918b854cd11fcacd6fab4c", new Minion("Flower", 11));
-        minions.put("1142fe535855dd6b06f4f0817dbc8bf98da31265ae918b854cd11fcacd6fab4c", new Minion("Flower", 12));
+        minions.put("6762823b4a9b3a3515044d0bc527ac33f7d13d73d80184fcebecd240f9d66703", new Minion("Flower", 12));
 
         minions.put("53ea0fd89524db3d7a3544904933830b4fc8899ef60c113d948bb3c4fe7aabb1", new Minion("Fishing", 1));
         minions.put("8798c0d7b65bfa5f56b084c1f51767a4276ad9f2c60bcb284dc6eccb7281e2ab", new Minion("Fishing", 2));
@@ -601,7 +601,7 @@ public final class DataHelper {
         minions.put("cdfb98800f7d01c56744fa116d2275090a337334f6f884230522f8ea3964c9e0", new Minion("Fishing", 4));
         minions.put("5eb079ce77840f08fb170aad0a89827695d92a6ccca5977f48c43fe931fd22f7", new Minion("Fishing", 5));
         minions.put("db557d80642ccd12c417a9190c8d24b9df2e797eb79b9b63e55c4b0716584222", new Minion("Fishing", 6));
-        minions.put("db557d80642ccd12c417a9190c8d24b9df2e797eb79b9b63e55c4b0716584222", new Minion("Fishing", 7));
+        minions.put("239b4b76830433de06f8f9f257ce3ec5140d1501649cb090f7f725b94d4c2c77", new Minion("Fishing", 7));
         minions.put("a5ee01b414c8e7fb1f55d8143d63b9dfed0c0428f7de043b721424c4a84eded3", new Minion("Fishing", 8));
         minions.put("204b03b60b99d675da18c4238d3031b6139c3763dcb59ba09129e6b3367d9f59", new Minion("Fishing", 9));
         minions.put("593aa3e4eaa3911456d25aab27ce63908fe7a57d880a55884498c3c6a67549b0", new Minion("Fishing", 10));
@@ -631,7 +631,7 @@ public final class DataHelper {
         minions.put("e7eb574b6ab8b394c6b4a112ae18d5a672ffa414ec4dff3d65c9950523c19e0a", new Minion("Revenant", 9));
         minions.put("d0197c8a4eaca2e5cc1b287ac84c62ef8c9f63068218105292dd89c3f7e64596", new Minion("Revenant", 10));
         minions.put("9cf6f95308bedb182b434aa73058aa8d69818b48900396cebc127c1bf7df6790", new Minion("Revenant", 11));
-        minions.put("a3dce8555923558d8d74c2a2b261b2b2d630559db54ef97ed3f9c30e9a20aba", new Minion("Revenant", 12));
+        minions.put("10243a93beca837c15839e938575a5ceb90d14a745686a9a0c4456e3698e32f8", new Minion("Revenant", 12));
 
         minions.put("3a851ed2ce5c2c0523af772d206d9555e2e1383ec87946e6ff4c51186e29ef7f", new Minion("Voidling", 1));
         minions.put("bc494af6b45980cb2b035007c25e1b4e169371c410fe5d2708daa4f695668fd2", new Minion("Voidling", 2));
@@ -656,6 +656,19 @@ public final class DataHelper {
         minions.put("86d467092efb156707c254f168ff03b0b763a74fe9f8ac15616ea4c97adfaf69", new Minion("Inferno", 9));
         minions.put("65c70f90a11c2d47feed7d1317b1c1b7fe93706a192a983af9a81a5170dbe71b", new Minion("Inferno", 10));
         minions.put("ec7cc5d8dea1eac6aa307b9ad32b79da0af7d16bad0fd8e34cc5735739db9753", new Minion("Inferno", 11));
+
+        minions.put("5b0c2db42e90f83fae6551c96e83669211a77c2c155c54d1523af3079f9565ed", new Minion("Vampire", 1));
+        minions.put("a88db98e82cc1d54014bf78627cdebb4a57167bf74dc5210006fc0625b2b4a1", new Minion("Vampire", 2));
+        minions.put("a273050c5f7ac7ae2a5d30f2aa2e24d3f0e2c5740d11659c1ed5b316cf891d27", new Minion("Vampire", 3));
+        minions.put("a100a5b3243ceb4eba1e30b6a65791780bc848a578cf2b7e1bf4603218c4cd89", new Minion("Vampire", 4));
+        minions.put("9ddfacf99e77f96c11726b9a8b650387ba96f11dca3f7df536c527e74f2048d3", new Minion("Vampire", 5));
+        minions.put("bb84fdd1410a7918e13aeba2963d4d55cd8ebcf451b4db54f21ae7d5c2f3c592", new Minion("Vampire", 6));
+        minions.put("6fedd9b94771a6d8c38294e5088d404468a012f9dec5987f3f492472f30b83b3", new Minion("Vampire", 7));
+        minions.put("c275215f04761beaf8d5a1fd6c68a6ddebf3c73209826da9d9615356b6e764db", new Minion("Vampire", 8));
+        minions.put("b5a9436c65dc81e67aed2a0f3d2e41413cc2e8ca7abe9a7caf26e1596df970a7", new Minion("Vampire", 9));
+        minions.put("4deaeb1710e6d9303060dca85308437651ca41169fe66f93a6b0ae8f634017e8", new Minion("Vampire", 10));
+        minions.put("c572c3b4cdedef1162a6da9be7f10dd24fcf642793d6c49aa08ee0bf4f9d3313", new Minion("Vampire", 11));
+
 
         minions.put("2fe009c5cfa44c05c88e5df070ae2533bd682a728e0b33bfc93fd92a6e5f3f64", new Minion("Skeleton", 1));
         minions.put("3ab6f9c3c911879181dbf2468783348abc671346d5e8c34d118b2b7ece7c47c2", new Minion("Skeleton", 2));
@@ -741,7 +754,7 @@ public final class DataHelper {
         minions.put("76101f4bb000518bbedc4b1147a920a99f141b8a679f2984fb94741a33eed69f", new Minion("Magma Cube", 9));
         minions.put("e9e67c3860cc1d36cb4930e0ae0488c64abc4e910b4224dc9160d273c3af0bba", new Minion("Magma Cube", 10));
         minions.put("6ab2af6b08c3acedd2328e152ef7177f6bbb617dc985dfbfecdc982e04939b04", new Minion("Magma Cube", 11));
-        minions.put("6ab2af6b08c3acedd2328e152ef7177f6bbb617dc985dfbfecdc982e04939b04", new Minion("Magma Cube", 12));
+        minions.put("836abe87bbab593c944975526e636c038829dd9f9d1d94db65838c2688b2fd40", new Minion("Magma Cube", 12));
 
         minions.put("e460d20ba1e9cd1d4cfd6d5fb0179ff41597ac6d2461bd7ccdb58b20291ec46e", new Minion("Enderman", 1));
         minions.put("e38b1bacbce1c6fa1928a89d443868a40a98da7b4507801993b1ab9bb9115458", new Minion("Enderman", 2));

@@ -31,6 +31,7 @@ All other features *do not* require an API key and thus should be unaffected by 
 ### Changed
 - Dungeons overlay: now disabled by default (old config entries aren't modified)
 - SkyBlock player lookup: removed 'last played/last profile save' as it's no longer part of the API
+- Analyze island: added new Minion (Vampire) and updated texture IDs for minions that previously erroneously shared the same skin
 - some Hypixel API related changes regarding API key validation
 
 ### Fixed
