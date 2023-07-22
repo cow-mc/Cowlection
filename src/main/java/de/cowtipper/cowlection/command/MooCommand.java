@@ -10,6 +10,7 @@ import de.cowtipper.cowlection.command.exception.InvalidPlayerNameException;
 import de.cowtipper.cowlection.command.exception.MooCommandException;
 import de.cowtipper.cowlection.config.CredentialStorage;
 import de.cowtipper.cowlection.config.MooConfig;
+import de.cowtipper.cowlection.config.gui.MooConfigBestFriendsMigration;
 import de.cowtipper.cowlection.config.gui.MooConfigGui;
 import de.cowtipper.cowlection.data.*;
 import de.cowtipper.cowlection.data.HySkyBlockStats.Profile.Pet;
@@ -19,6 +20,7 @@ import de.cowtipper.cowlection.partyfinder.RuleEditorGui;
 import de.cowtipper.cowlection.search.GuiSearch;
 import de.cowtipper.cowlection.util.*;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.SoundCategory;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.multiplayer.WorldClient;
@@ -93,16 +95,23 @@ public class MooCommand extends CommandBase {
                 || args[0].equalsIgnoreCase("s")
                 || args[0].equalsIgnoreCase("askPolitelyWhereTheyAre")) {
             handleStalking(args);
-        } else if (args[0].equalsIgnoreCase("add")) {
-            handleBestFriendAdd(args);
+        } else if (args[0].equalsIgnoreCase("add")
+                || args[0].equalsIgnoreCase("list")
+                || args[0].equalsIgnoreCase("online")
+                || args[0].equalsIgnoreCase("nameChangeCheck")) {
+            handleBestFriendSubcommands();
         } else if (args[0].equalsIgnoreCase("remove")) {
             handleBestFriendRemove(args);
-        } else if (args[0].equalsIgnoreCase("list")) {
-            handleListBestFriends();
-        } else if (args[0].equalsIgnoreCase("online")) {
-            handleBestFriendsOnlineCheck();
-        } else if (args[0].equalsIgnoreCase("nameChangeCheck")) {
-            handleNameChangeCheck(args);
+        } else if (args[0].equalsIgnoreCase("bestfriends") || args[0].equalsIgnoreCase("bestfriend")) {
+            displayGuiScreen(new MooConfigBestFriendsMigration());
+        } else if (args[0].equalsIgnoreCase("I-read-the-login-logout-notification-changes")) {
+            main.getConfig().acknowledgeLoginLogoutNotificationChanges();
+            MooChatComponent confirmationMsg = new MooChatComponent("[§2Cowlection§a] The 'login & logout notification filter' removal info message will no longer be shown.").green();
+            if (main.getFriendsHandler().getBestFriendsListSize() > 0) {
+                confirmationMsg.appendSibling(new MooChatComponent("\nHowever, don't forget to migrate your Cowlection best friends by using §4/moo bestfriends§c!").red())
+                        .setSuggestCommand("/moo bestfriends");
+            }
+            main.getChatHelper().sendMessage(confirmationMsg);
         }
         // + toggle (= alias for config)
         //endregion
@@ -193,7 +202,7 @@ public class MooCommand extends CommandBase {
     //region sub commands: Best friends, friends & other players
     private void handleStalking(String[] args) throws CommandException {
         if (!CredentialStorage.isMooValid) {
-            throw new MooCommandException("You haven't set your Hypixel API key yet or the API key is invalid. Use " + EnumChatFormatting.DARK_RED + "/api new" + EnumChatFormatting.RED + " to request a new API key from Hypixel or use " + EnumChatFormatting.DARK_RED + "/" + this.getCommandName() + " apikey <key>" + EnumChatFormatting.RED + " to manually set your existing API key.");
+            throw new MooCommandException("You haven't set your Hypixel API key yet or the API key is invalid. Use " + EnumChatFormatting.DARK_RED + "/" + this.getCommandName() + " apikey <key>" + EnumChatFormatting.RED + " to manually set your existing API key.");
         }
         if (args.length != 2) {
             throw new WrongUsageException("/" + getCommandName() + " stalk <playerName>");
@@ -202,24 +211,18 @@ public class MooCommand extends CommandBase {
         } else {
             String playerName = args[1];
             main.getChatHelper().sendMessage(EnumChatFormatting.GRAY, "Stalking " + EnumChatFormatting.WHITE + playerName + EnumChatFormatting.GRAY + ". This may take a few seconds.");
-            boolean isBestFriend = main.getFriendsHandler().isBestFriend(playerName, true);
-            if (isBestFriend) {
-                Friend stalkedPlayer = main.getFriendsHandler().getBestFriend(playerName);
-                // we have the uuid already, so stalk the player
-                stalkPlayer(stalkedPlayer);
-            } else {
-                // fetch player uuid
-                ApiUtils.fetchFriendData(playerName, stalkedPlayer -> {
-                    if (stalkedPlayer == null) {
-                        throw new ApiContactException("Mojang", "couldn't stalk " + EnumChatFormatting.DARK_RED + playerName);
-                    } else if (stalkedPlayer.equals(Friend.FRIEND_NOT_FOUND)) {
-                        throw new PlayerNotFoundException("There is no player with the name " + EnumChatFormatting.DARK_RED + playerName + EnumChatFormatting.RED + ".");
-                    } else {
-                        // ... then stalk the player
-                        stalkPlayer(stalkedPlayer);
-                    }
-                });
-            }
+
+            // fetch player uuid
+            ApiUtils.fetchFriendData(playerName, stalkedPlayer -> {
+                if (stalkedPlayer == null) {
+                    throw new ApiContactException("Mojang", "couldn't stalk " + EnumChatFormatting.DARK_RED + playerName);
+                } else if (stalkedPlayer.equals(Friend.FRIEND_NOT_FOUND)) {
+                    throw new PlayerNotFoundException("There is no player with the name " + EnumChatFormatting.DARK_RED + playerName + EnumChatFormatting.RED + ".");
+                } else {
+                    // ... then stalk the player
+                    stalkPlayer(stalkedPlayer);
+                }
+            });
         }
     }
 
@@ -267,20 +270,11 @@ public class MooCommand extends CommandBase {
         });
     }
 
-    private void handleBestFriendAdd(String[] args) throws CommandException {
-        if (args.length != 2) {
-            throw new WrongUsageException("/" + getCommandName() + " add <playerName>");
-        } else if (Utils.isInvalidMcName(args[1])) {
-            throw new InvalidPlayerNameException(args[1]);
-        } else if (main.getFriendsHandler().isBestFriend(args[1], true)) {
-            throw new MooCommandException(EnumChatFormatting.DARK_RED + args[1] + EnumChatFormatting.RED + " is a best friend already.");
-        } else if (main.getFriendsHandler().getBestFriends().size() >= 100) {
-            throw new MooCommandException(EnumChatFormatting.RED + "The best friends list is limited to 100 players. Remove some with " + EnumChatFormatting.WHITE + "/" + getCommandName() + " remove <name> " + EnumChatFormatting.RED + "first");
-        } else {
-            main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, "Fetching " + EnumChatFormatting.YELLOW + args[1] + EnumChatFormatting.GOLD + "'s unique user id. This may take a few seconds...");
-            // add friend async
-            main.getFriendsHandler().addBestFriend(args[1]);
-        }
+    private void handleBestFriendSubcommands() {
+        main.getChatHelper().sendMessage(new MooChatComponent("[" + EnumChatFormatting.DARK_RED + Cowlection.MODNAME + EnumChatFormatting.RED + "] The 'best friends list' feature has been removed from this mod.").red()
+                .appendSibling(new MooChatComponent(" Run " + EnumChatFormatting.GOLD + "/moo bestfriends " + EnumChatFormatting.YELLOW + "to migrate your best friends list").yellow())
+                .setSuggestCommand("/moo bestfriends"));
+        Minecraft.getMinecraft().thePlayer.playSound("mob.villager.no", Minecraft.getMinecraft().gameSettings.getSoundLevel(SoundCategory.MASTER), 1.4f);
     }
 
     private void handleBestFriendRemove(String[] args) throws CommandException {
@@ -297,51 +291,12 @@ public class MooCommand extends CommandBase {
             throw new MooCommandException(EnumChatFormatting.DARK_RED + username + EnumChatFormatting.RED + " isn't a best friend.");
         }
     }
-
-    private void handleListBestFriends() {
-        Set<String> bestFriends = main.getFriendsHandler().getBestFriends();
-
-        // TODO show fancy gui with list of best friends; maybe with buttons to delete them
-        main.getChatHelper().sendMessage(EnumChatFormatting.GREEN, "➜ Best friends"
-                + (bestFriends.isEmpty() ? "" : " (" + EnumChatFormatting.DARK_GREEN + bestFriends.size() + EnumChatFormatting.GREEN + ")") + ": "
-                + ((bestFriends.isEmpty())
-                ? EnumChatFormatting.ITALIC + "none :c"
-                : EnumChatFormatting.DARK_GREEN + String.join(EnumChatFormatting.GREEN + ", " + EnumChatFormatting.DARK_GREEN, bestFriends)));
-    }
-
-    private void handleBestFriendsOnlineCheck() throws MooCommandException {
-        if (!CredentialStorage.isMooValid) {
-            throw new MooCommandException("You haven't set your Hypixel API key yet or the API key is invalid. Use " + EnumChatFormatting.DARK_RED + "/api new" + EnumChatFormatting.RED + " to request a new API key from Hypixel or use " + EnumChatFormatting.DARK_RED + "/" + this.getCommandName() + " apikey <key>" + EnumChatFormatting.RED + " to manually set your existing API key.");
-        }
-        if (main.getFriendsHandler().getBestFriends().size() > 0) {
-            main.getChatHelper().sendMessage(EnumChatFormatting.GRAY, "Checking online status of " + EnumChatFormatting.WHITE + main.getFriendsHandler().getBestFriends().size() + EnumChatFormatting.GRAY + " best friends. This may take a few seconds.");
-            main.getFriendsHandler().runBestFriendsOnlineCheck(true);
-        } else {
-            main.getChatHelper().sendMessage(EnumChatFormatting.RED, "You haven't added anyone to your best friends list yet. Do so with " + EnumChatFormatting.WHITE + "/moo add <playerName>");
-        }
-    }
-
-    private void handleNameChangeCheck(String[] args) throws CommandException {
-        if (args.length != 2) {
-            throw new WrongUsageException("/" + getCommandName() + " nameChangeCheck <playerName>");
-        } else if (Utils.isInvalidMcName(args[1])) {
-            throw new InvalidPlayerNameException(args[1]);
-        }
-        Friend bestFriend = main.getFriendsHandler().getBestFriend(args[1]);
-        if (bestFriend.equals(Friend.FRIEND_NOT_FOUND)) {
-            throw new MooCommandException(EnumChatFormatting.DARK_RED + args[1] + EnumChatFormatting.RED + " isn't a best friend.");
-        } else {
-            main.getChatHelper().sendMessage(EnumChatFormatting.GOLD, "Checking if " + bestFriend.getName() + " changed their name... This will take a few seconds...");
-            // check for name change async
-            main.getFriendsHandler().doBestFriendNameChangeCheck(bestFriend, true);
-        }
-    }
     //endregion
 
     //region sub commands: SkyBlock
     private void handleStalkingSkyBlock(String[] args) throws CommandException {
         if (!CredentialStorage.isMooValid) {
-            throw new MooCommandException("You haven't set your Hypixel API key yet or the API key is invalid. Use " + EnumChatFormatting.DARK_RED + "/api new" + EnumChatFormatting.RED + " to request a new API key from Hypixel or use " + EnumChatFormatting.DARK_RED + "/" + this.getCommandName() + " apikey <key>" + EnumChatFormatting.RED + " to manually set your existing API key.");
+            throw new MooCommandException("You haven't set your Hypixel API key yet or the API key is invalid. Use " + EnumChatFormatting.DARK_RED + "/" + this.getCommandName() + " apikey <key>" + EnumChatFormatting.RED + " to manually set your existing API key.");
         }
         if (args.length != 2) {
             throw new WrongUsageException("/" + getCommandName() + " skyblockstalk <playerName>");
@@ -350,24 +305,17 @@ public class MooCommand extends CommandBase {
         } else {
             String playerName = args[1];
             main.getChatHelper().sendMessage(EnumChatFormatting.GRAY, "Stalking " + EnumChatFormatting.WHITE + playerName + EnumChatFormatting.GRAY + "'s SkyBlock stats. This may take a few seconds.");
-            boolean isBestFriend = main.getFriendsHandler().isBestFriend(playerName, true);
-            if (isBestFriend) {
-                Friend stalkedPlayer = main.getFriendsHandler().getBestFriend(playerName);
-                // we have the uuid already, so stalk the player
-                stalkSkyBlockStats(stalkedPlayer);
-            } else {
-                // fetch player uuid
-                ApiUtils.fetchFriendData(playerName, stalkedPlayer -> {
-                    if (stalkedPlayer == null) {
-                        throw new ApiContactException("Mojang", "couldn't stalk " + EnumChatFormatting.DARK_RED + playerName);
-                    } else if (stalkedPlayer.equals(Friend.FRIEND_NOT_FOUND)) {
-                        throw new PlayerNotFoundException("There is no player with the name " + EnumChatFormatting.DARK_RED + playerName + EnumChatFormatting.RED + ".");
-                    } else {
-                        // ... then stalk the player
-                        stalkSkyBlockStats(stalkedPlayer);
-                    }
-                });
-            }
+            // fetch player uuid
+            ApiUtils.fetchFriendData(playerName, stalkedPlayer -> {
+                if (stalkedPlayer == null) {
+                    throw new ApiContactException("Mojang", "couldn't stalk " + EnumChatFormatting.DARK_RED + playerName);
+                } else if (stalkedPlayer.equals(Friend.FRIEND_NOT_FOUND)) {
+                    throw new PlayerNotFoundException("There is no player with the name " + EnumChatFormatting.DARK_RED + playerName + EnumChatFormatting.RED + ".");
+                } else {
+                    // ... then stalk the player
+                    stalkSkyBlockStats(stalkedPlayer);
+                }
+            });
         }
     }
 
@@ -879,7 +827,7 @@ public class MooCommand extends CommandBase {
         } else if ((args.length == 2 && (args[1].equalsIgnoreCase("party") || args[1].equalsIgnoreCase("p")))
                 || args.length == 1 && args[0].equalsIgnoreCase("dp")) {
             if (!CredentialStorage.isMooValid) {
-                throw new MooCommandException("You haven't set your Hypixel API key yet or the API key is invalid. Use " + EnumChatFormatting.DARK_RED + "/api new" + EnumChatFormatting.RED + " to request a new API key from Hypixel or use " + EnumChatFormatting.DARK_RED + "/" + this.getCommandName() + " apikey <key>" + EnumChatFormatting.RED + " to manually set your existing API key.");
+                throw new MooCommandException("You haven't set your Hypixel API key yet or the API key is invalid. Use " + EnumChatFormatting.DARK_RED + "/" + this.getCommandName() + " apikey <key>" + EnumChatFormatting.RED + " to manually set your existing API key.");
             } else if (dungeonsPartyListener != null) {
                 throw new MooCommandException("Please wait a few seconds before using this command again.");
             }
@@ -951,14 +899,14 @@ public class MooCommand extends CommandBase {
                 color = EnumChatFormatting.RED;
                 colorSecondary = EnumChatFormatting.DARK_RED;
             }
-            main.getChatHelper().sendMessage(color, firstSentence + color + " Use " + colorSecondary + "/api new" + color + " to request a new API key from Hypixel or use " + colorSecondary + "/" + this.getCommandName() + " apikey <key>" + color + " to manually set your existing API key.");
+            main.getChatHelper().sendMessage(color, firstSentence + color + " Use " + colorSecondary + "/" + this.getCommandName() + " apikey <key>" + color + " to manually set your existing API key.");
         } else {
             String key = args[1];
             if (Utils.isValidUuid(key)) {
                 main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, "[" + Cowlection.MODNAME + "] Validating API key...");
                 main.getMoo().setMooIfValid(key, true);
             } else {
-                throw new SyntaxErrorException("[" + Cowlection.MODNAME + "] That doesn't look like a valid API key... Did you want check your API key usage statistics? Run /" + getCommandName() + " apikey");
+                throw new SyntaxErrorException("[" + Cowlection.MODNAME + "] That doesn't look like a valid API key...");
             }
         }
     }
@@ -1062,18 +1010,11 @@ public class MooCommand extends CommandBase {
                 ? new MooChatComponent("\n").reset().white().appendText(EnumChatFormatting.DARK_GREEN + "  ❢" + EnumChatFormatting.LIGHT_PURPLE + EnumChatFormatting.ITALIC + " To move the Dungeons overlay: " + EnumChatFormatting.WHITE + "/" + getCommandName() + " config " + EnumChatFormatting.GRAY + "➡ " + EnumChatFormatting.WHITE + "SB Dungeons " + EnumChatFormatting.GRAY + "➡ " + EnumChatFormatting.WHITE + "Dungeon Performance Overlay")
                 : null;
 
-        IChatComponent usage = new MooChatComponent("➜ " + Cowlection.MODNAME + " commands:").gold().bold()
+        MooChatComponent usage = new MooChatComponent("➜ " + Cowlection.MODNAME + " commands:").gold().bold()
                 .appendSibling(createCmdHelpEntry("config", "Open mod's configuration"))
                 .appendSibling(dungeonOverlayHint)
                 .appendSibling(new MooChatComponent("\n").reset().gray().appendText(EnumChatFormatting.DARK_GREEN + "  ❢" + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + " Commands marked with §d§l⚷" + EnumChatFormatting.GRAY + EnumChatFormatting.ITALIC + " require a valid API key"))
-                .appendSibling(createCmdHelpSection(1, "Best friends, friends & other players"))
-                .appendSibling(createCmdHelpEntry("stalk", "Get info of player's status §d§l⚷"))
-                .appendSibling(createCmdHelpEntry("add", "Add best friends"))
-                .appendSibling(createCmdHelpEntry("remove", "Remove best friends"))
-                .appendSibling(createCmdHelpEntry("list", "View list of best friends"))
-                .appendSibling(createCmdHelpEntry("online", "View list of best friends that are currently online §d§l⚷"))
-                .appendSibling(createCmdHelpEntry("nameChangeCheck", "Force a scan for a changed name of a best friend (is done automatically as well)"))
-                .appendSibling(createCmdHelpSection(2, "SkyBlock"))
+                .appendSibling(createCmdHelpSection(1, "SkyBlock"))
                 .appendSibling(createCmdHelpEntry("stalkskyblock", "Get info of player's SkyBlock stats §d§l⚷"))
                 .appendSibling(createCmdHelpEntry("analyzeChests", "Analyze chests' contents and evaluate potential Bazaar value"))
                 .appendSibling(createCmdHelpEntry("analyzeIsland", "Analyze a SkyBlock private island (inspect minions)"))
@@ -1081,19 +1022,23 @@ public class MooCommand extends CommandBase {
                 .appendSibling(createCmdHelpEntry("dungeon", "SkyBlock Dungeons: display current dungeon performance"))
                 .appendSibling(createCmdHelpEntry("dungeon party", "SkyBlock Dungeons: Shows armor and dungeon info about current party members " + EnumChatFormatting.GRAY + "(alias: " + EnumChatFormatting.WHITE + "/" + getCommandName() + " dp" + EnumChatFormatting.GRAY + ") §d§l⚷"))
                 .appendSibling(createCmdHelpEntry("dungeon rules", "SkyBlock Dungeons: Edit rules for Party Finder " + EnumChatFormatting.GRAY + "(alias: " + EnumChatFormatting.WHITE + "/" + getCommandName() + " dr" + EnumChatFormatting.GRAY + ")"))
-                .appendSibling(createCmdHelpSection(3, "Miscellaneous"))
+                .appendSibling(createCmdHelpSection(2, "Miscellaneous"))
                 .appendSibling(createCmdHelpEntry("search", "Open Minecraft log search"))
                 .appendSibling(createCmdHelpEntry("worldage", "Check how long the current world is loaded"))
+                .appendSibling(createCmdHelpEntry("stalk", "Get info of player's online status §d§l⚷"))
                 .appendSibling(createCmdHelpEntry("guiScale", "Change GUI scale"))
                 .appendSibling(createCmdHelpEntry("rr", "Alias for /r without auto-replacement to /msg"))
                 .appendSibling(createCmdHelpEntry("shrug", "¯\\_(ツ)_/¯"))
                 .appendSibling(createCmdHelpEntry("discord", "Need help? Join the Cowshed discord"))
-                .appendSibling(createCmdHelpSection(4, "Update mod"))
+                .appendSibling(createCmdHelpSection(3, "Update mod"))
                 .appendSibling(createCmdHelpEntry("update", "Check for new mod updates"))
                 .appendSibling(createCmdHelpEntry("updateHelp", "Show mod update instructions"))
                 .appendSibling(createCmdHelpEntry("version", "View results of last mod update check"))
-                .appendSibling(createCmdHelpEntry("directory", "Open Minecraft's mods directory"))
-                .appendFreshSibling(new MooChatComponent("➡ /commandslist " + EnumChatFormatting.YELLOW + "to list all commands added by your installed mods.").lightPurple().setSuggestCommand("/commandslist"))
+                .appendSibling(createCmdHelpEntry("directory", "Open Minecraft's mods directory"));
+        if (main.getFriendsHandler().getBestFriendsListSize() > 0) {
+            usage.appendSibling(createCmdHelpEntry("bestfriends", "§dMigrate best friends list"));
+        }
+        usage.appendFreshSibling(new MooChatComponent("➡ /commandslist " + EnumChatFormatting.YELLOW + "to list all commands added by your installed mods.").lightPurple().setSuggestCommand("/commandslist"))
                 .appendFreshSibling(new MooChatComponent("➜ Need help with " + EnumChatFormatting.GOLD + Cowlection.MODNAME + EnumChatFormatting.GREEN + "? Do you have any questions, suggestions or other feedback? " + EnumChatFormatting.GOLD + "Join the Cowshed discord!").green().setUrl(Cowlection.INVITE_URL));
         sender.addChatMessage(usage);
     }
@@ -1119,11 +1064,12 @@ public class MooCommand extends CommandBase {
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args,
                     /* main */ "help", "config",
-                    /* Best friends, friends & other players */ "stalk", "add", "remove", "list", "online", "nameChangeCheck",
+                    /* Best friends, friends & other players */ "stalk",
                     /* SkyBlock */ "stalkskyblock", "skyblockstalk", "chestAnalyzer", "analyzeChests", "analyzeIsland", "waila", "whatAmILookingAt", "dungeon",
                     /* miscellaneous */ "search", "worldage", "serverage", "guiscale", "rr", "shrug", "apikey", "discord",
                     /* update mod */ "update", "updateHelp", "version", "directory",
-                    /* rarely used aliases */ "askPolitelyWhereTheyAre", "askPolitelyAboutTheirSkyBlockProgress", "year", "whatyearisit");
+                    /* rarely used aliases */ "askPolitelyWhereTheyAre", "askPolitelyAboutTheirSkyBlockProgress", "year", "whatyearisit",
+                    /* deprecated as of 0.16.0: */ "bestfriends", "remove");
         } else if (args.length == 2 && (args[0].equalsIgnoreCase("waila") || args[0].equalsIgnoreCase("whatAmILookingAt"))) {
             return getListOfStringsMatchingLastWord(args, "all", "main");
         } else if (args.length == 2 && args[0].equalsIgnoreCase("remove")) {
@@ -1136,7 +1082,7 @@ public class MooCommand extends CommandBase {
             return getListOfStringsMatchingLastWord(args, "stop");
         }
         String commandArg = args[0].toLowerCase();
-        if (args.length == 2 && (commandArg.equals("s") || commandArg.equals("ss") || commandArg.equals("namechangecheck") || commandArg.contains("stalk") || commandArg.contains("askpolitely"))) { // stalk & stalkskyblock + namechangecheck
+        if (args.length == 2 && (commandArg.equals("s") || commandArg.equals("ss") || commandArg.contains("stalk") || commandArg.contains("askpolitely"))) { // stalk & stalkskyblock
             return getListOfStringsMatchingLastWord(args, main.getPlayerCache().getAllNamesSorted());
         }
         return null;

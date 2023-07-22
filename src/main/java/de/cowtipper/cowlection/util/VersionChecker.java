@@ -72,7 +72,7 @@ public class VersionChecker {
                 statusMsg = new ChatComponentText("✔ You're running the latest version (" + Cowlection.VERSION + ").").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GREEN));
             } else if (versionResult.status == ForgeVersion.Status.PENDING) {
                 // pending
-                statusMsg = new ChatComponentText("➜ " + "Version check either failed or is still running.").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.YELLOW))
+                statusMsg = new ChatComponentText("➜ Version check either failed or is still running.").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.YELLOW))
                         .appendSibling(new ChatComponentText("\n ➊ Check for results again in a few seconds with " + EnumChatFormatting.GOLD + "/moo version").setChatStyle(new ChatStyle()
                                 .setColor(EnumChatFormatting.YELLOW)
                                 .setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/moo version"))

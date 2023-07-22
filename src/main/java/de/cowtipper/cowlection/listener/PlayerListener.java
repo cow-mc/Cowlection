@@ -1,9 +1,7 @@
 package de.cowtipper.cowlection.listener;
 
 import de.cowtipper.cowlection.Cowlection;
-import de.cowtipper.cowlection.config.CredentialStorage;
 import de.cowtipper.cowlection.config.MooConfig;
-import de.cowtipper.cowlection.error.ApiAskPolitelyErrorEvent;
 import de.cowtipper.cowlection.error.ApiHttpErrorEvent;
 import de.cowtipper.cowlection.listener.skyblock.DungeonsListener;
 import de.cowtipper.cowlection.listener.skyblock.SkyBlockListener;
@@ -43,6 +41,7 @@ public class PlayerListener {
     private boolean isOnSkyBlock;
     private AbortableRunnable checkScoreboard;
     private long nextApiErrorMessage;
+    private long nextMigrationNotification = 0;
 
     public PlayerListener(Cowlection main) {
         this.main = main;
@@ -118,15 +117,7 @@ public class PlayerListener {
             isOnSkyBlock = false;
             isPlayerJoiningServer = true;
             main.getVersionChecker().runUpdateCheck(false);
-            if (MooConfig.doBestFriendsOnlineCheck && CredentialStorage.isMooValid && main.getFriendsHandler().getBestFriends().size() > 0) {
-                main.getFriendsHandler().runBestFriendsOnlineCheck(false);
-            }
         }
-    }
-
-    @SubscribeEvent
-    public void onApiAskPolitelyError(ApiAskPolitelyErrorEvent e) {
-        main.getFriendsHandler().addErroredApiRequest(e.getPlayerName());
     }
 
     @SubscribeEvent
@@ -147,6 +138,26 @@ public class PlayerListener {
     @SubscribeEvent
     public void onWorldEnter(PlayerSetSpawnEvent e) {
         isPlayerJoiningServer = false;
+
+        if (this.nextMigrationNotification < System.currentTimeMillis()) {
+            this.nextMigrationNotification = System.currentTimeMillis() + 10000;
+            new TickDelay(() -> {
+                if (MooConfig.doBestFriendsOnlineCheck || main.getFriendsHandler().getBestFriendsListSize() > 0) {
+                    main.getChatHelper().sendMessage(new MooChatComponent("[" + EnumChatFormatting.DARK_RED + Cowlection.MODNAME + EnumChatFormatting.RED + "] The 'best friends list' feature has been removed from this mod.").red()
+                            .appendSibling(new MooChatComponent(" Run " + EnumChatFormatting.GOLD + "/moo bestfriends " + EnumChatFormatting.YELLOW + "to migrate your best friends list").yellow())
+                            .setSuggestCommand("/moo bestfriends", false)
+                            .setHover(new MooChatComponent.KeyValueChatComponent("Run", "/moo bestfriends", " ")
+                                    .appendFreshSibling(new MooChatComponent("(This message will re-appear as long as there are still names on your Cowlection best friends list)").red())));
+                }
+                if (MooConfig.doMonitorNotifications()) {
+                    main.getChatHelper().sendMessage(new MooChatComponent("[" + EnumChatFormatting.DARK_RED + Cowlection.MODNAME + EnumChatFormatting.RED + "] The 'login & logout notifications filter' feature has been removed from this mod.").red()
+                            .appendFreshSibling(new MooChatComponent("Use Hypixel's commands instead:").gold()
+                                    .appendFreshSibling(new MooChatComponent(" §6➊ §eCycle through (best) friends notifications: §6/friend notifications §7(you may need to repeat this command to get the desired setting)").yellow().setSuggestCommand("/friend notifications"))
+                                    .appendFreshSibling(new MooChatComponent(" §6➋ §eToggle Guild notifications: §6/guild notifications").yellow().setSuggestCommand("/guild notifications")))
+                            .appendFreshSibling(new MooChatComponent("[Do not show this message again! I updated my settings accordingly]").darkAqua().underline().setSuggestCommand("/moo I-read-the-login-logout-notification-changes")));
+                }
+            }, 3000);
+        }
 
         if (MooConfig.getEnableSkyBlockOnlyFeatures() == MooConfig.Setting.ALWAYS) {
             main.getLogger().info("Registering SkyBlock listeners");

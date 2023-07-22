@@ -80,7 +80,7 @@ public class RuleEditorGui extends GuiScreen {
         this.buttonList.add(this.btnClose = new GuiButtonExt(2, this.width - 25, 4, 20, 20, EnumChatFormatting.RED + "X"));
 
         updateLastScrollDistance();
-        // scrollable commands list
+        // scrollable gui
         rulesList = new RulesListGui(this.width - 30, this.rules.getRules(), lastScrollDistance);
     }
 

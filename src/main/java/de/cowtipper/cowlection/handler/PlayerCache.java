@@ -8,7 +8,7 @@ import java.util.TreeSet;
 @SuppressWarnings("UnstableApiUsage")
 public class PlayerCache {
     private final EvictingQueue<String> nameCache = EvictingQueue.create(50);
-    private final EvictingQueue<String> bestFriendCache = EvictingQueue.create(100);
+    private final EvictingQueue<String> friendCache = EvictingQueue.create(100);
 
     public PlayerCache() {
     }
@@ -19,25 +19,25 @@ public class PlayerCache {
         nameCache.add(name);
     }
 
-    public void addBestFriend(String name) {
+    public void addFriend(String name) {
         // remove old entry (if exists) to 'push' name to the end of the queue
-        bestFriendCache.remove(name);
-        bestFriendCache.add(name);
+        friendCache.remove(name);
+        friendCache.add(name);
     }
 
-    public void removeBestFriend(String name) {
-        bestFriendCache.remove(name);
+    public void removeFriend(String name) {
+        friendCache.remove(name);
     }
 
     public SortedSet<String> getAllNamesSorted() {
         SortedSet<String> nameList = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-        nameList.addAll(bestFriendCache);
+        nameList.addAll(friendCache);
         nameList.addAll(nameCache);
         return nameList;
     }
 
     public void clearAllCaches() {
         nameCache.clear();
-        bestFriendCache.clear();
+        friendCache.clear();
     }
 }

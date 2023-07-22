@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [1.8.9-0.16.0] - unreleased
+### Removed
+- Removed Cowlection 'Best friends' list:
+  - Migrate your current Cowlection best friends with `/moo bestfriends`
+  - Hypixel added their own 'Best friends' list quite a while ago: [see patch notes for 'Social Update'](https://hypixel.net/threads/social-update-online-status-best-friends-more.4638020/)
+    - Hypixel's best friends list does basically the same, plus doesn't require *any* API requests
+    - View best friends list: `/friend list best` or `/fl best`
+    - Add or remove best friend: `/friend best <player name>`
+- Removed Join & leave notifications toggle for friends, best friends, and guild members
+  - use Hypixel's commands instead: 
+      - `/friend notifications` to cycle through the available Friends notifications options, or `/settings` → Social Settings → Friend Notifications: All / Best / None 
+      - `/guild notifications` to toggle Guild notifications, or `/settings` → Personal Guild Settings → Guild Notifications
+
 ### Changed
 - Dungeons overlay: now disabled by default (old config entries aren't modified)
 - SkyBlock player lookup: removed 'last played/last profile save' as it's no longer part of the API

@@ -9,11 +9,9 @@ import de.cowtipper.cowlection.util.ApiUtils;
 import de.cowtipper.cowlection.util.MooChatComponent;
 import de.cowtipper.cowlection.util.Utils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.SoundCategory;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.GuiControls;
 import net.minecraft.client.gui.GuiNewChat;
-import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
 import net.minecraftforge.client.ClientCommandHandler;
@@ -31,12 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ChatListener {
-    /**
-     * Examples:
-     * - §aFriend > §r§aNAME §r§eleft.§r
-     * - §2Guild > §r§aNAME §r§eleft.§r
-     */
-    private static final Pattern LOGIN_LOGOUT_NOTIFICATION = Pattern.compile("^(?<type>§aFriend|§2Guild) > §r(?<rank>§[0-9a-f])(?<playerName>\\w+)(?<joinLeaveSuffix> §r§e(?<joinedLeft>joined|left)\\.)§r$");
+    private static final Pattern FRIEND_LOGIN_LOGOUT_NOTIFICATION = Pattern.compile("^Friend > (?<playerName>\\w+) (?<joinedLeft>joined|left)\\.$");
     private static final Pattern CHAT_MESSAGE_RECEIVED_PATTERN = Pattern.compile("^(?:Party|Guild) > (?:\\[.*?] )?(\\w+)(?: \\[.*?])?: ");
     private static final Pattern PRIVATE_MESSAGE_RECEIVED_PATTERN = Pattern.compile("^From (?:\\[.*?] )?(\\w+): ");
     private static final Pattern PARTY_OR_GAME_INVITE_PATTERN = Pattern.compile("^-+\\s+(?:\\[.*?] )?(\\w+) has invited you ");
@@ -47,60 +40,6 @@ public class ChatListener {
 
     public ChatListener(Cowlection main) {
         this.main = main;
-    }
-
-    @SubscribeEvent
-    public void onLogInOutMessage(ClientChatReceivedEvent e) {
-        if (e.type != 2) { // normal chat or system msg (not above action bar)
-            String text = e.message.getUnformattedText();
-            Matcher notificationMatcher = LOGIN_LOGOUT_NOTIFICATION.matcher(e.message.getFormattedText());
-
-            if (MooConfig.doMonitorNotifications() && text.length() < 42 && notificationMatcher.matches()) {
-                // we got a login or logout notification!
-                main.getLogger().info(text);
-
-                String type = notificationMatcher.group("type");
-                String rank = notificationMatcher.group("rank");
-                String playerName = notificationMatcher.group("playerName");
-                String joinLeaveSuffix = notificationMatcher.group("joinLeaveSuffix");
-                String joinedLeft = notificationMatcher.group("joinedLeft");
-
-                boolean isBestFriend = main.getFriendsHandler().isBestFriend(playerName, false);
-                if (isBestFriend) {
-                    switch (joinedLeft) {
-                        case "joined":
-                            main.getPlayerCache().addBestFriend(playerName);
-                            if (MooConfig.enableBestFriendNotificationSound && Minecraft.getMinecraft().thePlayer != null) {
-                                Minecraft.getMinecraft().thePlayer.playSound("random.pop", Minecraft.getMinecraft().gameSettings.getSoundLevel(SoundCategory.MASTER), 1);
-                            }
-                            break;
-                        case "left":
-                            main.getPlayerCache().removeBestFriend(playerName);
-                            break;
-                        default:
-                            // player neither left nor joined?!
-                            return;
-                    }
-                    if (MooConfig.showBestFriendNotifications) {
-                        // replace default (friend/guild) notification with best friend notification
-                        e.message = new ChatComponentText("" + EnumChatFormatting.DARK_GREEN + EnumChatFormatting.BOLD + "Best friend" + EnumChatFormatting.DARK_GREEN + " > " + EnumChatFormatting.RESET + rank + playerName + joinLeaveSuffix);
-                        return;
-                    }
-                }
-                if (!MooConfig.showFriendNotifications && "§aFriend".equals(type)) {
-                    e.setCanceled(true);
-                } else if (!MooConfig.showGuildNotifications && "§2Guild".equals(type)) {
-                    e.setCanceled(true);
-                }
-            } else if (text.length() == 56 && text.startsWith("Your new API key is ")) {
-                // Your new API key is 00000000-0000-0000-0000-000000000000
-                String moo = text.substring(20, 56);
-                if (Utils.isValidUuid(moo)) {
-                    main.getChatHelper().sendMessage(EnumChatFormatting.YELLOW, "[" + Cowlection.MODNAME + "] Verifying the new API key...");
-                    main.getMoo().setMooIfValid(moo, true);
-                }
-            }
-        }
     }
 
     @SubscribeEvent
@@ -159,45 +98,59 @@ public class ChatListener {
     // priority = highest to ignore other mods modifying the chat output
     @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
     public void onChatMsgReceive(ClientChatReceivedEvent e) {
-        if (e.type != 2) {
-            String messageSender = null;
+        if (e.type == 2) return; // above action bar
+        String message = EnumChatFormatting.getTextWithoutFormattingCodes(e.message.getUnformattedText());
+        if (message.length() < 42) {
+            Matcher notificationMatcher = FRIEND_LOGIN_LOGOUT_NOTIFICATION.matcher(message);
+            if (notificationMatcher.matches()) {
+                // we got a friend login or logout notification!
+                String playerName = notificationMatcher.group("playerName");
+                String joinedLeft = notificationMatcher.group("joinedLeft");
 
-            String message = EnumChatFormatting.getTextWithoutFormattingCodes(e.message.getUnformattedText());
-
-            Matcher privateMessageMatcher = PRIVATE_MESSAGE_RECEIVED_PATTERN.matcher(message);
-            Matcher chatMessageMatcher = CHAT_MESSAGE_RECEIVED_PATTERN.matcher(message);
-            Matcher partyOrGameInviteMatcher = PARTY_OR_GAME_INVITE_PATTERN.matcher(message);
-            Matcher dungeonPartyFinderJoinedMatcher = DUNGEON_FINDER_JOINED_PATTERN.matcher(message);
-            if (privateMessageMatcher.find()) {
-                messageSender = privateMessageMatcher.group(1);
-                if (!"stash".equals(messageSender)) {
-                    this.lastPMSender = messageSender;
+                if ("joined".equals(joinedLeft)) {
+                    main.getPlayerCache().addFriend(playerName);
+                } else { // left
+                    main.getPlayerCache().removeFriend(playerName);
                 }
-            } else if (chatMessageMatcher.find()) {
-                messageSender = chatMessageMatcher.group(1);
-            } else if (partyOrGameInviteMatcher.find()) {
-                messageSender = partyOrGameInviteMatcher.group(1);
-            } else if (dungeonPartyFinderJoinedMatcher.find()) {
-                messageSender = dungeonPartyFinderJoinedMatcher.group(1);
-                if (CredentialStorage.isMooValid) {
-                    boolean joinedYourself = messageSender.equals(Minecraft.getMinecraft().thePlayer.getName());
-                    if (!joinedYourself && MooConfig.getDungPartyFinderPlayerLookupDisplay() != MooConfig.Setting.DISABLED) {
-                        // another player joined via Dungeon Party Finder
-                        String dungeonClass = dungeonPartyFinderJoinedMatcher.group(2) + " Lvl " + dungeonPartyFinderJoinedMatcher.group(3);
-                        getNewDungeonPartyMemberDetails(messageSender, dungeonClass);
-                    } else if (joinedYourself && MooConfig.dungPartyFinderPartyLookup) {
-                        // successfully joined another party via Dungeon Party Finder
-                        main.getDungeonCache().lookupPartyMembers();
-                    }
-                }
-            } else if (CredentialStorage.isMooValid && MooConfig.dungPartyFullLookup && message.equals("Party Finder > Your dungeon group is full! Click here to warp to the dungeon!")
-                    && (Minecraft.getMinecraft().currentScreen == null || Minecraft.getMinecraft().currentScreen instanceof GuiChat)) {
-                ClientCommandHandler.instance.executeCommand(Minecraft.getMinecraft().thePlayer, "/moo dp");
+                return;
             }
+        }
 
-            if (messageSender != null) {
-                main.getPlayerCache().add(messageSender);
+        String messageSender = null;
+
+        Matcher privateMessageMatcher = PRIVATE_MESSAGE_RECEIVED_PATTERN.matcher(message);
+        Matcher chatMessageMatcher = CHAT_MESSAGE_RECEIVED_PATTERN.matcher(message);
+        Matcher partyOrGameInviteMatcher = PARTY_OR_GAME_INVITE_PATTERN.matcher(message);
+        Matcher dungeonPartyFinderJoinedMatcher = DUNGEON_FINDER_JOINED_PATTERN.matcher(message);
+        if (privateMessageMatcher.find()) {
+            messageSender = privateMessageMatcher.group(1);
+            if (!"stash".equals(messageSender)) {
+                this.lastPMSender = messageSender;
             }
+        } else if (chatMessageMatcher.find()) {
+            messageSender = chatMessageMatcher.group(1);
+        } else if (partyOrGameInviteMatcher.find()) {
+            messageSender = partyOrGameInviteMatcher.group(1);
+        } else if (dungeonPartyFinderJoinedMatcher.find()) {
+            messageSender = dungeonPartyFinderJoinedMatcher.group(1);
+            if (CredentialStorage.isMooValid) {
+                boolean joinedYourself = messageSender.equals(Minecraft.getMinecraft().thePlayer.getName());
+                if (!joinedYourself && MooConfig.getDungPartyFinderPlayerLookupDisplay() != MooConfig.Setting.DISABLED) {
+                    // another player joined via Dungeon Party Finder
+                    String dungeonClass = dungeonPartyFinderJoinedMatcher.group(2) + " Lvl " + dungeonPartyFinderJoinedMatcher.group(3);
+                    getNewDungeonPartyMemberDetails(messageSender, dungeonClass);
+                } else if (joinedYourself && MooConfig.dungPartyFinderPartyLookup) {
+                    // successfully joined another party via Dungeon Party Finder
+                    main.getDungeonCache().lookupPartyMembers();
+                }
+            }
+        } else if (CredentialStorage.isMooValid && MooConfig.dungPartyFullLookup && message.equals("Party Finder > Your dungeon group is full! Click here to warp to the dungeon!")
+                && (Minecraft.getMinecraft().currentScreen == null || Minecraft.getMinecraft().currentScreen instanceof GuiChat)) {
+            ClientCommandHandler.instance.executeCommand(Minecraft.getMinecraft().thePlayer, "/moo dp");
+        }
+
+        if (messageSender != null) {
+            main.getPlayerCache().add(messageSender);
         }
     }
 

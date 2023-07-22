@@ -71,7 +71,7 @@ public class CredentialStorage {
             // uhm... looks like someone added the certs to the default JKS already
             return;
         }
-        System.out.println("Injecting Let's Encrypt support due to ancient Java version...");
+        Cowlection.getInstance().getLogger().info("Injecting Let's Encrypt support due to ancient Java version...");
         try {
             KeyStore originalKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
             originalKeyStore.load(Files.newInputStream(Paths.get(System.getProperty("java.home"), "lib", "security", "cacerts")), "changeit".toCharArray());

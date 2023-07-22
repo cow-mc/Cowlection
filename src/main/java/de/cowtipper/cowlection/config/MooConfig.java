@@ -11,16 +11,13 @@ import de.cowtipper.cowlection.partyfinder.Rule;
 import de.cowtipper.cowlection.util.MooChatComponent;
 import de.cowtipper.cowlection.util.Utils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.SoundCategory;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.command.ICommand;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagInt;
 import net.minecraft.nbt.NBTTagString;
-import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.util.IChatComponent;
 import net.minecraft.util.Util;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.ForgeModContainer;
@@ -66,8 +63,6 @@ public class MooConfig {
     private static int maxLatestLogFileSize;
     // Category: Notifications
     public static boolean doUpdateCheck;
-    public static boolean showBestFriendNotifications;
-    public static boolean enableBestFriendNotificationSound;
     public static boolean showFriendNotifications;
     public static boolean showGuildNotifications;
     public static boolean doBestFriendsOnlineCheck;
@@ -325,6 +320,10 @@ public class MooConfig {
                 "configGuiExplanations", "as tooltip", "Display config settings explanations",
                 new String[]{"as tooltip", "as text", "hidden"}));
 
+        // Sub-Category: Mod update checker
+        subCat = configCat.addSubCategory("Mod update checker");
+        Property propDoUpdateCheck = subCat.addConfigEntry(cfg.get("notifications", // legacy category
+                "doUpdateCheck", true, "Check for mod updates?"));
 
         // (not visible in config gui: has opened config? or: knows how to move the dungeon overlay?)
         Property propHasOpenedConfigGui = cfg.get(configCat.getConfigName(),
@@ -360,7 +359,7 @@ public class MooConfig {
                 "  ‣ Guild and Party chat",
                 "  ‣ Party and game (duels) invites",
                 "  ‣ SkyBlock Dungeon party finder: when a player joins the group",
-                "  ‣ Online best friends (if the best friend online checker is enabled)");
+                "  ‣ Friends join & leave messages");
 
         propTabCompletableNamesCommands = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                         "tabCompletableNamesCommands", new String[]{"p", "ah", "ignore", "msg", "tell", "w", "boop", "profile", "friend", "friends"}, "List of commands with a Tab-completable username argument.")
@@ -386,49 +385,22 @@ public class MooConfig {
         logSearchProperties.add(propMaxLogFileSize);
         logSearchProperties.add(propMaxLatestLogFileSize);
 
-        // Category: Notifications
-        configCat = new MooConfigCategory("Notifications", "notifications");
-        configCategories.add(configCat);
-
-        // Sub-Category: Mod update checker
-        subCat = configCat.addSubCategory("Mod update checker");
-        Property propDoUpdateCheck = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "doUpdateCheck", true, "Check for mod updates?"));
-
-        // Sub-Category: Login & Logout
-        subCat = configCat.addSubCategory("Login & Logout");
-        subCat.addExplanations("Hides selected login/logout notifications ",
-                "while still showing notifications of best friends (if enabled).",
-                "Add someone to the best friends list with " + EnumChatFormatting.YELLOW + "/moo add <player>" + EnumChatFormatting.RESET);
-
-        Property propShowBestFriendNotifications = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                        "showBestFriendNotifications", true, "Set to true to receive best friends' login/logout messages, set to false hide them."),
-                new MooConfigPreview(new ChatComponentText("§a§lBest friend §a> §6Cow §r§ejoined.")));
-        Property propEnableBestFriendNotificationSound = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                        "enableBestFriendNotificationSound", false, "Set to true to play a notification sound when a best friend comes online"),
-                new MooConfigPreview("random.pop", Minecraft.getMinecraft().gameSettings.getSoundLevel(SoundCategory.MASTER), 1));
-
-        Property propShowFriendNotifications = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                        "showFriendNotifications", true, "Set to true to receive friends' login/logout messages, set to false hide them."),
-                new MooConfigPreview(new ChatComponentText("§aFriend > §r§aBob §ejoined.")));
-        Property propShowGuildNotifications = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                        "showGuildNotifications", true, "Set to true to receive guild members' login/logout messages, set to false hide them."),
-                new MooConfigPreview(new ChatComponentText("§2Guild > §r§7Herobrian §eleft.")));
+        // Category "Notifications" > Sub-Category: Login & Logout
+        // deprecated as of 0.16.0
+        String legacyConfigCategory = "notifications";
+        Property propShowFriendNotifications = cfg.get(legacyConfigCategory,
+                        "showFriendNotifications", true, "[DEPRECATED as of 0.16.0] Set to true to receive friends' login/logout messages, set to false hide them.")
+                .setShowInGui(false);
+        Property propShowGuildNotifications = cfg.get(legacyConfigCategory,
+                        "showGuildNotifications", true, "[DEPRECATED as of 0.16.0] Set to true to receive guild members' login/logout messages, set to false hide them.")
+                .setShowInGui(false);
 
 
         // Sub-Category: Best friends online status
-        subCat = configCat.addSubCategory("Best friend online checker");
-        subCat.addExplanations("Check which best friends are online when you join the server.",
-                "About once a day, a check for new name changes is also performed automatically.");
-
-        IChatComponent spacer = new MooChatComponent(", ").green();
-        Property propDoBestFriendsOnlineCheck = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                        "doBestFriendsOnlineCheck", true, "Set to true to check best friends' online status when joining a server, set to false to disable."),
-                new MooConfigPreview(new MooChatComponent("§a⬤ Online best friends (§24§a/§216§a): ")
-                        .appendSibling(MooConfigPreview.createDemoOnline("Alice", "Housing", "1 hour 13 minutes 37 seconds")).appendSibling(spacer)
-                        .appendSibling(MooConfigPreview.createDemoOnline("Bob", "Build Battle", "2 hours 13 minutes 37 seconds")).appendSibling(spacer)
-                        .appendSibling(MooConfigPreview.createDemoOnline("Cow", "SkyBlock", "13 minutes 37 seconds")).appendSibling(spacer)
-                        .appendSibling(MooConfigPreview.createDemoOnline("Herobrian", "Murder Mystery", "13 hours 33 minutes 37 seconds"))));
+        // deprecated as of 0.16.0
+        Property propDoBestFriendsOnlineCheck = cfg.get(legacyConfigCategory,
+                        "doBestFriendsOnlineCheck", false, "[DEPRECATED as of 0.16.0] Set to true to check best friends' online status when joining a server, set to false to disable.")
+                .setShowInGui(false);
 
 
         // Category: SkyBlock
@@ -760,8 +732,6 @@ public class MooConfig {
             maxLatestLogFileSize = propMaxLatestLogFileSize.getInt();
             // Category: Notifications
             doUpdateCheck = propDoUpdateCheck.getBoolean();
-            showBestFriendNotifications = propShowBestFriendNotifications.getBoolean();
-            enableBestFriendNotificationSound = propEnableBestFriendNotificationSound.getBoolean();
             showFriendNotifications = propShowFriendNotifications.getBoolean();
             showGuildNotifications = propShowGuildNotifications.getBoolean();
             doBestFriendsOnlineCheck = propDoBestFriendsOnlineCheck.getBoolean();
@@ -854,8 +824,6 @@ public class MooConfig {
         propMaxLatestLogFileSize.set(maxLatestLogFileSize);
         // Category: Notifications
         propDoUpdateCheck.set(doUpdateCheck);
-        propShowBestFriendNotifications.set(showBestFriendNotifications);
-        propEnableBestFriendNotificationSound.set(enableBestFriendNotificationSound);
         propShowFriendNotifications.set(showFriendNotifications);
         propShowGuildNotifications.set(showGuildNotifications);
         propDoBestFriendsOnlineCheck.set(doBestFriendsOnlineCheck);
@@ -1052,7 +1020,13 @@ public class MooConfig {
      * @return true if notifications should be monitored
      */
     public static boolean doMonitorNotifications() {
-        return showBestFriendNotifications || enableBestFriendNotificationSound || !showFriendNotifications || !showGuildNotifications;
+        return !showFriendNotifications || !showGuildNotifications;
+    }
+
+    public void acknowledgeLoginLogoutNotificationChanges() {
+        showFriendNotifications = true;
+        showGuildNotifications = true;
+        syncFromFields();
     }
 
     // Category: SkyBlock

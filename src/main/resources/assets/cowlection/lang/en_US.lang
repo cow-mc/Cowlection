@@ -1,5 +1,5 @@
 cowlection.config.isMooValid=API key valid? §d§l⚷
-cowlection.config.isMooValid.tooltip=You can use /moo apikey to see how to request a new API key from Hypixel\n§eConfig entries marked with §d§l⚷ §erequire a valid API key.
+cowlection.config.isMooValid.tooltip=You can use §e/moo apikey <new key> §rto set a new API key\n§eConfig entries marked with §d§l⚷ §erequire a valid API key.
 cowlection.config.configGuiExplanations=Show config categories explanations...
 cowlection.config.configGuiExplanations.tooltip=How should the explanations (introductory words, hints, and tips) of the individual configuration categories be displayed?
 cowlection.config.mooCmdAlias=Alias for /moo command
@@ -28,16 +28,6 @@ cowlection.config.gotoKeyBindings=Change key bindings
 cowlection.config.gotoKeyBindings.tooltip=Some key bindings can be found in the 'Cowlection' sub-category
 cowlection.config.doUpdateCheck=Check for updates
 cowlection.config.doUpdateCheck.tooltip=Check for mod updates when launching the game?
-cowlection.config.showBestFriendNotifications=Show best friend notifications
-cowlection.config.showBestFriendNotifications.tooltip=Set to true to receive best friends' login/logout messages, set to false hide them.\n§7Best friends list commands:\n  ‣ §e/moo add\n  ‣ §e/moo remove\n  ‣ §e/moo list
-cowlection.config.enableBestFriendNotificationSound=Play sound when best friend joins
-cowlection.config.enableBestFriendNotificationSound.tooltip=If enabled: plays a notification sound when a best friend comes online.
-cowlection.config.showFriendNotifications=Show friend notifications
-cowlection.config.showFriendNotifications.tooltip=Set to true to receive friends' login/logout messages, set to false hide them.
-cowlection.config.showGuildNotifications=Show guild notifications
-cowlection.config.showGuildNotifications.tooltip=Set to true to receive guild members' login/logout messages, set to false hide them.
-cowlection.config.doBestFriendsOnlineCheck=Do best friends online check §d§l⚷
-cowlection.config.doBestFriendsOnlineCheck.tooltip=Set to true to check best friends' online status when joining a server, set to false to disable.\n§fDoes §dnot §fwork for staff members and players hiding their online status.\n§aHover over a player name to see their current gamemode.\n§d§l⚷ §eRequires a valid API key!
 cowlection.config.enableSkyBlockOnlyFeatures=Enable SkyBlock-only features
 cowlection.config.enableSkyBlockOnlyFeatures.tooltip=§6When should SkyBlock-only features be active?\n§7§o(relog or change worlds after changing this option)\n §d➊ §fonly while being on SkyBlock §e(= disabled on other servers and in other gamemodes\n §d➋ §falways §e(= including other servers and gamemodes)\n §d➌ §fnever §e(§cNone §eof the SkyBlock-only features will work!)
 cowlection.config.notifyFreshServer=Notify when world is loaded <X days

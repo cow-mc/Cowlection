@@ -1,7 +1,5 @@
 package de.cowtipper.cowlection.util;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.mojang.util.UUIDTypeAdapter;
 import de.cowtipper.cowlection.Cowlection;
@@ -11,7 +9,6 @@ import de.cowtipper.cowlection.chesttracker.data.LowestBinsCache;
 import de.cowtipper.cowlection.command.exception.ThrowingConsumer;
 import de.cowtipper.cowlection.config.CredentialStorage;
 import de.cowtipper.cowlection.data.*;
-import de.cowtipper.cowlection.error.ApiAskPolitelyErrorEvent;
 import de.cowtipper.cowlection.error.ApiHttpErrorEvent;
 import de.cowtipper.cowlection.error.ApiHttpErrorException;
 import net.minecraft.util.EnumChatFormatting;
@@ -32,9 +29,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ApiUtils {
-    public static final String UUID_NOT_FOUND = "UUID-NOT-FOUND";
     private static final String NAME_TO_UUID_URL = "https://api.mojang.com/users/profiles/minecraft/";
-    private static final String UUID_TO_NAME_URL = "https://sessionserver.mojang.com/session/minecraft/profile/%s";
     private static final String ONLINE_STATUS_URL = "https://api.hypixel.net/status?key=%s&uuid=%s";
     private static final String SKYBLOCK_STATS_URL = "https://api.hypixel.net/skyblock/profiles?key=%s&uuid=%s";
     private static final String BAZAAR_URL = "https://api.hypixel.net/skyblock/bazaar";
@@ -57,26 +52,6 @@ public class ApiUtils {
                 return Friend.FRIEND_NOT_FOUND;
             } else {
                 return GsonUtils.fromJson(reader, Friend.class);
-            }
-        } catch (IOException | JsonSyntaxException e) {
-            handleApiException(e);
-        }
-        return null;
-    }
-
-    public static void fetchCurrentName(Friend friend, ThrowingConsumer<String> action) {
-        pool.execute(() -> action.accept(getCurrentName(friend)));
-    }
-
-    private static String getCurrentName(Friend friend) {
-        try (BufferedReader reader = makeApiCall(String.format(UUID_TO_NAME_URL, UUIDTypeAdapter.fromUUID(friend.getUuid())))) {
-            if (reader == null) {
-                return UUID_NOT_FOUND;
-            } else {
-                JsonObject profile = new JsonParser().parse(reader).getAsJsonObject();
-                if (profile.has("name")) {
-                    return profile.get("name").getAsString();
-                }
             }
         } catch (IOException | JsonSyntaxException e) {
             handleApiException(e);
@@ -169,8 +144,6 @@ public class ApiUtils {
                 return GsonUtils.fromJson(reader, HyPlayerData.class);
             }
         } catch (IOException | JsonSyntaxException e) {
-            ApiAskPolitelyErrorEvent event = new ApiAskPolitelyErrorEvent(stalkedPlayer.getName());
-            MinecraftForge.EVENT_BUS.post(event);
             handleApiException(e);
         }
         return null;

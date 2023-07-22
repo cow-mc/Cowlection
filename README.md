@@ -10,10 +10,8 @@ It is a collection of different features mainly focused on Hypixel SkyBlock. üê
 
 | Feature                                                                 | Command/Usage                           |
 |-------------------------------------------------------------------------|-----------------------------------------|
-| 'Best friends' list to limit the amount of join and leave notifications (always up-to-date names even after player name changes). Also checks best friends' online status automatically | `/moo add/remove/list/online` |
 | Search through your Minecraft log files                                 | `/moo search` (click the `?` for more info) |
 | Stalk a player (check online status, current game, ...)                 | `/moo stalk`                            |
-| Toggle join/leave notifications for friends, guild members or best friends separately | `/moo config` &rarr; Notifications |
 | Show all client-side commands added by all installed mods               | `/commandslist`                         |
 | Copy chat component                                                     | <kbd>ALT</kbd> + <kbd>right click</kbd><br>Hold <kbd>shift</kbd> to copy full component |
 | Copy inventories to clipboard as JSON                                   | <kbd>CTRL</kbd> + <kbd>C</kbd> (single item)<br><kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>C</kbd> (whole inventory) |
