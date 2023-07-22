@@ -125,10 +125,9 @@ public class PlayerListener {
         if (nextApiErrorMessage < System.currentTimeMillis() && Minecraft.getMinecraft().thePlayer != null) {
             this.nextApiErrorMessage = System.currentTimeMillis() + 3000;
             MooChatComponent hoverComponent = new MooChatComponent.KeyValueTooltipComponent("Click to visit", e.getBaseUrl());
-            if (e.hasUrlKey()) {
+            if (e.wasUsingApiKey()) {
                 String eyeCatcher = "" + EnumChatFormatting.LIGHT_PURPLE + EnumChatFormatting.OBFUSCATED + "#" + EnumChatFormatting.RESET + EnumChatFormatting.RED;
-                hoverComponent.appendFreshSibling(new MooChatComponent(eyeCatcher + " Warning! " + eyeCatcher + " If you're streaming or sharing your screen:").red()
-                        .appendFreshSibling(new MooChatComponent("Clicking this will reveal your Hypixel " + EnumChatFormatting.DARK_RED + "API key" + EnumChatFormatting.RED + "!").red()));
+                hoverComponent.appendFreshSibling(new MooChatComponent(eyeCatcher + " Request was using your API-Key.").red());
             }
             main.getChatHelper().sendMessage(new MooChatComponent(e.getMessage()).red()
                     .setUrl(e.getUrl(), hoverComponent));

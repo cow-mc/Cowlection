@@ -162,7 +162,7 @@ public class MooConfig {
                     String oldMoo = cfg.getString("moo", Configuration.CATEGORY_CLIENT, "00000000-0000-0000-0000-000000000000", "Temporary config entry, should be deleted automatically.", Utils.VALID_UUID_PATTERN);
                     if (StringUtils.isNotEmpty(oldMoo) && Utils.isValidUuid(oldMoo)) {
                         // save into new cfg:
-                        main.getMoo().setMooIfValid(oldMoo, false);
+                        main.getMoo().setMoo(oldMoo);
                     }
                 }
 
@@ -333,7 +333,7 @@ public class MooConfig {
         // Sub-Category: API settings
         subCat = configCat.addSubCategory("API settings");
         subCat.addExplanations("Some features use the official Hypixel API and therefore require your API key.",
-                "Use " + EnumChatFormatting.YELLOW + "/moo apikey " + EnumChatFormatting.RESET + "to see how to request a new API key from Hypixel",
+                "Use " + EnumChatFormatting.YELLOW + "/moo apikey " + EnumChatFormatting.RESET + "to set your Hypixel API key",
                 "The API key is stored " + EnumChatFormatting.ITALIC + "locally " + EnumChatFormatting.ITALIC + "on your computer.");
         subCat.addConfigEntry(main.getMoo().getPropIsMooValid());
 

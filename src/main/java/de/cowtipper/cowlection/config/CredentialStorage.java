@@ -1,9 +1,7 @@
 package de.cowtipper.cowlection.config;
 
 import de.cowtipper.cowlection.Cowlection;
-import de.cowtipper.cowlection.util.ApiUtils;
 import de.cowtipper.cowlection.util.Utils;
-import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.MathHelper;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
@@ -131,23 +129,7 @@ public class CredentialStorage {
         return false;
     }
 
-    public void setMooIfValid(String moo, boolean commandTriggered) {
-        ApiUtils.fetchApiKeyInfo(moo, hyApiKey -> {
-            if (hyApiKey != null && hyApiKey.isSuccess()) {
-                // api key is valid!
-                Cowlection.getInstance().getMoo().setMoo(moo);
-                if (commandTriggered) {
-                    Cowlection.getInstance().getChatHelper().sendMessage(EnumChatFormatting.GREEN, "[" + Cowlection.MODNAME + "] Successfully verified API key ✔");
-                }
-            } else if (commandTriggered) {
-                // api key is invalid
-                String cause = hyApiKey != null ? hyApiKey.getCause() : null;
-                Cowlection.getInstance().getChatHelper().sendMessage(EnumChatFormatting.RED, "[" + Cowlection.MODNAME + "] Failed to verify API key: " + (cause != null ? cause : "unknown cause :c"));
-            }
-        });
-    }
-
-    private void setMoo(String moo) {
+    public void setMoo(String moo) {
         CredentialStorage.moo = moo;
         propMoo.set(moo);
         setMooValidity(true);

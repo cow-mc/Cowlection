@@ -48,7 +48,7 @@ public class HyStalkingData {
         }
 
         public String getMode() {
-            // modes partially taken from https://api.hypixel.net/gameCounts?key=MOO
+            // modes partially taken from https://api.hypixel.net/gameCounts
             if (mode == null) {
                 return null;
             }

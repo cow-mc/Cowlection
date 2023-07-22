@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [1.8.9-0.16.0] - unreleased
+### Note on API keys ❗
+In case you haven't heard yet: player-based API keys are currently being phased out (see also forums post about [Public API Changes](https://hypixel.net/threads/public-api-changes-february-2023.5266129/)).
+
+Therefore, API-related features _that require an API key_ will probably stop working in the foreseeable future. I _don't_ currently plan to provide my own API backend system, so sooner or later the few features in Cowlection that require an API key will probably stop working.
+
+The affected features are the following:
+1. `/moo stalk`: check online status & current game of a user ➡️I plan to move this to my Discord bot Moonitor (for that join the [Cowshed Discord server](https://discord.gg/fU2tFPf))
+2. `/moo stalkskyblock`: check SkyBlock stats of a player ➡️there are various bots/mods/websites that allow SkyBlock player lookups
+3. `/moo dungeon party` (= `/moo dp`): lookup armor and dungeons stats of each Dungeons party member ➡️same as (2)
+
+All other features *do not* require an API key and thus should be unaffected by these changes.
+
 ### Removed
 - Removed Cowlection 'Best friends' list:
   - Migrate your current Cowlection best friends with `/moo bestfriends`
@@ -19,6 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Dungeons overlay: now disabled by default (old config entries aren't modified)
 - SkyBlock player lookup: removed 'last played/last profile save' as it's no longer part of the API
+- some Hypixel API related changes regarding API key validation
 
 ### Fixed
 - Pet exp in tooltips: fixed rare crash caused by unexpected NBT data typing
