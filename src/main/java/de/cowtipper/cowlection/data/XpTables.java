@@ -175,7 +175,7 @@ public class XpTables {
     }
 
     public enum Slayer {
-        ZOMBIE(SlayerXpTable.ZOMBIE), SPIDER(SlayerXpTable.SPIDER), WOLF, ENDERMAN, BLAZE;
+        ZOMBIE(SlayerXpTable.ZOMBIE), SPIDER(SlayerXpTable.SPIDER), WOLF, ENDERMAN, VAMPIRE(SlayerXpTable.VAMPIRE), BLAZE;
         private final SlayerXpTable slayerXpTable;
 
         Slayer() {
@@ -192,7 +192,7 @@ public class XpTables {
     }
 
     private enum SlayerXpTable {
-        DEFAULT, ZOMBIE, SPIDER;
+        DEFAULT, ZOMBIE, SPIDER, VAMPIRE;
 
         /**
          * Valid for Wolf + Enderman + Blaze
@@ -200,6 +200,7 @@ public class XpTables {
         private static final TreeMap<Integer, Integer> XP_TO_LEVEL = new TreeMap<>();
         private static final TreeMap<Integer, Integer> XP_TO_LEVEL_ZOMBIE = new TreeMap<>();
         private static final TreeMap<Integer, Integer> XP_TO_LEVEL_SPIDER = new TreeMap<>();
+        private static final TreeMap<Integer, Integer> XP_TO_LEVEL_VAMPIRE = new TreeMap<>();
 
         static {
             // exp data taken from https://wiki.hypixel.net/Slayer
@@ -235,6 +236,13 @@ public class XpTables {
             XP_TO_LEVEL_SPIDER.put(100000, 7);
             XP_TO_LEVEL_SPIDER.put(400000, 8);
             XP_TO_LEVEL_SPIDER.put(1000000, 9);
+
+            XP_TO_LEVEL_VAMPIRE.put(0, 0);
+            XP_TO_LEVEL_VAMPIRE.put(20, 1);
+            XP_TO_LEVEL_VAMPIRE.put(75, 2);
+            XP_TO_LEVEL_VAMPIRE.put(240, 3);
+            XP_TO_LEVEL_VAMPIRE.put(840, 4);
+            XP_TO_LEVEL_VAMPIRE.put(2400, 5);
         }
 
         public int getLevel(double exp) {
@@ -243,6 +251,8 @@ public class XpTables {
                 currentXpTable = XP_TO_LEVEL_ZOMBIE;
             } else if (this == SPIDER) {
                 currentXpTable = XP_TO_LEVEL_SPIDER;
+            } else if (this == VAMPIRE) {
+                currentXpTable = XP_TO_LEVEL_VAMPIRE;
             }
 
             return currentXpTable.floorEntry((int) exp).getValue();
