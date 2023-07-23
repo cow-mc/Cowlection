@@ -33,11 +33,10 @@ import net.minecraft.inventory.Slot;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagInt;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StatCollector;
 import net.minecraftforge.client.event.GuiOpenEvent;
@@ -45,7 +44,6 @@ import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -61,8 +59,10 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-import java.util.*;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -524,54 +524,14 @@ public class SkyBlockListener {
         // for auction house: show price for each item if multiple items are sold at once or if higher tier ultimate enchantment books are sold
         MooConfig.Setting tooltipAuctionHousePriceEachDisplay = MooConfig.getTooltipAuctionHousePriceEachDisplay();
         if ((tooltipAuctionHousePriceEachDisplay == MooConfig.Setting.ALWAYS || tooltipAuctionHousePriceEachDisplay == MooConfig.Setting.SPECIAL && MooConfig.isTooltipToggleKeyBindingPressed())
-                && (e.entityPlayer.openContainer instanceof ContainerChest || Minecraft.getMinecraft().currentScreen instanceof MooConfigGui)) {
+                && (e.entityPlayer.openContainer instanceof ContainerChest || currentScreen instanceof MooConfigGui)) {
 
-            int itemAmount = -1;
-            String superEnchant = null;
-            if (e.itemStack.getItem() == Items.enchanted_book && extraAttributes != null && extraAttributes.hasKey("enchantments", Constants.NBT.TAG_COMPOUND)) {
-                NBTTagCompound enchants = extraAttributes.getCompoundTag("enchantments");
-                try {
-                    Map<String, NBTBase> enchantmentsMap = ReflectionHelper.getPrivateValue(NBTTagCompound.class, enchants, "tagMap", "field_74784_a");
-
-                    if (enchantmentsMap.size() == 1) {
-                        for (Map.Entry<String, NBTBase> enchant : enchantmentsMap.entrySet()) {
-                            String enchantKey = enchant.getKey();
-                            if (enchantKey.startsWith("ultimate_") && enchant.getValue() instanceof NBTTagInt) {
-                                // enchanted book with 1 enchantment (which is an ultimate enchant)
-                                // enchantment tier => amount of books needed
-                                //    I = 2^0 = 1
-                                //   II = 2^1 = 2
-                                //  III = 2^2 = 4
-                                //   IV = 2^3 = 8
-                                //    V = 2^4 = 16
-                                itemAmount = (int) Math.pow(2, ((NBTTagInt) enchant.getValue()).getInt() - 1);
-                                superEnchant = Utils.fancyCase(enchantKey.substring("ultimate_".length()));
-                                break;
-                            } else if (enchantKey.startsWith("turbo_") && enchant.getValue() instanceof NBTTagInt) {
-                                itemAmount = (int) Math.pow(2, ((NBTTagInt) enchant.getValue()).getInt() - 1);
-                                superEnchant = "Turbo-" + Utils.fancyCase(enchantKey.substring("turbo_".length()));
-                                if (superEnchant.equals("Turbo-Cactus")) {
-                                    // (╯°□°）╯︵ ┻━┻
-                                    superEnchant = "Turbo-Cacti";
-                                }
-                                break;
-                            }
-                            for (String priceEachEnchantment : MooConfig.tooltipAuctionHousePriceEachEnchantments) {
-                                String priceEachEnchantKey = priceEachEnchantment;
-                                int dashInEnchantName = priceEachEnchantKey.indexOf('-');
-                                if (dashInEnchantName > 0) {
-                                    priceEachEnchantKey = priceEachEnchantKey.replace('-', '_');
-                                }
-                                if (enchantKey.equals(priceEachEnchantKey) && enchant.getValue() instanceof NBTTagInt) {
-                                    itemAmount = (int) Math.pow(2, ((NBTTagInt) enchant.getValue()).getInt() - 1);
-                                    superEnchant = Utils.fancyCase(priceEachEnchantment);
-                                }
-                            }
-                        }
-                    }
-                } catch (ReflectionHelper.UnableToAccessFieldException ignored) {
-                    return;
-                }
+            int itemAmount;
+            String enchantmentName = null;
+            Pair<String, Integer> enchantedBookInfo = this.extractEnchantedBookInfo(currentScreen, e.itemStack);
+            if (enchantedBookInfo != null) {
+                enchantmentName = enchantedBookInfo.first();
+                itemAmount = enchantedBookInfo.second();
             } else {
                 itemAmount = e.itemStack.stackSize;
                 boolean isSubmitBidItem = isSubmitBidItem(e.itemStack);
@@ -590,45 +550,39 @@ public class SkyBlockListener {
                     itemAmount = auctionedItem.stackSize;
                 }
             }
-            if (itemAmount > 1) {
-                List<String> toolTip = e.toolTip;
-                String superEnchantName = null;
+            if (itemAmount <= 1) return;
 
-                // starting with i=1 because first line is never the one we're looking for
-                for (int i = 1; i < toolTip.size(); i++) {
-                    String toolTipLine = toolTip.get(i);
-                    String toolTipLineUnformatted = EnumChatFormatting.getTextWithoutFormattingCodes(toolTipLine);
-                    if (superEnchant != null && superEnchantName == null && (toolTipLineUnformatted.startsWith(superEnchant) || toolTipLineUnformatted.startsWith("Ultimate " + superEnchant))) {
-                        int lastSpace = toolTipLine.lastIndexOf(' ');
-                        if (lastSpace > 0) {
-                            superEnchantName = toolTipLine.substring(0, lastSpace);
-                        }
-                    }
-                    if (toolTipLineUnformatted.startsWith("Top bid: ")
-                            || toolTipLineUnformatted.startsWith("Starting bid: ")
-                            || toolTipLineUnformatted.startsWith("Item price: ")
-                            || toolTipLineUnformatted.startsWith("Buy it now: ")
-                            || toolTipLineUnformatted.startsWith("Sold for: ")
-                            || toolTipLineUnformatted.startsWith("New bid: ") /* special case: 'Submit Bid' item */) {
+            List<String> toolTip = e.toolTip;
 
-                        try {
-                            String hopefullyAPrice = StringUtils.substringBetween(toolTipLineUnformatted, ": ", " coins");
-                            if (hopefullyAPrice == null) {
-                                return;
-                            }
-                            long price = numberFormatter.parse(hopefullyAPrice).longValue();
-                            double priceEach = price / (double) itemAmount;
-                            String formattedPriceEach = priceEach < 5000 ? numberFormatter.format(priceEach) : Utils.formatNumberWithAbbreviations(priceEach);
-                            if (superEnchantName != null) {
-                                toolTip.add(i + 1, EnumChatFormatting.YELLOW + "  (≙ " + itemAmount + "x " + superEnchantName + " " + (MooConfig.useRomanNumerals() ? "I" : "1") + EnumChatFormatting.RESET + EnumChatFormatting.YELLOW + " for " + formattedPriceEach + " each)");
-                            } else {
-                                String pricePerItem = EnumChatFormatting.YELLOW + " (" + formattedPriceEach + " each)";
-                                toolTip.set(i, toolTipLine + pricePerItem);
-                            }
-                            return;
-                        } catch (ParseException ex) {
+            // starting with i=1 because first line is never the one we're looking for
+            for (int i = 1; i < toolTip.size(); i++) {
+                String toolTipLine = toolTip.get(i);
+                String toolTipLineUnformatted = EnumChatFormatting.getTextWithoutFormattingCodes(toolTipLine);
+                if (toolTipLineUnformatted.startsWith("Top bid: ")
+                        || toolTipLineUnformatted.startsWith("Starting bid: ")
+                        || toolTipLineUnformatted.startsWith("Item price: ")
+                        || toolTipLineUnformatted.startsWith("Buy it now: ")
+                        || toolTipLineUnformatted.startsWith("Sold for: ")
+                        || toolTipLineUnformatted.startsWith("New bid: ") /* special case: 'Submit Bid' item */
+                        || (enchantmentName != null && (toolTipLineUnformatted.startsWith("Buy price: ") || toolTipLineUnformatted.startsWith("Sell price: ")))) {
+
+                    try {
+                        String hopefullyAPrice = StringUtils.substringBetween(toolTipLineUnformatted, ": ", " coins");
+                        if (hopefullyAPrice == null) {
                             return;
                         }
+                        long price = numberFormatter.parse(hopefullyAPrice).longValue();
+                        double priceEach = price / (double) itemAmount;
+                        String formattedPriceEach = priceEach < 5000 ? numberFormatter.format(priceEach) : Utils.formatNumberWithAbbreviations(priceEach);
+                        if (enchantmentName != null) {
+                            toolTip.add(i + 1, EnumChatFormatting.YELLOW + "  (≙ " + itemAmount + "x " + EnumChatFormatting.BLUE + enchantmentName + " " + (MooConfig.useRomanNumerals() ? "I" : "1") + EnumChatFormatting.RESET + EnumChatFormatting.YELLOW + " for " + formattedPriceEach + " each)");
+                        } else {
+                            String pricePerItem = EnumChatFormatting.YELLOW + " (" + formattedPriceEach + " each)";
+                            toolTip.set(i, toolTipLine + pricePerItem);
+                            return;
+                        }
+                    } catch (ParseException ex) {
+                        return;
                     }
                 }
             }
@@ -765,6 +719,48 @@ public class SkyBlockListener {
             }
         }
         return false;
+    }
+
+    private Pair<String, Integer> extractEnchantedBookInfo(GuiScreen currentScreen, ItemStack currentItem) {
+        if (!(currentScreen instanceof GuiChest) || currentItem.getItem() != Items.enchanted_book) {
+            return null;
+        }
+
+        IInventory inventory = ((GuiChest) currentScreen).inventorySlots.getSlot(0).inventory;
+        String inventoryName = (inventory.hasCustomName() ? EnumChatFormatting.getTextWithoutFormattingCodes(inventory.getDisplayName().getUnformattedTextForChat()) : inventory.getName());
+        String currentItemName = EnumChatFormatting.getTextWithoutFormattingCodes(currentItem.getDisplayName());
+
+        boolean shouldDisplayPriceEach = inventoryName.startsWith("Ultimate Enchantments ➜");
+        if (!shouldDisplayPriceEach && inventoryName.startsWith("Enchantments ➜ ")) {
+            if (currentItemName.contains("Turbo-")) {
+                shouldDisplayPriceEach = true;
+            } else {
+                String currentItemNameNormalized = currentItemName.toLowerCase().replaceAll("[_ -]", "");
+                for (String priceEachEnchantment : MooConfig.tooltipAuctionHousePriceEachEnchantments) {
+                    if (currentItemNameNormalized.contains(priceEachEnchantment)) {
+                        shouldDisplayPriceEach = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if (!shouldDisplayPriceEach) return null;
+
+        int lastSpace = currentItemName.lastIndexOf(' ');
+
+        if (lastSpace < 0) return null;
+        String enchantmentLevelRaw = currentItemName.substring(lastSpace + 1);
+        int enchantmentLevel = MathHelper.parseIntWithDefault(enchantmentLevelRaw, Utils.convertRomanToArabic(enchantmentLevelRaw));
+        if (enchantmentLevel < 1) return null;
+        // enchantment tier => amount of books needed
+        //    I = 2^0 = 1
+        //   II = 2^1 = 2
+        //  III = 2^2 = 4
+        //   IV = 2^3 = 8
+        //    V = 2^4 = 16
+        int itemAmount = (int) Math.pow(2, enchantmentLevel - 1);
+        String enchantmentName = currentItemName.substring(0, lastSpace);
+        return Pair.of(enchantmentName, itemAmount);
     }
 
     private int abbreviatedToLongNumber(String number) throws NumberInvalidException {

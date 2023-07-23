@@ -28,15 +28,18 @@ All other features *do not* require an API key and thus should be unaffected by 
       - `/friend notifications` to cycle through the available Friends notifications options, or `/settings` → Social Settings → Friend Notifications: All / Best / None 
       - `/guild notifications` to toggle Guild notifications, or `/settings` → Personal Guild Settings → Guild Notifications
 
+### Fixed
+- Pet exp in tooltips: fixed rare crash caused by unexpected NBT data typing
+- Bazaar: fixed "Show items left to buy/sell" not working anymore
+- Enchanted books: fixed "price converted to level 1 books", as enchantments are now sold on the Bazaar, and no longer inside the Auction house
+  - works on "intermediate" Bazaar pages, so the 'overview' Bazaar pages that list all levels of a certain enchantment (GUI title starts with either `Enchantments ➜` or `Ultimate Enchantments ➜`)
+  - (related config options: `/moo config enchantment`)
+
 ### Changed
 - Dungeons overlay: now disabled by default (old config entries aren't modified)
 - SkyBlock player lookup: removed 'last played/last profile save' as it's no longer part of the API
 - Analyze island: added new Minion (Vampire) and updated texture IDs for minions that previously erroneously shared the same skin
 - some Hypixel API related changes regarding API key validation
-
-### Fixed
-- Pet exp in tooltips: fixed rare crash caused by unexpected NBT data typing
-- Bazaar: fixed "Show items left to buy/sell" not working anymore
 
 ## [1.8.9-0.15.1] - 22.12.2022
 ### Fixed

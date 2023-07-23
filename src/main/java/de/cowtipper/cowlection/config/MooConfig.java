@@ -478,6 +478,9 @@ public class MooConfig {
         Property propNumeralSystem = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                 "numeralSystem", "Arabic: 1, 4, 10", "Use Roman or Arabic numeral system?", new String[]{"Arabic: 1, 4, 10", "Roman: I, IV, X"}));
 
+        Property propAuctionHouseMarkEndedAuctions = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
+                "auctionHouseMarkEndedAuctions", "a letter", "Mark ended auctions", new String[]{"a letter", "a word", "disabled"}));
+
         Map<String, NBTBase> demoAhItemExtraAttributes = new HashMap<>();
         demoAhItemExtraAttributes.put("id", new NBTTagString("BEACON"));
         ItemStack demoAhItem = MooConfigPreview.createDemoItem("beacon", "§764x §fB§8e§facon Block", new String[]{"§f§lCOMMON", "§8§m-----------------", "§7Seller: §6[MVP§0++§6] Enlightener", "§7Buy it now: §63,900,000 coins", "", "§7Ends in: §e13h 33m 37s", "", "§eDon't click to inspect!"}, demoAhItemExtraAttributes);
@@ -489,9 +492,6 @@ public class MooConfig {
         propTooltipAuctionHousePriceEachEnchantments = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                         "tooltipAuctionHousePriceEachEnchantments", new String[]{"overload", "rejuvenate"}, "Price per lvl 1 book enchantment")
                 .setValidationPattern(Pattern.compile("^[A-Za-z_ -]+$")));
-
-        Property propAuctionHouseMarkEndedAuctions = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
-                "auctionHouseMarkEndedAuctions", "a letter", "Mark ended auctions", new String[]{"a letter", "a word", "disabled"}));
 
         Property propBazaarSellAllOrder = subCat.addConfigEntry(cfg.get(configCat.getConfigName(),
                         "bazaarSellAllOrder", "price (sum)", "Bazaar: sell all order", new String[]{"price (sum)", "item amount", "unordered", "price (each)"}),
@@ -929,9 +929,9 @@ public class MooConfig {
             }
             if (modifiedTooltipAuctionHousePriceEachEnchantments) {
                 for (int i = 0, enchantmentsLength = tooltipAuctionHousePriceEachEnchantments.length; i < enchantmentsLength; i++) {
-                    // standardize enchantment names to match their names in the NBT data
+                    // standardize enchantment names
                     String enchantmentName = tooltipAuctionHousePriceEachEnchantments[i];
-                    String standardizedEnchantmentName = enchantmentName.toLowerCase().replace(' ', '_');
+                    String standardizedEnchantmentName = enchantmentName.toLowerCase().replaceAll("[_ -]", "");
                     tooltipAuctionHousePriceEachEnchantments[i] = standardizedEnchantmentName;
                 }
                 propTooltipAuctionHousePriceEachEnchantments.set(tooltipAuctionHousePriceEachEnchantments);
