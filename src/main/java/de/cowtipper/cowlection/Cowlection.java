@@ -41,6 +41,7 @@ public class Cowlection {
     public static KeyBinding[] keyBindings;
     private static Cowlection instance;
     private File modsDir;
+    private File configDir;
     private File modOutDir;
     private MooConfig config;
     private CredentialStorage moo;
@@ -62,7 +63,7 @@ public class Cowlection {
 
         chatHelper = new ChatHelper();
 
-        File configDir = new File(e.getModConfigurationDirectory(), MODID + File.separatorChar);
+        configDir = new File(e.getModConfigurationDirectory(), MODID + File.separatorChar);
         if (!configDir.exists()) {
             configDir.mkdirs();
         }
@@ -166,6 +167,10 @@ public class Cowlection {
 
     public File getModsDirectory() {
         return modsDir;
+    }
+
+    public File getConfigDirectory() {
+        return configDir;
     }
 
     public File getModOutDirectory() {

@@ -172,8 +172,22 @@ public class MooCommand extends CommandBase {
         } else if (args[0].equalsIgnoreCase("version")) {
             main.getVersionChecker().handleVersionStatus(true);
         } else if (args[0].equalsIgnoreCase("directory") || args[0].equalsIgnoreCase("folder")) {
+            File directory = null;
+            if (args.length > 1) {
+                if (args[1].startsWith("c")) {
+                    directory = main.getConfigDirectory();
+                } else if (args[1].startsWith("m")) {
+                    directory = main.getModsDirectory();
+                }
+            }
+            if (directory == null) {
+                main.getChatHelper().sendMessage(new MooChatComponent("[§2Cowlection§a] open directory:").green()
+                        .appendFreshSibling(new MooChatComponent(" §6➊ §a/config/cowlection/").setSuggestCommand("/" + getCommandName() + " directory config"))
+                        .appendFreshSibling(new MooChatComponent(" §6➋ §a/mods/").setSuggestCommand("/" + getCommandName() + " directory mods")));
+                return;
+            }
             try {
-                Desktop.getDesktop().open(main.getModsDirectory());
+                Desktop.getDesktop().open(directory);
             } catch (IOException e) {
                 e.printStackTrace();
                 throw new MooCommandException("✖ An error occurred trying to open the mod's directory. I guess you have to open it manually ¯\\_(ツ)_/¯");
@@ -1021,7 +1035,7 @@ public class MooCommand extends CommandBase {
                 .appendSibling(createCmdHelpEntry("update", "Check for new mod updates"))
                 .appendSibling(createCmdHelpEntry("updateHelp", "Show mod update instructions"))
                 .appendSibling(createCmdHelpEntry("version", "View results of last mod update check"))
-                .appendSibling(createCmdHelpEntry("directory", "Open Minecraft's mods directory"));
+                .appendSibling(createCmdHelpEntry("directory", "Open Minecraft's 'mods' or Cowlection's 'config' directory"));
         if (main.getFriendsHandler().getBestFriendsListSize() > 0) {
             usage.appendSibling(createCmdHelpEntry("bestfriends", "§dMigrate best friends list"));
         }
@@ -1067,6 +1081,8 @@ public class MooCommand extends CommandBase {
             return getListOfStringsMatchingLastWord(args, "off", "on", "disable", "enable");
         } else if (args.length == 2 && (args[0].equalsIgnoreCase("chestAnalyzer") || args[0].equalsIgnoreCase("chestAnalyser") || args[0].equalsIgnoreCase("analyzeChests") || args[0].equalsIgnoreCase("analyseChests"))) {
             return getListOfStringsMatchingLastWord(args, "stop");
+        } else if (args.length == 2 && (args[0].equalsIgnoreCase("directory") || args[0].equalsIgnoreCase("folder"))) {
+            return getListOfStringsMatchingLastWord(args, "config", "mods");
         }
         String commandArg = args[0].toLowerCase();
         if (args.length == 2 && (commandArg.equals("s") || commandArg.equals("ss") || commandArg.contains("stalk") || commandArg.contains("askpolitely"))) { // stalk & stalkskyblock
