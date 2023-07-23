@@ -30,10 +30,11 @@ All other features *do not* require an API key and thus should be unaffected by 
 
 ### Fixed
 - Pet exp in tooltips: fixed rare crash caused by unexpected NBT data typing
-- Bazaar: fixed "Show items left to buy/sell" not working anymore
+- Bazaar: fixed "Show items left to buy/sell" for buy/sell orders not working anymore
 - Enchanted books: fixed "price converted to level 1 books", as enchantments are now sold on the Bazaar, and no longer inside the Auction house
   - works on "intermediate" Bazaar pages, so the 'overview' Bazaar pages that list all levels of a certain enchantment (GUI title starts with either `Enchantments ➜` or `Ultimate Enchantments ➜`)
   - (related config options: `/moo config enchantment`)
+- `/moo analyzeChests`: lowest BINs are now stored as long values instead of integers (affects only a handful of items with very high BIN prices)
 
 ### Changed
 - Dungeons overlay: now disabled by default (old config entries aren't modified)

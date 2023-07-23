@@ -160,7 +160,7 @@ public class ChestTracker {
             }
             if (!foundPriceForItem && checkLowestBinPrices) {
                 String productKey = itemEntry.getKey().replace(':', '-');
-                Integer lowestBin = lowestBinsCache.get(productKey);
+                Long lowestBin = lowestBinsCache.get(productKey);
                 if (lowestBin != null) {
                     // item is sold via BIN
                     itemData.setLowestBin(lowestBin);

@@ -187,9 +187,9 @@ public final class GsonUtils {
             JsonObject lowestBins = json.getAsJsonObject();
             for (Map.Entry<String, JsonElement> entry : lowestBins.entrySet()) {
                 try {
-                    lowestBinsCache.put(entry.getKey(), entry.getValue().getAsInt());
+                    lowestBinsCache.put(entry.getKey(), entry.getValue().getAsLong());
                 } catch (ClassCastException | NumberFormatException ignored) {
-                    // somehow not an integer
+                    // somehow not a long
                 }
             }
             return lowestBinsCache;

@@ -10,7 +10,7 @@ public class ItemData {
     private int amount;
     private double bazaarInstantSellPrice = 0;
     private double bazaarSellOfferPrice = 0;
-    private int lowestBin = 0;
+    private long lowestBin = 0;
     private double npcPrice = 0;
     private PriceType priceType;
     private boolean isHidden = false;
@@ -76,7 +76,7 @@ public class ItemData {
         this.priceType = PriceType.BAZAAR;
     }
 
-    public void setLowestBin(int lowestBin) {
+    public void setLowestBin(long lowestBin) {
         this.lowestBin = lowestBin;
         this.priceType = PriceType.LOWEST_BIN;
     }
@@ -100,7 +100,7 @@ public class ItemData {
     }
 
     public long getLowestBinValue() {
-        return (long) amount * lowestBin;
+        return ((long) amount) * lowestBin;
     }
 
     public long getNpcSellValue() {
