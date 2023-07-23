@@ -1,11 +1,13 @@
 package de.cowtipper.cowlection.data;
 
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.StringUtils;
 
 import java.util.Map;
 
 @SuppressWarnings("unused")
 public class HyPlayerData {
+    private String playername;
     private String displayname;
     private String rank;
     private String prefix;
@@ -30,7 +32,7 @@ public class HyPlayerData {
     }
 
     public String getPlayerNameFormatted() {
-        return getRankFormatted() + " " + displayname;
+        return getRankFormatted() + displayname;
     }
 
     public long getLastLogin() {
@@ -54,7 +56,7 @@ public class HyPlayerData {
 
     public boolean hasNeverJoinedHypixel() {
         // example player that has never joined Hypixel (as of April 2020): Joe
-        return rank == null && lastLogin == 0;
+        return rank == null && lastLogin == 0 && StringUtils.isNullOrEmpty(playername);
     }
 
     public boolean hasNeverLoggedOut() {
@@ -79,15 +81,15 @@ public class HyPlayerData {
         if (rank != null) {
             switch (rank) {
                 case "HELPER":
-                    return EnumChatFormatting.BLUE + "[HELPER]";
+                    return EnumChatFormatting.BLUE + "[HELPER] ";
                 case "MODERATOR":
-                    return EnumChatFormatting.DARK_GREEN + "[MOD]";
+                    return EnumChatFormatting.DARK_GREEN + "[MOD] ";
                 case "GAME_MASTER":
-                    return EnumChatFormatting.DARK_GREEN + "[GM]";
+                    return EnumChatFormatting.DARK_GREEN + "[GM] ";
                 case "ADMIN":
-                    return EnumChatFormatting.RED + "[ADMIN]";
+                    return EnumChatFormatting.RED + "[ADMIN] ";
                 case "YOUTUBER":
-                    return EnumChatFormatting.RED + "[" + EnumChatFormatting.WHITE + "YOUTUBE" + EnumChatFormatting.RED + "]";
+                    return EnumChatFormatting.RED + "[" + EnumChatFormatting.WHITE + "YOUTUBE" + EnumChatFormatting.RED + "] ";
                 default:
                     // unknown rank, fall-through
                     break;
@@ -99,18 +101,18 @@ public class HyPlayerData {
         if (monthlyPackageRank != null && monthlyPackageRank.equals("SUPERSTAR")) {
             // MVP++
             EnumChatFormatting rankPlusPlusColor = monthlyRankColor != null ? EnumChatFormatting.getValueByName(monthlyRankColor) : EnumChatFormatting.GOLD;
-            return rankPlusPlusColor + "[MVP" + EnumChatFormatting.getValueByName(rankPlusColor) + "++" + rankPlusPlusColor + "]";
+            return rankPlusPlusColor + "[MVP" + EnumChatFormatting.getValueByName(rankPlusColor) + "++" + rankPlusPlusColor + "] ";
         }
         if (newPackageRank != null) {
             switch (newPackageRank) {
                 case "VIP":
-                    return EnumChatFormatting.GREEN + "[VIP]";
+                    return EnumChatFormatting.GREEN + "[VIP] ";
                 case "VIP_PLUS":
-                    return EnumChatFormatting.GREEN + "[VIP" + EnumChatFormatting.GOLD + "+" + EnumChatFormatting.GREEN + "]";
+                    return EnumChatFormatting.GREEN + "[VIP" + EnumChatFormatting.GOLD + "+" + EnumChatFormatting.GREEN + "] ";
                 case "MVP":
-                    return EnumChatFormatting.AQUA + "[MVP]";
+                    return EnumChatFormatting.AQUA + "[MVP] ";
                 case "MVP_PLUS":
-                    return EnumChatFormatting.AQUA + "[MVP" + EnumChatFormatting.getValueByName(rankPlusColor) + "+" + EnumChatFormatting.AQUA + "]";
+                    return EnumChatFormatting.AQUA + "[MVP" + EnumChatFormatting.getValueByName(rankPlusColor) + "+" + EnumChatFormatting.AQUA + "] ";
                 default:
                     return EnumChatFormatting.GRAY.toString();
             }
