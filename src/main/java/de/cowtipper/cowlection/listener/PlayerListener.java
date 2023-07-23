@@ -124,13 +124,17 @@ public class PlayerListener {
     public void onApiHttpError(ApiHttpErrorEvent e) {
         if (nextApiErrorMessage < System.currentTimeMillis() && Minecraft.getMinecraft().thePlayer != null) {
             this.nextApiErrorMessage = System.currentTimeMillis() + 3000;
-            MooChatComponent hoverComponent = new MooChatComponent.KeyValueTooltipComponent("Click to visit", e.getBaseUrl());
+            MooChatComponent hoverComponent = new MooChatComponent.KeyValueTooltipComponent("Click to visit", e.getUrl());
             if (e.wasUsingApiKey()) {
-                String eyeCatcher = "" + EnumChatFormatting.LIGHT_PURPLE + EnumChatFormatting.OBFUSCATED + "#" + EnumChatFormatting.RESET + EnumChatFormatting.RED;
-                hoverComponent.appendFreshSibling(new MooChatComponent(eyeCatcher + " Request was using your API-Key.").red());
+                hoverComponent.appendFreshSibling(new MooChatComponent(EnumChatFormatting.LIGHT_PURPLE + " ❢ " + EnumChatFormatting.RED + " Request was using your API-Key.").red());
             }
-            main.getChatHelper().sendMessage(new MooChatComponent(e.getMessage()).red()
-                    .setUrl(e.getUrl(), hoverComponent));
+            MooChatComponent errorMsg = new MooChatComponent(e.getMessage()).red()
+                    .setUrl(e.getUrl(), hoverComponent);
+            if (e.wasUsingApiKey()) {
+                errorMsg.appendFreshSibling(new MooChatComponent(" ❢ ").lightPurple().setUrl("https://github.com/cow-mc/Cowlection/blob/master/CHANGELOG.md#note-on-api-keys-")
+                        .appendSibling(new MooChatComponent("[open 'Note on API keys']").darkAqua().underline()));
+            }
+            main.getChatHelper().sendMessage(errorMsg);
         }
     }
 
@@ -223,7 +227,7 @@ public class PlayerListener {
                 }
             };
 
-            new TickDelay(checkScoreboard, 40); // 2 second delay + retrying for 20 seconds, making sure scoreboard got sent
+            new TickDelay(checkScoreboard, 40); // 2-second delay + retrying for 20 seconds, making sure scoreboard got sent
         } else if (MooConfig.getEnableSkyBlockOnlyFeatures() == MooConfig.Setting.DISABLED) {
             isOnSkyBlock = false;
             unregisterSkyBlockListeners();

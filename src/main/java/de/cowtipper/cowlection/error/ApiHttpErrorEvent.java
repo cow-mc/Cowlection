@@ -21,11 +21,6 @@ public class ApiHttpErrorEvent extends Event {
         return url;
     }
 
-    public String getBaseUrl() {
-        int queryParamStart = url.indexOf('?', 10);
-        return queryParamStart > 0 ? url.substring(0, queryParamStart) : url;
-    }
-
     public boolean wasUsingApiKey() {
         return wasUsingApiKey;
     }

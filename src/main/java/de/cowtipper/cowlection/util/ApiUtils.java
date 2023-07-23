@@ -164,7 +164,7 @@ public class ApiUtils {
 
     private static BufferedReader makeApiCall(String url, boolean sendApiKey, String key) throws IOException {
         if (sendApiKey && !CredentialStorage.isMooValid) {
-            throw new ApiHttpErrorException("Your current Hypixel API key is invalid. Use /moo apikey to manually set your existing API key.", url);
+            throw new ApiHttpErrorException("Your current Hypixel API key is invalid. Use §4/moo apikey §cto manually set your API key.", url, true);
         }
         try {
             HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
@@ -182,10 +182,10 @@ public class ApiUtils {
             if (connection.getResponseCode() == HttpStatus.SC_NO_CONTENT) { // http status 204
                 return null;
             } else if (connection.getResponseCode() == HttpStatus.SC_BAD_GATEWAY && url.startsWith("https://api.hypixel.net/")) { // http status 502 (cloudflare)
-                throw new ApiHttpErrorException("Couldn't contact Hypixel API (502 Bad Gateway). API might be down, check https://status.hypixel.net for info.", "https://status.hypixel.net");
+                throw new ApiHttpErrorException("Couldn't contact Hypixel API (502 Bad Gateway). API might be down, check https://status.hypixel.net for info.", "https://status.hypixel.net", sendApiKey);
             } else if (connection.getResponseCode() == HttpStatus.SC_FORBIDDEN && sendApiKey && url.startsWith("https://api.hypixel.net/")) { // http status 403 Forbidden
                 Cowlection.getInstance().getMoo().setMooValidity(false);
-                throw new ApiHttpErrorException("Your current Hypixel API key seems to be invalid. Use /moo apikey to manually set your existing API key.", url);
+                throw new ApiHttpErrorException("Your current Hypixel API key seems to be invalid. Use §4/moo apikey §cto manually set your API key.", url, true);
             } else if (connection.getResponseCode() == HttpStatus.SC_SERVICE_UNAVAILABLE) { // http status 503 Service Unavailable
                 throw new ApiHttpErrorException("Couldn't contact the API (503 Service unavailable). API might be down, or you might be blocked by Cloudflare, check if you can reach: " + url, url, sendApiKey);
             } else if (connection.getResponseCode() == HttpStatus.SC_BAD_GATEWAY && url.startsWith("https://moulberry.codes/")) { // http status 502 (cloudflare)

@@ -202,7 +202,7 @@ public class MooCommand extends CommandBase {
     //region sub commands: Best friends, friends & other players
     private void handleStalking(String[] args) throws CommandException {
         if (!CredentialStorage.isMooValid) {
-            throw new MooCommandException("[Cowlection] You haven't set your Hypixel API key yet or the API key is invalid. Use " + EnumChatFormatting.DARK_RED + "/" + this.getCommandName() + " apikey <key>" + EnumChatFormatting.RED + " to manually set your existing API key.");
+            throw new MooCommandException("[Cowlection] You haven't set your Hypixel API key yet or the API key is invalid. Use " + EnumChatFormatting.DARK_RED + "/" + this.getCommandName() + " apikey " + EnumChatFormatting.RED + "to manually set your existing API key.");
         }
         if (args.length != 2) {
             throw new WrongUsageException("/" + getCommandName() + " stalk <playerName>");
@@ -296,7 +296,7 @@ public class MooCommand extends CommandBase {
     //region sub commands: SkyBlock
     private void handleStalkingSkyBlock(String[] args) throws CommandException {
         if (!CredentialStorage.isMooValid) {
-            throw new MooCommandException("[Cowlection] You haven't set your Hypixel API key yet or the API key is invalid. Use " + EnumChatFormatting.DARK_RED + "/" + this.getCommandName() + " apikey <key>" + EnumChatFormatting.RED + " to manually set your existing API key.");
+            throw new MooCommandException("[Cowlection] You haven't set your Hypixel API key yet or the API key is invalid. Use " + EnumChatFormatting.DARK_RED + "/" + this.getCommandName() + " apikey " + EnumChatFormatting.RED + "to manually set your existing API key.");
         }
         if (args.length != 2) {
             throw new WrongUsageException("/" + getCommandName() + " skyblockstalk <playerName>");
@@ -827,7 +827,7 @@ public class MooCommand extends CommandBase {
         } else if ((args.length == 2 && (args[1].equalsIgnoreCase("party") || args[1].equalsIgnoreCase("p")))
                 || args.length == 1 && args[0].equalsIgnoreCase("dp")) {
             if (!CredentialStorage.isMooValid) {
-                throw new MooCommandException("[Cowlection] You haven't set your Hypixel API key yet or the API key is invalid. Use " + EnumChatFormatting.DARK_RED + "/" + this.getCommandName() + " apikey <key>" + EnumChatFormatting.RED + " to manually set your existing API key.");
+                throw new MooCommandException("[Cowlection] You haven't set your Hypixel API key yet or the API key is invalid. Use " + EnumChatFormatting.DARK_RED + "/" + this.getCommandName() + " apikey " + EnumChatFormatting.RED + "to manually set your existing API key.");
             } else if (dungeonsPartyListener != null) {
                 throw new MooCommandException("Please wait a few seconds before using this command again.");
             }
@@ -872,19 +872,21 @@ public class MooCommand extends CommandBase {
 
     private void handleApiKey(String[] args) throws CommandException {
         if (args.length == 1) {
-            String firstSentence;
+            MooChatComponent msg;
             EnumChatFormatting color;
             EnumChatFormatting colorSecondary;
             if (CredentialStorage.isMooValid && StringUtils.isNotEmpty(CredentialStorage.moo)) {
-                firstSentence = EnumChatFormatting.GREEN + "[Cowlection] You already set your Hypixel API key.";
+                msg = new MooChatComponent("[Cowlection] You already set your Hypixel API key.").green();
                 color = EnumChatFormatting.GRAY;
                 colorSecondary = EnumChatFormatting.YELLOW;
             } else {
-                firstSentence = "[Cowlection] You haven't set your Hypixel API key yet or the API key is invalid.";
+                msg = new MooChatComponent("[Cowlection] You haven't set your Hypixel API key yet or the API key is invalid.").red();
                 color = EnumChatFormatting.RED;
                 colorSecondary = EnumChatFormatting.DARK_RED;
             }
-            main.getChatHelper().sendMessage(color, firstSentence + color + " Use " + colorSecondary + "/" + this.getCommandName() + " apikey <key>" + color + " to manually set your API key.");
+            main.getChatHelper().sendMessage(msg.appendSibling(new MooChatComponent(color + " Use " + colorSecondary + "/" + this.getCommandName() + " apikey <key>" + color + " to manually set your API key."))
+                    .appendFreshSibling(new MooChatComponent(" ❢ ").lightPurple().setUrl("https://github.com/cow-mc/Cowlection/blob/master/CHANGELOG.md#note-on-api-keys-")
+                            .appendSibling(new MooChatComponent("[open 'Note on API keys']").darkAqua().underline())));
         } else {
             String key = args[1];
             if (Utils.isValidUuid(key)) {
