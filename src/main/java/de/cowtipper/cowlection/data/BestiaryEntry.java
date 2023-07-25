@@ -40,6 +40,8 @@ public class BestiaryEntry {
         spacerChar = ' ';
     }
 
+    private boolean isMaxed;
+
     public BestiaryEntry(String mobName, int currentKills, int killsGoal) {
         this.mobName = mobName;
         this.killsToGo = killsGoal - currentKills;
@@ -61,14 +63,15 @@ public class BestiaryEntry {
     }
 
     /**
-     * Bestiary not unlocked yet
+     * Bestiary is maxed (when isMaxed=true), or has not been unlocked yet (when isMaxed=false)
      */
-    public BestiaryEntry(String mobName) {
+    public BestiaryEntry(String mobName, boolean isMaxed) {
         this.mobName = mobName;
         mobNameWidth = -1;
-        killsToGo = Integer.MAX_VALUE;
+        killsToGo = Integer.MAX_VALUE - (isMaxed ? 0 : 1);
         killsGoal = -1;
-        percentageToGo = Integer.MAX_VALUE;
+        percentageToGo = Integer.MAX_VALUE - (isMaxed ? 0 : 1);
+        this.isMaxed = isMaxed;
     }
 
     public static void reinitialize(ItemStack triggerItem) {
@@ -96,7 +99,10 @@ public class BestiaryEntry {
     }
 
     public String getFormattedOutput(boolean sortBestiaryOverviewByKills) {
-        if (percentageToGo == Integer.MAX_VALUE) {
+        if (isMaxed) {
+            return mobName + EnumChatFormatting.WHITE + ": maxed!";
+        }
+        if (percentageToGo == Integer.MAX_VALUE - 1) {
             return mobName + EnumChatFormatting.GRAY + ": not unlocked yet";
         }
 

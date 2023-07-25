@@ -71,10 +71,13 @@ public class SkyBlockListener {
     private static final Pattern ITEM_COUNT_SUFFIXED_PATTERN = Pattern.compile(" (?:§[0-9a-fl-or])*x\\d+$");
     private static final Pattern PET_NAME_PATTERN = Pattern.compile("^§7\\[Lvl (\\d+)] (§[0-9a-f])");
     private static final Pattern TIER_SUFFIX_PATTERN = Pattern.compile(" [IVX0-9]+$");
-    // example: " §a42§7x §fLeather §7for §6436.8 coins"
+    /**
+     * example: " §a42§7x §fLeather §7for §6436.8 coins"
+     */
     private static final Pattern BAZAAR_SELL_ALL_PATTERN = Pattern.compile("^(?:§[0-9a-fl-or])* (?:§[0-9a-fl-or])+([0-9,]+)(?:§[0-9a-fl-or])+x (?:§[0-9a-fl-or])+.+ (?:§[0-9a-fl-or])+for (?:§[0-9a-fl-or])+([0-9,.]+) coins$");
     private static final Pattern BAZAAR_TARGET_AMOUNT_PATTERN = Pattern.compile("^O(?:ff|rd)er amount: ([\\d,]+)x$");
     private static final Pattern BAZAAR_FILLED_PATTERN = Pattern.compile("^Filled: ([\\d,.k]+)/[\\d,.k]+ \\(?([\\d.]+)%[)!]$");
+    private static final Pattern BESTIARY_GUI_TITLE_PATTERN = Pattern.compile("^(?:\\(\\d+/\\d+\\) )?(Bestiary|.+) ➜ (.+)$");
     List<BestiaryEntry> bestiaryOverview = null;
     private final NumberFormat numberFormatter;
     private final Cowlection main;
@@ -349,7 +352,8 @@ public class SkyBlockListener {
 
                 ContainerChest chestContainer = (ContainerChest) ((GuiChest) currentScreen).inventorySlots;
                 IInventory inventory = chestContainer.getLowerChestInventory();
-                for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
+                invLoop:
+                for (int slot = 9; slot < inventory.getSizeInventory(); slot++) { // slot 9 = start with 2nd row
                     ItemStack item = inventory.getStackInSlot(slot);
                     if (item != null) {
                         // slot + item
@@ -357,19 +361,24 @@ public class SkyBlockListener {
                         if (itemNbtDisplay != null && itemNbtDisplay.hasKey("Lore", Constants.NBT.TAG_LIST)) {
                             NBTTagList loreList = itemNbtDisplay.getTagList("Lore", Constants.NBT.TAG_STRING);
 
-                            if (loreList.tagCount() < 10 || !"§eClick to view!".equals(loreList.getStringTagAt(loreList.tagCount() - 1))) {
+                            if (loreList.tagCount() < 8 || !"§eClick to view!".equals(loreList.getStringTagAt(loreList.tagCount() - 1))) {
                                 if (item.getItem() == Items.dye && item.getMetadata() == EnumDyeColor.GRAY.getDyeDamage()) {
                                     // mob hasn't been killed yet
-                                    bestiaryOverview.add(new BestiaryEntry(item.getDisplayName()));
+                                    bestiaryOverview.add(new BestiaryEntry(item.getDisplayName(), false));
                                 }
                                 // not a bestiary icon with additional data
                                 continue;
                             }
 
+                            boolean hasProgressBar = false;
                             for (int loreLineNr = 0; loreLineNr < loreList.tagCount(); ++loreLineNr) {
                                 String loreLineFormatted = loreList.getStringTagAt(loreLineNr);
                                 String loreLine = EnumChatFormatting.getTextWithoutFormattingCodes(loreLineFormatted);
-                                if (loreLine.startsWith("                    ")) { // bar to next level
+                                if (loreLine.startsWith("Families Found")) {
+                                    // bestiary sub category, e.g. Fishing
+                                    bestiaryOverview = null;
+                                    break invLoop;
+                                } else if (loreLine.startsWith("                    ")) { // bar to next level
                                     try {
                                         String progress = loreLine.substring(loreLine.lastIndexOf(' ') + 1);
                                         int divider = progress.indexOf('/');
@@ -377,11 +386,15 @@ public class SkyBlockListener {
                                             bestiaryOverview.add(new BestiaryEntry(TIER_SUFFIX_PATTERN.matcher(item.getDisplayName()).replaceFirst(""),
                                                     abbreviatedToLongNumber(progress.substring(0, divider)),
                                                     abbreviatedToLongNumber(progress.substring(divider + 1))));
+                                            hasProgressBar = true;
                                             break;
                                         }
                                     } catch (NumberInvalidException ignored) {
                                     }
                                 }
+                            }
+                            if (!hasProgressBar) {
+                                bestiaryOverview.add(new BestiaryEntry(item.getDisplayName(), true));
                             }
                         }
                     }
@@ -392,10 +405,11 @@ public class SkyBlockListener {
                 // bestiary overview preview in config gui
                 BestiaryEntry.reinitialize(e.itemStack);
                 bestiaryOverview = new ArrayList<>();
-                bestiaryOverview.add(new BestiaryEntry(EnumChatFormatting.GREEN + "Cow", 1, 2));
+                bestiaryOverview.add(new BestiaryEntry(EnumChatFormatting.GREEN + "Sheep", 1, 2));
                 bestiaryOverview.add(new BestiaryEntry(EnumChatFormatting.GREEN + "Pig", 1163, 2500));
                 bestiaryOverview.add(new BestiaryEntry(EnumChatFormatting.GREEN + "Chicken", 10800, 15000));
-                bestiaryOverview.add(new BestiaryEntry(EnumChatFormatting.RED + "Farmhand"));
+                bestiaryOverview.add(new BestiaryEntry(EnumChatFormatting.RED + "Farmhand", false));
+                bestiaryOverview.add(new BestiaryEntry(EnumChatFormatting.GREEN + "Cow", true));
             }
         } else {
             isBestiaryOverviewVisible = false;
@@ -701,7 +715,28 @@ public class SkyBlockListener {
         IInventory inventory = guiChest.inventorySlots.getSlot(0).inventory;
         String inventoryName = (inventory.hasCustomName() ? EnumChatFormatting.getTextWithoutFormattingCodes(inventory.getDisplayName().getUnformattedTextForChat()) : inventory.getName());
         String hoveredItemName = EnumChatFormatting.getTextWithoutFormattingCodes(hoveredItem.getDisplayName());
-        if (inventoryName.startsWith("Bestiary ➜ ") && inventoryName.endsWith(hoveredItemName)) {
+
+        Matcher bestiaryGuiTitleMatcher = BESTIARY_GUI_TITLE_PATTERN.matcher(inventoryName);
+        if (bestiaryGuiTitleMatcher.matches() && hoveredItemName.startsWith(bestiaryGuiTitleMatcher.group(2))) {
+            if (!"Bestiary".equals(bestiaryGuiTitleMatcher.group(1))) {
+                // special Bestiary sub category (e.g. Fishing)
+                NBTTagCompound itemNbtDisplay = hoveredItem.getSubCompound("display", false);
+                if (itemNbtDisplay != null && itemNbtDisplay.hasKey("Lore", Constants.NBT.TAG_LIST)) {
+                    boolean loreContainsFamiliesFound = false;
+                    NBTTagList loreList = itemNbtDisplay.getTagList("Lore", Constants.NBT.TAG_STRING);
+                    for (int loreLineNr = 0; loreLineNr < loreList.tagCount(); ++loreLineNr) {
+                        String loreLineFormatted = loreList.getStringTagAt(loreLineNr);
+                        String loreLine = EnumChatFormatting.getTextWithoutFormattingCodes(loreLineFormatted);
+                        if (loreLine.startsWith("Families Found")) {
+                            loreContainsFamiliesFound = true;
+                            break;
+                        }
+                    }
+                    if (!loreContainsFamiliesFound) {
+                        return false;
+                    }
+                }
+            }
             // bestiary overview is enabled and mouse is hovering over bestiary category item (with same name as category)
             BestiaryEntry.triggerItem = hoveredItem;
             return true;

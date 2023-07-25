@@ -31,6 +31,7 @@ All other features of Cowlection *do not* require an API key and thus should be 
       - `/guild notifications` to toggle Guild notifications, or `/settings` → Personal Guild Settings → Guild Notifications
 
 ### Fixed
+- Bestiary Overview (`/moo config bestiary` + `/be`): adapted tooltip detection for newly added bestiary entries
 - Pet exp in tooltips: fixed rare crash caused by unexpected NBT data typing
 - Bazaar: fixed "Show items left to buy/sell" for buy/sell orders not working anymore
 - Enchanted books: fixed "price converted to level 1 books", as enchantments are now sold on the Bazaar, and no longer inside the Auction house

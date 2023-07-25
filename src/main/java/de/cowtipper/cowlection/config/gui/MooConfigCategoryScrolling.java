@@ -59,7 +59,7 @@ public class MooConfigCategoryScrolling extends GuiListExtended {
         this.mc = mc;
 
         listEntriesPreviews = new TreeMap<>();
-        newConfigOptions = Sets.newHashSet("tooltipAuctionHousePriceEach", "tooltipAuctionHousePriceEachEnchantments", "bazaarShowItemsLeft", "showPetExp", "dungOverlayEnabled", "dungSendPerformanceOnDeath", "dungSendPerformanceOnEndScreen");
+        newConfigOptions = Sets.newHashSet("bestiaryOverviewOrder", "tooltipAuctionHousePriceEach", "tooltipAuctionHousePriceEachEnchantments", "bazaarShowItemsLeft", "showPetExp", "dungOverlayEnabled", "dungSendPerformanceOnDeath", "dungSendPerformanceOnEndScreen");
         explanations = new HashMap<>();
         listEntries = new ArrayList<>();
     }
