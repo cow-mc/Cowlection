@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [1.8.9-0.16.0] - unreleased
+## [1.8.9-0.16.0] - 25.07.2023
 ### Note on API keys ❗
 In case you haven't heard yet: player-based API keys are currently being phased out (see also forums post about [Public API Changes](https://hypixel.net/threads/public-api-changes-february-2023.5266129/)).
 
@@ -446,7 +446,7 @@ All other features of Cowlection *do not* require an API key and thus should be 
 
 *Note:* The 'best friends' list is currently available via <kbd>ESC</kbd> > Mod Options > Cowlection > Config > bestFriends.
 
-[1.8.9-0.16.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.15.1...master
+[1.8.9-0.16.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.15.1...v1.8.9-0.16.0
 [1.8.9-0.15.1]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.15.0...v1.8.9-0.15.1
 [1.8.9-0.15.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.14.0...v1.8.9-0.15.0
 [1.8.9-0.14.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.13.0...v1.8.9-0.14.0

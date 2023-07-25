@@ -1,10 +1,10 @@
 {
   "homepage": "https://github.com/cow-mc/Cowlection/",
   "1.8.9": {
-    "1.8.9-0.15.1": "https://github.com/cow-mc/Cowlection/blob/master/CHANGELOG.md"
+    "1.8.9-0.16.0": "https://github.com/cow-mc/Cowlection/blob/master/CHANGELOG.md"
   },
   "promos": {
-    "1.8.9-latest": "1.8.9-0.15.1",
-    "1.8.9-recommended": "1.8.9-0.15.1"
+    "1.8.9-latest": "1.8.9-0.16.0",
+    "1.8.9-recommended": "1.8.9-0.16.0"
   }
 }
