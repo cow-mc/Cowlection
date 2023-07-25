@@ -7,14 +7,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Note on API keys ❗
 In case you haven't heard yet: player-based API keys are currently being phased out (see also forums post about [Public API Changes](https://hypixel.net/threads/public-api-changes-february-2023.5266129/)).
 
-Therefore, API-related features _that require an API key_ will probably stop working in the foreseeable future. I _don't_ currently plan to provide my own API backend system, so sooner or later the few features in Cowlection that require an API key will probably stop working.
+Therefore, **API-related features _that require an API key_ will probably stop working in the foreseeable future**. I _don't_ currently plan to provide my own API backend system, so sooner or later the few features in Cowlection that require an API key will probably stop working.
+
+However, there are some Discord bots (e.g. [SkyHelper](https://skyhelper.altpapier.dev/)), other bigger SkyBlock mods, and some websites that provide similar API-based player lookup functionality.
 
 The affected features are the following:
-1. `/moo stalk`: check online status & current game of a user ➡️I plan to move this to my Discord bot Moonitor (for that join the [Cowshed Discord server](https://discord.gg/fU2tFPf))
-2. `/moo stalkskyblock`: check SkyBlock stats of a player ➡️there are various bots/mods/websites that allow SkyBlock player lookups
-3. `/moo dungeon party` (= `/moo dp`): lookup armor and dungeons stats of each Dungeons party member ➡️same as (2)
+1. `/moo stalk`: check online status & current game of a user
+2. `/moo stalkskyblock`: check SkyBlock stats of a player
+3. `/moo dungeon party` (= `/moo dp`): lookup armor and dungeons stats of each Dungeons party member
 
-All other features *do not* require an API key and thus should be unaffected by these changes.
+All other features of Cowlection *do not* require an API key and thus should be unaffected by the API-related changes.
 
 ### Removed
 - Removed Cowlection 'Best friends' list:
