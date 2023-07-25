@@ -143,14 +143,19 @@ public class PlayerListener {
         isPlayerJoiningServer = false;
 
         if (this.nextMigrationNotification < System.currentTimeMillis()) {
-            this.nextMigrationNotification = System.currentTimeMillis() + 10000;
+            this.nextMigrationNotification = System.currentTimeMillis() + 600_000; // every 10 minutes
             new TickDelay(() -> {
-                if (MooConfig.doBestFriendsOnlineCheck || main.getFriendsHandler().getBestFriendsListSize() > 0) {
-                    main.getChatHelper().sendMessage(new MooChatComponent("[" + EnumChatFormatting.DARK_RED + Cowlection.MODNAME + EnumChatFormatting.RED + "] The 'best friends list' feature has been removed from this mod.").red()
-                            .appendSibling(new MooChatComponent(" Run " + EnumChatFormatting.GOLD + "/moo bestfriends " + EnumChatFormatting.YELLOW + "to migrate your best friends list").yellow())
-                            .setSuggestCommand("/moo bestfriends", false)
-                            .setHover(new MooChatComponent.KeyValueChatComponent("Run", "/moo bestfriends", " ")
-                                    .appendFreshSibling(new MooChatComponent("(This message will re-appear as long as there are still names on your Cowlection best friends list)").red())));
+                if (MooConfig.doBestFriendsOnlineCheck) {
+                    if (main.getFriendsHandler().getBestFriendsListSize() == 0) {
+                        MooConfig.doBestFriendsOnlineCheck = false;
+                        main.getConfig().syncFromFields();
+                    } else {
+                        main.getChatHelper().sendMessage(new MooChatComponent("[" + EnumChatFormatting.DARK_RED + Cowlection.MODNAME + EnumChatFormatting.RED + "] The 'best friends list' feature has been removed from this mod.").red()
+                                .appendSibling(new MooChatComponent(" Run " + EnumChatFormatting.GOLD + "/moo bestfriends " + EnumChatFormatting.YELLOW + "to migrate your best friends list").yellow())
+                                .setSuggestCommand("/moo bestfriends", false)
+                                .setHover(new MooChatComponent.KeyValueChatComponent("Run", "/moo bestfriends", " ")
+                                        .appendFreshSibling(new MooChatComponent("(This message will re-appear as long as there are still names on your Cowlection best friends list)").red())));
+                    }
                 }
                 if (MooConfig.doMonitorNotifications()) {
                     main.getChatHelper().sendMessage(new MooChatComponent("[" + EnumChatFormatting.DARK_RED + Cowlection.MODNAME + EnumChatFormatting.RED + "] The 'login & logout notifications filter' feature has been removed from this mod.").red()
