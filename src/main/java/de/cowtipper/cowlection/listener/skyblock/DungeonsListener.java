@@ -339,7 +339,9 @@ public class DungeonsListener {
             boolean partyReqTooLowLevel = false;
             String middleText = null;
 
-            for (String toolTipLine : itemTooltip) {
+            for (int i = 0; i < itemTooltip.size(); i ++ ) {
+                String toolTipLine = itemTooltip.get(i);
+
                 String toolTipLineWithoutFormatting = EnumChatFormatting.getTextWithoutFormattingCodes(toolTipLine);
                 Matcher playerDetailMatcher = DUNGEON_PARTY_FINDER_PLAYER.matcher(toolTipLineWithoutFormatting);
                 if (playerDetailMatcher.matches()) {
@@ -360,7 +362,13 @@ public class DungeonsListener {
                 } else if (" Empty".equals(toolTipLineWithoutFormatting)) {
                     --partySize;
                 } else if (toolTipLineWithoutFormatting.startsWith("Note: ")) {
-                    String partyNote = toolTipLineWithoutFormatting.toLowerCase();
+                    String partyNote = toolTipLineWithoutFormatting.toLowerCase().trim();
+                    while (i + 1 < itemTooltip.size()) {
+                        String next = EnumChatFormatting.getTextWithoutFormattingCodes(itemTooltip.get(i + 1)).trim().toLowerCase();
+                        if (next.isEmpty()) break;
+                        partyNote += " " + next;
+                        i++;
+                    }
 
                     StringBuilder middleTextBuilder = new StringBuilder();
                     for (Rule rule : main.getPartyFinderRules().getRules()) {
