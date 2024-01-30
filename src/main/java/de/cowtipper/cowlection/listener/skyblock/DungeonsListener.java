@@ -339,7 +339,7 @@ public class DungeonsListener {
             boolean partyReqTooLowLevel = false;
             String middleText = null;
 
-            for (int i = 0; i < itemTooltip.size(); i ++ ) {
+            for (int i = 0; i < itemTooltip.size(); i++) {
                 String toolTipLine = itemTooltip.get(i);
 
                 String toolTipLineWithoutFormatting = EnumChatFormatting.getTextWithoutFormattingCodes(toolTipLine);
@@ -361,13 +361,15 @@ public class DungeonsListener {
                     }
                 } else if (" Empty".equals(toolTipLineWithoutFormatting)) {
                     --partySize;
-                } else if (toolTipLineWithoutFormatting.startsWith("Note: ")) {
-                    String partyNote = toolTipLineWithoutFormatting.toLowerCase().trim();
-                    while (i + 1 < itemTooltip.size()) {
-                        String next = EnumChatFormatting.getTextWithoutFormattingCodes(itemTooltip.get(i + 1)).trim().toLowerCase();
-                        if (next.isEmpty()) break;
-                        partyNote += " " + next;
-                        i++;
+                } else if (toolTipLineWithoutFormatting.startsWith("Note:")) {
+                    String partyNote = toolTipLineWithoutFormatting.substring(5 /* remove "Note:" */).trim().toLowerCase();
+
+                    if (i + 1 < itemTooltip.size()) {
+                        String nextToolTipLine = itemTooltip.get(i + 1);
+                        if (!nextToolTipLine.isEmpty() && (nextToolTipLine.startsWith("§7§f") || nextToolTipLine.startsWith("§f"))) {
+                            partyNote += " " + EnumChatFormatting.getTextWithoutFormattingCodes(nextToolTipLine).trim().toLowerCase();
+                            i++;
+                        }
                     }
 
                     StringBuilder middleTextBuilder = new StringBuilder();
