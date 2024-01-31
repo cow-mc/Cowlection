@@ -147,10 +147,12 @@ public class DungeonCache {
                     String tabListEntry = EnumChatFormatting.getTextWithoutFormattingCodes(tabList.getPlayerName(playerInfo));
                     if (tabListEntry != null && tabListEntry.startsWith(" Crypts: ")) {
                         try {
-                            destroyedCryptsInTabList = Integer.parseInt(tabListEntry.substring(" Crypts: ".length()).trim());
-                        } catch (NumberFormatException | IndexOutOfBoundsException ex) {
+                            int cryptsCounterBegin = " Crypts: ".length();
+                            int firstSlash = tabListEntry.indexOf('/'); // e.g. 4/16 -> only parse '4'
+                            int cryptsCounterEnd = firstSlash > 0 ? firstSlash : tabListEntry.length();
+                            destroyedCryptsInTabList = Integer.parseInt(tabListEntry.substring(cryptsCounterBegin, cryptsCounterEnd).trim());
+                        } catch (NumberFormatException | IndexOutOfBoundsException ignored) {
                             // couldn't parse crypts count from tab list
-                            ex.printStackTrace();
                         }
                     }
                 }
