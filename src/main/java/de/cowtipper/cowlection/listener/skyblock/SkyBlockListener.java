@@ -54,9 +54,7 @@ import java.net.URI;
 import java.net.URLEncoder;
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -276,25 +274,36 @@ public class SkyBlockListener {
         // add item age to tooltip
         if (extraAttributes != null && extraAttributes.hasKey("timestamp")
                 && (tooltipItemAgeDisplay != MooConfig.Setting.DISABLED || tooltipItemTimestampDisplay != MooConfig.Setting.DISABLED)) {
-            LocalDateTime skyBlockDateTime;
-            try {
-                String timestamp = extraAttributes.getString("timestamp");
-                if (timestamp.endsWith("M")) {
-                    // format: month > day > year + 12 hour clock (AM or PM)
-                    skyBlockDateTime = LocalDateTime.parse(timestamp, DateTimeFormatter.ofPattern("M/d/yy h:mm a", Locale.US));
-                } else {
-                    // format: day > month > year + 24 hour clock (very, very rare)
-                    skyBlockDateTime = LocalDateTime.parse(timestamp, DateTimeFormatter.ofPattern("d/M/yy HH:mm", Locale.US));
+            ZonedDateTime localZoneDateTime = null;
+            if (extraAttributes.hasKey("timestamp", Constants.NBT.TAG_LONG)) {
+                long timestampInMs = extraAttributes.getLong("timestamp");
+                try {
+                    localZoneDateTime = ZonedDateTime.ofInstant(Instant.ofEpochMilli(timestampInMs), ZoneId.systemDefault());
+                } catch (DateTimeException ignored) {
                 }
-            } catch (DateTimeParseException ignored) {
-                // unknown/invalid timestamp format
-                skyBlockDateTime = null;
+            } else if (extraAttributes.hasKey("timestamp", Constants.NBT.TAG_STRING)) {
+                LocalDateTime skyBlockDateTime = null;
+                try {
+                    String timestamp = extraAttributes.getString("timestamp");
+                    if (timestamp.endsWith("M")) {
+                        // format: month > day > year + 12-hour clock (AM or PM)
+                        skyBlockDateTime = LocalDateTime.parse(timestamp, DateTimeFormatter.ofPattern("M/d/yy h:mm a", Locale.US));
+                    } else {
+                        // format: day > month > year + 24-hour clock (very, very rare)
+                        skyBlockDateTime = LocalDateTime.parse(timestamp, DateTimeFormatter.ofPattern("d/M/yy HH:mm", Locale.US));
+                    }
+                } catch (DateTimeParseException ignored) {
+                    // unknown/invalid timestamp format
+                }
+
+                if (skyBlockDateTime != null) {
+                    // Timezone = America/Toronto! headquarter is in Val-des-Monts, Quebec, Canada; timezone can also be confirmed by looking at the timestamps of New Year Cakes
+                    localZoneDateTime = ZonedDateTime.of(skyBlockDateTime, ZoneId.of("America/Toronto")) // EDT/EST
+                            .withZoneSameInstant(ZoneId.systemDefault());
+                }
             }
 
-            if (skyBlockDateTime != null) {
-                // Timezone = America/Toronto! headquarter is in Val-des-Monts, Quebec, Canada; timezone can also be confirmed by looking at the timestamps of New Year Cakes
-                ZonedDateTime dateTime = ZonedDateTime.of(skyBlockDateTime, ZoneId.of("America/Toronto")); // EDT/EST
-
+            if (localZoneDateTime != null) {
                 int index = Math.max(0, e.toolTip.size() - (e.showAdvancedItemTooltips ? /* item name & nbt info */ 2 : 0));
 
                 switch (tooltipItemTimestampDisplay) {
@@ -303,7 +312,7 @@ public class SkyBlockListener {
                             break;
                         }
                     case ALWAYS:
-                        e.toolTip.add(index, "Timestamp: " + EnumChatFormatting.DARK_GRAY + dateTime.withZoneSameInstant(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm zzz")));
+                        e.toolTip.add(index, "Timestamp: " + EnumChatFormatting.DARK_GRAY + localZoneDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm zzz")));
                         break;
                     default:
                         // do nothing
@@ -315,7 +324,7 @@ public class SkyBlockListener {
                             break;
                         }
                     case ALWAYS: {
-                        long itemCreationTimestamp = dateTime.toEpochSecond() * 1000;
+                        long itemCreationTimestamp = localZoneDateTime.toEpochSecond() * 1000;
                         long itemAgeInMs = System.currentTimeMillis() - itemCreationTimestamp;
 
                         String itemAge = itemAgeInMs >= 60_000
