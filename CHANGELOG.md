@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - fixed detection of maxed bestiary entries
   - fixed detection of bestiary categories with sub-categories
 - Party Finder: added support for multi-line party notes (https://github.com/cow-mc/Cowlection/pull/8)
+- Party Finder Rules Editor: changed party note display conditions for unjoinable/blocked parties in Rules Editor to match display inside Party Finder 
 - Dungeons overlay: fixed possible incompatibility when another mod modifies the crypts count in the tab list
 
 ## [1.8.9-0.16.0] - 25.07.2023

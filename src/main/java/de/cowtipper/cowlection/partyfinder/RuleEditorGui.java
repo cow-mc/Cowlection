@@ -20,6 +20,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTUtil;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.StringUtils;
 import net.minecraftforge.fml.client.GuiScrollingList;
 import net.minecraftforge.fml.client.config.*;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
@@ -544,15 +545,18 @@ public class RuleEditorGui extends GuiScreen {
                 // party preview:
                 drawItemsPreview(demoItem, currentX, y - 2);
 
-                GlStateManager.pushMatrix();
-                GlStateManager.translate(0, 0, 281);
-                double scaleFactor = 0.5;
-                GlStateManager.scale(scaleFactor, scaleFactor, 0);
-                RuleEditorGui.this.fontRendererObj.drawStringWithShadow(rule.getMiddleText(), (float) ((currentX + 1) / scaleFactor), (float) ((y + 5) / scaleFactor), 0xFFffffff);
-                GlStateManager.popMatrix();
+                DataHelper.PartyType partyType = rule.getPartyType();
+
+                if (partyType != DataHelper.PartyType.UNJOINABLE_OR_BLOCK && !StringUtils.isNullOrEmpty(rule.getMiddleText())) {
+                    GlStateManager.pushMatrix();
+                    GlStateManager.translate(0, 0, 281);
+                    double scaleFactor = 0.5;
+                    GlStateManager.scale(scaleFactor, scaleFactor, 0);
+                    RuleEditorGui.this.fontRendererObj.drawStringWithShadow(rule.getMiddleText(), (float) ((currentX + 1) / scaleFactor), (float) ((y + 5) / scaleFactor), 0xFFffffff);
+                    GlStateManager.popMatrix();
+                }
 
                 if (MooConfig.dungPartyFinderOverlayDrawBackground) {
-                    DataHelper.PartyType partyType = rule.getPartyType();
                     GlStateManager.pushMatrix();
                     if (partyType == DataHelper.PartyType.UNJOINABLE_OR_BLOCK) {
                         GlStateManager.translate(0, 0, partyType.getZIndex());
