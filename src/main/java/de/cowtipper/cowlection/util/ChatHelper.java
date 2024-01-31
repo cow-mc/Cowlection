@@ -38,7 +38,7 @@ public class ChatHelper {
     }
 
     private void putOfflineMessage(IChatComponent chatComponent) {
-        if (offlineMessages.size() == 0) {
+        if (offlineMessages.isEmpty()) {
             // had no offline messages before
             MinecraftForge.EVENT_BUS.register(this);
         }

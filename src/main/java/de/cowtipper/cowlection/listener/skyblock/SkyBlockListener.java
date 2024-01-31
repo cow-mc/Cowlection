@@ -379,12 +379,12 @@ public class SkyBlockListener {
                                 continue;
                             }
 
-                            boolean hasProgressBar = false;
                             for (int loreLineNr = 0; loreLineNr < loreList.tagCount(); ++loreLineNr) {
                                 String loreLineFormatted = loreList.getStringTagAt(loreLineNr);
                                 String loreLine = EnumChatFormatting.getTextWithoutFormattingCodes(loreLineFormatted);
                                 if (loreLine.startsWith("Families Found")) {
                                     // bestiary sub category, e.g. Fishing
+                                    BestiaryEntry.triggerItem = null;
                                     bestiaryOverview = null;
                                     break invLoop;
                                 } else if (loreLine.startsWith("                    ")) { // bar to next level
@@ -392,18 +392,18 @@ public class SkyBlockListener {
                                         String progress = loreLine.substring(loreLine.lastIndexOf(' ') + 1);
                                         int divider = progress.indexOf('/');
                                         if (divider > 0) {
-                                            bestiaryOverview.add(new BestiaryEntry(TIER_SUFFIX_PATTERN.matcher(item.getDisplayName()).replaceFirst(""),
-                                                    abbreviatedToLongNumber(progress.substring(0, divider)),
-                                                    abbreviatedToLongNumber(progress.substring(divider + 1))));
-                                            hasProgressBar = true;
+                                            int currentKills = abbreviatedToLongNumber(progress.substring(0, divider));
+                                            int killsGoal = abbreviatedToLongNumber(progress.substring(divider + 1));
+                                            if (currentKills == killsGoal) {
+                                                bestiaryOverview.add(new BestiaryEntry(item.getDisplayName(), true));
+                                            } else {
+                                                bestiaryOverview.add(new BestiaryEntry(TIER_SUFFIX_PATTERN.matcher(item.getDisplayName()).replaceFirst(""), currentKills, killsGoal));
+                                            }
                                             break;
                                         }
                                     } catch (NumberInvalidException ignored) {
                                     }
                                 }
-                            }
-                            if (!hasProgressBar) {
-                                bestiaryOverview.add(new BestiaryEntry(item.getDisplayName(), true));
                             }
                         }
                     }
@@ -427,7 +427,7 @@ public class SkyBlockListener {
             e.toolTip.add("");
             e.toolTip.add("" + EnumChatFormatting.GOLD + EnumChatFormatting.BOLD + EnumChatFormatting.UNDERLINE + "Bestiary Overview:" + EnumChatFormatting.RESET + EnumChatFormatting.YELLOW + " (ordered by: " + bestiaryOverviewOrder + " to next tier)");
 
-            if (bestiaryOverview.size() == 0) {
+            if (bestiaryOverview.isEmpty()) {
                 e.toolTip.add(EnumChatFormatting.GREEN + "All mobs max tier " + EnumChatFormatting.DARK_GREEN + "✔");
             } else {
                 boolean sortBestiaryOverviewByKills = "fewest kills".equals(bestiaryOverviewOrder);

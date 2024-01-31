@@ -51,7 +51,7 @@ public class NumerousCommandsGui extends GuiScreen {
             }
             lines.add("" + EnumChatFormatting.UNDERLINE + EnumChatFormatting.ITALIC + "Commands" + EnumChatFormatting.RESET + EnumChatFormatting.GRAY + " (" + modInfo.getCommandsCount() + ")");
             Collection<CommandInfo> commands = modInfo.getCommands();
-            if (commands.size() == 0) {
+            if (commands.isEmpty()) {
                 lines.add(EnumChatFormatting.YELLOW + " ‣ This mod either has no client-side commands, or doesn't use Forge's command registry");
             } else {
                 for (CommandInfo cmd : commands) {

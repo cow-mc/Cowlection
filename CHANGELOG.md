@@ -5,7 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [1.8.9-0.16.1] - unreleased
 ### Fixed / Improvement
-- Item Tooltips: added support for new item creation timestamp format
+- Item Age in tooltips: added support for new item creation timestamp format
+- Bestiary overview (`/be`):
+  - fixed detection of maxed bestiary entries
+  - fixed detection of bestiary categories with sub-categories
 - Party Finder: added support for multi-line party notes (https://github.com/cow-mc/Cowlection/pull/8)
 
 ## [1.8.9-0.16.0] - 25.07.2023

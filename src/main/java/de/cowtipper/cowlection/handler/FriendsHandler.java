@@ -31,7 +31,7 @@ public class FriendsHandler {
     public boolean removeBestFriend(String name) {
         boolean removed = bestFriends.removeIf(friend -> friend.getName().equalsIgnoreCase(name));
         if (removed) {
-            if (bestFriends.size() == 0) {
+            if (bestFriends.isEmpty()) {
                 MooConfig.doBestFriendsOnlineCheck = false;
                 main.getConfig().syncFromFields();
             }
