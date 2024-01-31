@@ -3,8 +3,8 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [1.8.9-0.16.1] - unreleased
-### Fixed / Improved
+## [1.8.9-0.16.1] - 31.01.2024
+### Fixed & Improved
 - Item Age in tooltips: added support for new item creation timestamp format
 - Bestiary overview (`/be`):
   - fixed detection of maxed bestiary entries
@@ -456,7 +456,7 @@ All other features of Cowlection *do not* require an API key and thus should be 
 
 *Note:* The 'best friends' list is currently available via <kbd>ESC</kbd> > Mod Options > Cowlection > Config > bestFriends.
 
-[1.8.9-0.16.1]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.16.0...master
+[1.8.9-0.16.1]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.16.0...v1.8.9-0.16.1
 [1.8.9-0.16.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.15.1...v1.8.9-0.16.0
 [1.8.9-0.15.1]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.15.0...v1.8.9-0.15.1
 [1.8.9-0.15.0]: https://github.com/cow-mc/Cowlection/compare/v1.8.9-0.14.0...v1.8.9-0.15.0
